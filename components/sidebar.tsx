@@ -1,7 +1,9 @@
 "use client"
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Home, BookOpen, User, Users, GraduationCap, FileText, Wrench, ChevronLeft, ChevronRight } from "lucide-react"
+import { Home, BookOpen, User, Users, GraduationCap, FileText, Wrench, ChevronLeft, ChevronRight, LogOut, Shield } from "lucide-react"
+import { useAuth } from "@/components/auth/auth-context"
+import { useRouter } from "next/navigation"
 
 interface SidebarProps {
   activeTab: string
@@ -18,7 +20,14 @@ export default function Sidebar({
   setIsMobileMenuOpen,
   onCollapseChange,
 }: SidebarProps) {
+  const { user, logout } = useAuth()
+  const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const handleLogout = async () => {
+    logout()
+    router.push('/')
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -136,6 +145,43 @@ export default function Sidebar({
             })}
           </div>
         </nav>
+
+        {/* Bottom section with Admin Panel and Logout */}
+        <div className="p-2 border-t border-[#636370]/20 space-y-1">
+          {/* Admin Panel Button - only show for admins */}
+          {user?.role === 'admin' && (
+            <div
+              onClick={() => router.push('/admin')}
+              className="group relative flex items-center justify-center p-3 rounded-lg transition-all duration-200 cursor-pointer text-[#a0a0b0] hover:text-white hover:bg-[#636370]/10"
+            >
+              <Shield className="w-5 h-5 transition-transform duration-200 group-hover:scale-105" />
+              {!isCollapsed && (
+                <span className="text-sm ml-3">Админ панель</span>
+              )}
+              {isCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-[#2a2a35] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  Админ панель
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Logout Button */}
+          <div
+            onClick={handleLogout}
+            className="group relative flex items-center justify-center p-3 rounded-lg transition-all duration-200 cursor-pointer text-[#ff4757] hover:text-white hover:bg-[#ff4757]/10"
+          >
+            <LogOut className="w-5 h-5 transition-transform duration-200 group-hover:scale-105" />
+            {!isCollapsed && (
+              <span className="text-sm ml-3">Выйти</span>
+            )}
+            {isCollapsed && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-[#2a2a35] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                Выйти
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </>
   )

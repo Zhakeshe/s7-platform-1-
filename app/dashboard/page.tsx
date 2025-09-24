@@ -9,12 +9,18 @@ import MasterclassTab from "@/components/tabs/masterclass-tab"
 import ProfileTab from "@/components/tabs/profile-tab"
 import ByteSizeTab from "@/components/tabs/bytesize-tab"
 import FooterSocial from "@/components/footer-social"
+import CourseDetailsTab from "@/components/tabs/course-details-tab"
+import type { CourseDetails } from "@/components/tabs/course-details-tab"
+import CourseLessonTab from "@/components/tabs/course-lesson-tab"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("home")
   const [currentDate, setCurrentDate] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState<CourseDetails | null>(null)
+  const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null)
+  const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null)
 
   useEffect(() => {
     const updateDate = () => {
@@ -55,11 +61,27 @@ export default function Dashboard() {
     }
   }, [isMobileMenuOpen])
 
+  const handleOpenCourse = (course: CourseDetails) => {
+    setSelectedCourse(course)
+    setActiveTab("course-details")
+  }
+
+  const handleOpenLesson = (course: CourseDetails, moduleId: number, lessonId: number) => {
+    setSelectedCourse(course)
+    setSelectedModuleId(moduleId)
+    setSelectedLessonId(lessonId)
+    setActiveTab("lesson-details")
+  }
+
   const getTabTitle = (tab: string) => {
     switch (tab) {
       case "home":
         return "Главная"
       case "courses":
+        return "Курсы"
+      case "course-details":
+        return "Курсы"
+      case "lesson-details":
         return "Курсы"
       case "s7-tools":
         return "S7 Tool"
@@ -79,9 +101,26 @@ export default function Dashboard() {
   const renderTabContent = () => {
     switch (activeTab) {
       case "home":
-        return <HomeTab />
+        return <HomeTab onOpenCourse={handleOpenCourse} />
       case "courses":
-        return <CoursesTab />
+        return <CoursesTab onOpenCourse={handleOpenCourse} />
+      case "course-details":
+        return (
+          <CourseDetailsTab
+            course={selectedCourse}
+            onBack={() => setActiveTab("courses")}
+            onOpenLesson={(moduleId, lessonId) => selectedCourse && handleOpenLesson(selectedCourse, moduleId, lessonId)}
+          />
+        )
+      case "lesson-details":
+        return (
+          <CourseLessonTab
+            course={selectedCourse}
+            moduleId={selectedModuleId}
+            lessonId={selectedLessonId}
+            onBack={() => setActiveTab("course-details")}
+          />
+        )
       case "s7-tools":
         return <S7ToolsTab />
       case "teams":
@@ -109,7 +148,7 @@ export default function Dashboard() {
       </button>
 
       <Sidebar
-        activeTab={activeTab}
+        activeTab={activeTab === "course-details" || activeTab === "lesson-details" ? "courses" : activeTab}
         onTabChange={setActiveTab}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}

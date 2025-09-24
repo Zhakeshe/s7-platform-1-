@@ -1,7 +1,34 @@
 "use client"
-import { User, Trophy, ExternalLink, Plus } from "lucide-react"
+import { User as UserIcon, Trophy, ExternalLink, Plus } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/components/auth/auth-context"
+import { listAchievements } from "@/lib/s7db"
+import { toast } from "@/hooks/use-toast"
 
 export default function ProfileTab() {
+  const { user, updateProfile, loading } = useAuth()
+  const [fullName, setFullName] = useState("")
+  const [institution, setInstitution] = useState("")
+  const [achievements, setAchievements] = useState<{ id: string; text: string; createdAt: number }[]>([])
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.fullName || "")
+      setInstitution(user.institution || "")
+      const list = listAchievements().filter((a) => a.userId === user.id)
+      setAchievements(list.map((a) => ({ id: a.id, text: a.text, createdAt: a.createdAt })))
+    }
+  }, [user])
+
+  if (loading) {
+    return (
+      <div className="flex-1 p-4 md:p-8 animate-slide-up">
+        <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+          <div className="text-white text-center">Загрузка профиля...</div>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="flex-1 p-4 md:p-8 animate-slide-up">
       <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
@@ -12,35 +39,69 @@ export default function ProfileTab() {
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#00a3ff] to-[#0080cc] rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 md:w-10 md:h-10 text-white" />
+              <UserIcon className="w-8 h-8 md:w-10 md:h-10 text-white" />
             </div>
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
-                <h2 className="text-white text-xl md:text-2xl font-medium">Амантай Батырхан</h2>
+                <h2 className="text-white text-xl md:text-2xl font-medium">{user?.fullName || "Пользователь"}</h2>
                 <span className="bg-[#00a3ff] text-white px-3 py-1 rounded-full text-sm font-medium w-fit">
-                  12 Уровень
+                  {user?.level ?? 1} Уровень
                 </span>
               </div>
               <div className="text-[#a0a0b0] text-sm space-y-1">
                 <p>
-                  <span className="text-white">ФИО:</span> Амантай Батырхан Найманович
+                  <span className="text-white">Почта:</span> {user?.email || 'Не указано'}
                 </p>
                 <p>
-                  <span className="text-white">Возраст:</span> 16 лет
+                  <span className="text-white">Учреждение:</span> {user?.institution || 'Не указано'}
                 </p>
+                {user?.primaryRole && (
+                  <p>
+                    <span className="text-white">Роль:</span> {user.primaryRole}
+                  </p>
+                )}
+                {typeof user?.age === 'number' && (
+                  <p>
+                    <span className="text-white">Возраст:</span> {user?.age}
+                  </p>
+                )}
                 <p>
-                  <span className="text-white">Место обучения:</span> NIS Aktau
-                </p>
-                <p>
-                  <span className="text-white">Основная должность:</span> Капитан
-                </p>
-                <p>
-                  <span className="text-white">Команда:</span> S7 Robotics
+                  <span className="text-white">XP:</span> {user?.xp ?? 0}
                 </p>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Onboarding if fullName is empty */}
+        {!user?.fullName && (
+          <div className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20">
+            <h3 className="text-white text-lg font-medium mb-4">Заполните профиль</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="ФИО"
+                className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 text-white outline-none"
+              />
+              <input
+                value={institution}
+                onChange={(e) => setInstitution(e.target.value)}
+                placeholder="Место обучения"
+                className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 text-white outline-none"
+              />
+            </div>
+            <button
+              onClick={() => {
+                updateProfile({ fullName: fullName.trim(), institution: institution.trim() })
+                toast({ title: "Профиль обновлён" })
+              }}
+              className="mt-4 w-full md:w-auto rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium px-4 py-2"
+            >
+              Сохранить
+            </button>
+          </div>
+        )}
 
         {/* Level Progress */}
         <div
@@ -48,13 +109,15 @@ export default function ProfileTab() {
           style={{ animationDelay: "200ms" }}
         >
           <div className="flex items-center justify-between mb-4">
-            <span className="text-white text-lg font-medium">12</span>
-            <span className="text-white text-lg font-medium">13</span>
+            <span className="text-white text-lg font-medium">{user?.level ?? 1}</span>
+            <span className="text-white text-lg font-medium">{(user?.level ?? 1) + 1}</span>
           </div>
           <div className="w-full bg-[#636370]/20 rounded-full h-2 mb-4">
             <div
               className="bg-gradient-to-r from-[#00a3ff] to-[#0080cc] h-2 rounded-full"
-              style={{ width: "75%" }}
+              style={{ 
+                width: `${Math.min(((user?.xp || 0) % 1000) / 10, 100)}%` 
+              }}
             ></div>
           </div>
           <div className="flex items-center justify-between text-sm">
@@ -71,25 +134,28 @@ export default function ProfileTab() {
           style={{ animationDelay: "300ms" }}
         >
           <h3 className="text-white text-lg font-medium mb-4">Достижения</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10 group hover:border-[#00a3ff]/30 transition-all duration-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-white font-medium">Профессионал</h4>
-                <ExternalLink className="w-4 h-4 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
-              </div>
-              <span className="bg-[#00a3ff] text-white px-2 py-1 rounded text-xs">Не получен</span>
+          {achievements.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {achievements.map((a) => (
+                <div key={a.id} className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10 group hover:border-[#00a3ff]/30 transition-all duration-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-white font-medium">Достижение</h4>
+                    <ExternalLink className="w-4 h-4 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
+                  </div>
+                  <p className="text-[#a0a0b0] text-xs mb-2">{a.text}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#00ff88] text-black px-2 py-1 rounded text-xs">Получен</span>
+                    <span className="text-[#a0a0b0] text-xs">{new Date(a.createdAt).toLocaleDateString('ru-RU')}</span>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10 group hover:border-[#00a3ff]/30 transition-all duration-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-white font-medium">Врошник</h4>
-                <ExternalLink className="w-4 h-4 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-[#00a3ff] text-white px-2 py-1 rounded text-xs">Получен</span>
-                <span className="text-[#a0a0b0] text-xs">21.05.2024</span>
-              </div>
+          ) : (
+            <div className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10 text-center">
+              <Trophy className="w-8 h-8 text-[#636370] mx-auto mb-2" />
+              <p className="text-[#a0a0b0] text-sm">Достижений пока нет</p>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Completed Courses */}
