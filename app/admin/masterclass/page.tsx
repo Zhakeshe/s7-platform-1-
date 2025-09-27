@@ -96,6 +96,8 @@ export default function Page() {
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <h2 className="text-white text-xl font-medium mb-6">Мастер-классы</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">
+        <div className="md:col-span-2 flex justify-end">
+          <button onClick={bulkDelete} className="text-xs bg-[#ef4444]/20 text-[#ef4444] rounded-full px-3 py-1 hover:bg-[#ef4444]/30">Удалить все</button>
         </div>
         {loading ? (
           <div className="text-white/60">Загрузка...</div>
