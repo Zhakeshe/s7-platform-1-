@@ -84,16 +84,14 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
       <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 w-full max-w-md mx-4">
         <h3 className="text-white text-xl font-medium mb-4">Создать команду</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Название команды"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
-              required
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Название команды"
+            value={teamName}
+            onChange={(e) => setTeamName(e.target.value)}
+            className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+            required
+          />
           <div className="grid grid-cols-1 gap-3">
             <input
               type="text"
@@ -126,7 +124,7 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
           </div>
           <div>
             <div className="text-white/80 mb-2">Какие позиции нужны</div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-3">
               {positionsList.map((p) => (
                 <button
                   key={p}
@@ -137,16 +135,19 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
                   {p}
                 </button>
               ))}
-              <input
-                type="text"
-                placeholder="Другая должность (через запятую)"
-                value={customPositions}
-                onChange={(e) => setCustomPositions(e.target.value)}
-              />
             </div>
-            <div>
-              <div className="text-white/80 mb-2">Соревнования команды</div>
-              <div className="flex flex-wrap gap-2 mb-2">
+            <input
+              type="text"
+              placeholder="Другая должность (через запятую)"
+              value={customPositions}
+              onChange={(e) => setCustomPositions(e.target.value)}
+              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <div className="text-white/80 mb-2">Соревнования команды</div>
+            <div className="flex flex-wrap gap-2 mb-3">
               {competitionOptions.map((c) => (
                 <button
                   key={c}
