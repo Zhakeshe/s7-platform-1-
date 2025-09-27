@@ -74,6 +74,8 @@ model User {
   awardedAchievements UserAchievement[] @relation("AchievementAwarder")
   teamsCaptain Team[] @relation("TeamCaptain")
   teamMemberships TeamMembership[]
+  competitionSubmissions CompetitionSubmission[]
+  eventsCreated Event[]
 }
 
 model Session {
