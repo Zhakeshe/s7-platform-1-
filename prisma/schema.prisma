@@ -42,6 +42,12 @@ enum EventStatus {
   rejected
 }
 
+enum EventFormat {
+  online
+  offline
+  hybrid
+}
+
 enum LessonMediaType {
   video
   slide
@@ -76,6 +82,8 @@ model User {
   teamMemberships TeamMembership[]
   competitionSubmissions CompetitionSubmission[]
   eventsCreated Event[]
+  byteSizeItems ByteSizeItem[]
+  byteSizeLikes ByteSizeLike[]
 }
 
 model Session {
@@ -113,6 +121,7 @@ model Course {
   coverImageUrl String?
   estimatedHours Int?
   totalModules  Int      @default(0)
+  deliveryMode  String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -202,6 +211,9 @@ model Purchase {
   currency  String  @default("KZT")
   paymentMethod String @default("kaspi")
   transactionId String?
+  payerFullName String?
+  senderCode  String?
+  metadata    Json?
   status    PurchaseStatus @default(pending)
   createdAt DateTime @default(now())
   confirmedAt DateTime?
@@ -274,10 +286,29 @@ model Event {
   contact     String?
   date        DateTime?
   imageUrl    String?
+  format      EventFormat @default(offline)
+  isFree      Boolean  @default(true)
+  price       Decimal  @default(0)
+  location    String?
+  url         String?
   status      EventStatus @default(pending)
   createdAt   DateTime @default(now())
   createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdById String?
+}
+
+// User registrations to events/masterclasses
+model EventRegistration {
+  id        String   @id @default(cuid())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  status    SubmissionStatus @default(pending)
+  contactPhone String?
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId])
 }
 
 model Team {
@@ -320,4 +351,29 @@ model Competition {
   awardsWon String?
   status    String   @default("upcoming")
   createdAt DateTime @default(now())
+}
+
+// ByteSize short videos (reels)
+model ByteSizeItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  videoUrl    String
+  coverImageUrl String?
+  tags        Json?
+  author      User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId    String?
+  createdAt   DateTime @default(now())
+  likes       ByteSizeLike[]
+}
+
+model ByteSizeLike {
+  id        String   @id @default(cuid())
+  item      ByteSizeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([itemId, userId])
 }

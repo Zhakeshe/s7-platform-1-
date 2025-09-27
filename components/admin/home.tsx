@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Plus, User, Clock, CheckCircle } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/components/auth/auth-context"
-import { listUsers, listCourses, listPurchases, getUserById, type Purchase } from "@/lib/s7db"
+import { apiFetch } from "@/lib/api"
 
 interface DashboardStats {
   totalUsers: number
@@ -12,6 +12,20 @@ interface DashboardStats {
   completedPayments: number
   newUsersThisWeek: number
   totalRevenue: number
+}
+
+interface AdminPurchase {
+  id: string
+  amount: number
+  currency: string
+  status: string
+  createdAt: string
+  payerFullName?: string
+  senderCode?: string
+  transactionId?: string
+  paymentMethod: string
+  user: { id: string; email: string; fullName?: string }
+  course: { id: string; title: string }
 }
 
 function Card({ children, add, href, loading }: { children: React.ReactNode; add?: boolean; href?: string; loading?: boolean }) {
@@ -44,29 +58,22 @@ export default function AdminHome() {
   const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [pendingPayments, setPendingPayments] = useState<Purchase[]>([])
+  const [pendingPayments, setPendingPayments] = useState<AdminPurchase[]>([])
 
   useEffect(() => {
-    // compute from local S7DB
-    const users = listUsers()
-    const courses = listCourses()
-    const purchases = listPurchases()
-    const pending = purchases.filter((p) => p.status === "pending")
-    const completed = purchases.filter((p) => p.status === "paid")
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-    const newUsers = users.filter((u) => u.createdAt >= weekAgo).length
-    const totalRevenue = completed.reduce((sum, p) => sum + (p.amount || 0), 0)
-
-    setStats({
-      totalUsers: users.length,
-      totalCourses: courses.length,
-      pendingPayments: pending.length,
-      completedPayments: completed.length,
-      newUsersThisWeek: newUsers,
-      totalRevenue,
-    })
-    setPendingPayments(pending.slice(0, 5))
-    setLoading(false)
+    Promise.all([
+      apiFetch<DashboardStats>("/api/admin/stats"),
+      apiFetch<AdminPurchase[]>("/api/admin/purchases?status=pending&limit=5"),
+    ])
+      .then(([s, pending]) => {
+        setStats(s)
+        setPendingPayments(pending || [])
+      })
+      .catch(() => {
+        setStats({ totalUsers: 0, totalCourses: 0, pendingPayments: 0, completedPayments: 0, newUsersThisWeek: 0, totalRevenue: 0 })
+        setPendingPayments([])
+      })
+      .finally(() => setLoading(false))
   }, [])
 
   return (
@@ -167,14 +174,13 @@ export default function AdminHome() {
               {pendingPayments.map((payment) => (
                 <div key={payment.id} className="flex items-center justify-between bg-[#0f0f14] rounded-lg p-3">
                   <div className="flex items-center gap-3">
-                    {(() => { const u = getUserById(payment.userId); return (
-                      <div className="w-10 h-10 bg-[#00a3ff] rounded-full flex items-center justify-center text-black font-bold text-sm">
-                        {(u?.fullName || u?.email || '?').charAt(0)}
-                      </div>
-                    ) })()}
+                    <div className="w-10 h-10 bg-[#00a3ff] rounded-full flex items-center justify-center text-black font-bold text-sm">
+                      {(payment.user.fullName || payment.user.email || '?').charAt(0)}
+                    </div>
                     <div>
-                      <div className="text-white font-medium">{getUserById(payment.userId)?.fullName || getUserById(payment.userId)?.email}</div>
-                      <div className="text-white/60 text-sm">Курс {payment.courseId} - {payment.amount.toLocaleString()} ₸</div>
+                      <div className="text-white font-medium">{payment.payerFullName || payment.user.fullName || payment.user.email}</div>
+                      <div className="text-white/60 text-xs">Код отправителя: {payment.senderCode || '—'}</div>
+                      <div className="text-white/60 text-sm">Курс {payment.course.title} — {Number(payment.amount).toLocaleString()} ₸</div>
                     </div>
                   </div>
                   <div className="text-[#00a3ff] text-sm">Ожидает подтверждения</div>

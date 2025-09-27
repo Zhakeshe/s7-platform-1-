@@ -9,6 +9,9 @@ const purchaseSchema = z.object({
   currency: z.string().default("KZT"),
   paymentMethod: z.string().default("kaspi"),
   transactionId: z.string().optional(),
+  payerFullName: z.string().min(1).optional(),
+  senderCode: z.string().min(3).max(64).optional(),
+  metadata: z.record(z.any()).optional(),
 })
 
 const progressSchema = z.object({
@@ -19,9 +22,23 @@ const progressSchema = z.object({
 
 export const router = Router()
 
-router.get("/", async (_req: Request, res: Response) => {
+// Published courses with optional search/filtering
+router.get("/", async (req: Request, res: Response) => {
+  const search = (req.query.search as string | undefined)?.trim()
+  const filter = (req.query.filter as string | undefined) // 'free' | 'paid' | 'all'
+
+  const where: any = { isPublished: true }
+  if (search && search.length > 0) {
+    where.OR = [
+      { title: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ]
+  }
+  if (filter === "free") where.isFree = true
+  if (filter === "paid") where.isFree = false
+
   const courses = await prisma.course.findMany({
-    where: { isPublished: true },
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       author: { select: { id: true, fullName: true } },
@@ -51,6 +68,44 @@ router.get("/", async (_req: Request, res: Response) => {
       modules: course.modules,
     }))
   )
+})
+
+// Continue list: courses where the user has completed at least 1 lesson
+router.get("/continue", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const enrollments = (await prisma.enrollment.findMany({
+    where: { userId: req.user!.id },
+    orderBy: { updatedAt: "desc" },
+    include: {
+      lessonProgress: true,
+      course: {
+        include: {
+          author: { select: { id: true, fullName: true } },
+          modules: { orderBy: { orderIndex: "asc" }, include: { lessons: true } },
+        },
+      },
+    },
+  })) as any[]
+
+  const items = enrollments
+    .map((e: any) => {
+      const completedLessons = (e.lessonProgress || []).filter((p: any) => p.isCompleted).length
+      const totalLessons = (e.course?.modules || []).reduce((acc: number, m: any) => acc + (m.lessons?.length || 0), 0)
+      const progress = typeof e.progressPercentage === "number" ? e.progressPercentage : totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0
+      return {
+        id: e.course.id,
+        title: e.course.title,
+        difficulty: e.course.difficulty,
+        author: e.course.author,
+        price: e.course.price,
+        modules: (e.course.modules || []).map((m: any) => ({ id: m.id, title: m.title, lessons: m.lessons })),
+        completedLessons,
+        totalLessons,
+        progress,
+      }
+    })
+    .filter((it) => it.completedLessons >= 1)
+
+  res.json(items)
 })
 
 router.get("/:courseId", optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
@@ -141,6 +196,9 @@ router.post("/:courseId/purchase", requireAuth, async (req: AuthenticatedRequest
       currency: parsed.data.currency,
       paymentMethod: parsed.data.paymentMethod,
       transactionId: parsed.data.transactionId,
+      payerFullName: parsed.data.payerFullName,
+      senderCode: parsed.data.senderCode,
+      metadata: parsed.data.metadata as any,
     },
   })
 

@@ -2,18 +2,18 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
-import { listCourses } from "@/lib/s7db"
+import { apiFetch } from "@/lib/api"
 
-interface StoredCourse {
+interface AdminCourse {
   id: string
   title: string
   difficulty: string
-  author: string
-  price?: number
-  modules?: { id: number; title: string; lessons: any[] }[]
+  price: number
+  isFree: boolean
+  modules: Array<{ id: string; title: string; lessons: Array<{ id: string; title: string }> }>
 }
 
-function CourseCard({ id, title, level, author }: { id: string; title: string; level: string; author: string }) {
+function CourseCard({ id, title, level, price, lessonsCount }: { id: string; title: string; level: string; price: number; lessonsCount: number }) {
   return (
     <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative">
       <div className="absolute top-4 right-4 text-white/70">
@@ -24,9 +24,8 @@ function CourseCard({ id, title, level, author }: { id: string; title: string; l
         {level}
       </span>
       <div className="text-[#a0a0b0] text-sm space-y-1">
-        <div>Автор: {author}</div>
-        <div>Тема: 12/72</div>
-        <div>Стоимость: 0₸</div>
+        <div>Уроков: {lessonsCount}</div>
+        <div>Стоимость: {price > 0 ? `${Number(price).toLocaleString()}₸` : '0₸'}</div>
       </div>
       <Link
         href={`/admin/courses/new?edit=${encodeURIComponent(id)}`}
@@ -39,15 +38,14 @@ function CourseCard({ id, title, level, author }: { id: string; title: string; l
 }
 
 export default function AdminCourses() {
-  const [courses, setCourses] = useState<StoredCourse[]>([])
+  const [courses, setCourses] = useState<AdminCourse[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    try {
-      const list = listCourses() as any as StoredCourse[]
-      setCourses(list)
-    } catch {
-      setCourses([])
-    }
+    apiFetch<AdminCourse[]>("/api/admin/courses")
+      .then((list) => setCourses(list || []))
+      .catch(() => setCourses([]))
+      .finally(() => setLoading(false))
   }, [])
 
   return (
@@ -62,12 +60,22 @@ export default function AdminCourses() {
             <div className="text-white text-lg font-medium">Создать курс</div>
           </div>
         </Link>
-        {/* Default sample course */}
-        <CourseCard id="web-dev" title="WEB - Разработка" level="Легкий" author="S7 Robotics" />
-        {/* Saved courses from S7DB */}
-        {courses.map((c) => (
-          <CourseCard key={c.id} id={c.id} title={c.title} level={c.difficulty} author={c.author} />
-        ))}
+        {loading ? (
+          <div className="text-white/60">Загрузка...</div>
+        ) : courses.length === 0 ? (
+          <div className="text-white/60">Курсов пока нет</div>
+        ) : (
+          courses.map((c) => (
+            <CourseCard
+              key={c.id}
+              id={c.id}
+              title={c.title}
+              level={c.difficulty}
+              price={Number((c as any).price || 0)}
+              lessonsCount={c.modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)}
+            />
+          ))
+        )}
       </div>
     </main>
   )

@@ -11,6 +11,9 @@ import { router as courseRouter } from "./routes/courses"
 import { router as adminRouter } from "./routes/admin"
 import { router as eventsRouter } from "./routes/events"
 import { router as submissionsRouter } from "./routes/submissions"
+import { router as achievementsRouter } from "./routes/achievements"
+import { router as bytesizeRouter } from "./routes/bytesize"
+import { router as teamsRouter } from "./routes/teams"
 import { router as uploadRouter } from "./routes/uploads"
 import { ensureDir } from "./utils/fs"
 
@@ -45,6 +48,9 @@ app.use("/courses", courseRouter)
 app.use("/api/admin", adminRouter)
 app.use("/events", eventsRouter)
 app.use("/submissions", submissionsRouter)
+app.use("/achievements", achievementsRouter)
+app.use("/bytesize", bytesizeRouter)
+app.use("/teams", teamsRouter)
 app.use("/uploads", uploadRouter)
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

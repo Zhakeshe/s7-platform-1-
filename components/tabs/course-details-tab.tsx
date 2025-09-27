@@ -75,9 +75,15 @@ export default function CourseDetailsTab({
     if (!user || !course) return
     setIsPurchasing(true)
     try {
+      const senderCode = (user.id || '').slice(-8)
       await apiFetch(`/courses/${course.id}/purchase`, {
         method: "POST",
-        body: JSON.stringify({ amount: course.price || 0, paymentMethod: "kaspi" }),
+        body: JSON.stringify({
+          amount: course.price || 0,
+          paymentMethod: "kaspi",
+          payerFullName: user.fullName,
+          senderCode,
+        }),
       })
       toast({ title: "Заявка отправлена", description: "Как только оплата подтвердится, доступ будет открыт" })
     } catch (e: any) {

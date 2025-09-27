@@ -1,4 +1,4 @@
-import { Router, type Response } from "express"
+import { Router, type Response, type Request } from "express"
 import { z } from "zod"
 import { prisma } from "../db"
 import { requireAdmin, requireAuth } from "../middleware/auth"
@@ -28,6 +28,43 @@ const competitionSchema = z.object({
 router.get("/competitions", async (_req: AuthenticatedRequest, res: Response) => {
   const list = await prisma.competition.findMany({ orderBy: { createdAt: "desc" } })
   res.json(list)
+})
+
+// ---- ByteSize admin ----
+const byteSizeSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  videoUrl: z.string().url(),
+  coverImageUrl: z.string().url().optional(),
+  tags: z.array(z.string()).optional(),
+})
+
+router.get("/bytesize", async (_req: AuthenticatedRequest, res: Response) => {
+  const list = await (prisma as any).byteSizeItem.findMany({ orderBy: { createdAt: "desc" } })
+  res.json(list)
+})
+
+router.post("/bytesize", async (req: AuthenticatedRequest, res: Response) => {
+  const parsed = byteSizeSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  const data = parsed.data
+  const created = await (prisma as any).byteSizeItem.create({
+    data: {
+      title: data.title,
+      description: data.description,
+      videoUrl: data.videoUrl,
+      coverImageUrl: data.coverImageUrl,
+      tags: data.tags && data.tags.length ? data.tags : undefined,
+      authorId: req.user!.id,
+    },
+  })
+  res.status(201).json(created)
+})
+
+router.delete("/bytesize/:id", async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params
+  await (prisma as any).byteSizeItem.delete({ where: { id } }).catch(() => null)
+  res.json({ success: true })
 })
 
 router.post("/competitions", async (req: AuthenticatedRequest, res: Response) => {
@@ -130,6 +167,77 @@ const teamSchema = z.object({
 
 router.use(requireAuth, requireAdmin)
 
+// Platform statistics for Admin Dashboard
+router.get("/stats", async (_req: AuthenticatedRequest, res: Response) => {
+  const [totalUsers, totalCourses, pendingPayments, approvedPayments, revenueAgg] = await Promise.all([
+    prisma.user.count(),
+    prisma.course.count(),
+    prisma.purchase.count({ where: { status: "pending" } }),
+    prisma.purchase.count({ where: { status: "approved" } }),
+    prisma.purchase.aggregate({ _sum: { amount: true }, where: { status: "approved" } }),
+  ])
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  const newUsersThisWeek = await prisma.user.count({ where: { createdAt: { gte: weekAgo } } })
+  res.json({
+    totalUsers,
+    totalCourses,
+    pendingPayments,
+    completedPayments: approvedPayments,
+    newUsersThisWeek,
+    totalRevenue: Number(revenueAgg._sum.amount || 0),
+  })
+})
+
+// Payments management
+router.get("/purchases", async (req: AuthenticatedRequest, res: Response) => {
+  const status = (req.query.status as string | undefined) as any
+  const limit = Number(req.query.limit || 50)
+  const purchases = await prisma.purchase.findMany({
+    where: { status: status || undefined },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: {
+      user: { select: { id: true, email: true, fullName: true } },
+      course: { select: { id: true, title: true } },
+    },
+  })
+  res.json(
+    purchases.map((p) => ({
+      id: p.id,
+      amount: p.amount,
+      currency: p.currency,
+      status: p.status,
+      createdAt: p.createdAt,
+      payerFullName: (p as any).payerFullName,
+      senderCode: (p as any).senderCode,
+      transactionId: p.transactionId,
+      paymentMethod: p.paymentMethod,
+      user: p.user,
+      course: p.course,
+    }))
+  )
+})
+
+router.post("/purchases/:id/approve", async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params
+  const updated = await prisma.purchase.update({
+    where: { id },
+    data: { status: "approved", confirmedAt: new Date(), adminNotes: (req.body as any)?.adminNotes },
+  }).catch(() => null)
+  if (!updated) return res.status(404).json({ error: "Purchase not found" })
+  res.json(updated)
+})
+
+router.post("/purchases/:id/reject", async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params
+  const updated = await prisma.purchase.update({
+    where: { id },
+    data: { status: "rejected", adminNotes: (req.body as any)?.adminNotes },
+  }).catch(() => null)
+  if (!updated) return res.status(404).json({ error: "Purchase not found" })
+  res.json(updated)
+})
+
 // User management (admin-only)
 const roleUpdateSchema = z.object({ role: z.enum(["ADMIN", "USER"]) })
 
@@ -171,6 +279,39 @@ router.post("/users/:userId/demote", async (req: AuthenticatedRequest, res: Resp
   } catch {
     return res.status(404).json({ error: "User not found" })
   }
+})
+
+// Overview for a specific user: participations, purchases, achievements
+router.get("/users/:userId/overview", async (req: AuthenticatedRequest, res: Response) => {
+  const { userId } = req.params
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      profile: true,
+      enrollments: { include: { course: { select: { id: true, title: true } } } },
+      teamMemberships: { include: { team: { select: { id: true, name: true } } } },
+    },
+  })
+  if (!user) return res.status(404).json({ error: "User not found" })
+  const [purchases, registrations, userAchievements, submissions] = await Promise.all([
+    prisma.purchase.findMany({ where: { userId }, include: { course: { select: { id: true, title: true } } } }),
+    (prisma as any).eventRegistration.findMany({ where: { userId }, include: { event: { select: { id: true, title: true, date: true } } } }),
+    prisma.userAchievement.findMany({ where: { userId }, include: { achievement: true } }),
+    prisma.competitionSubmission.findMany({ where: { userId } }),
+  ])
+  res.json({ user, purchases, registrations, achievements: userAchievements, competitionSubmissions: submissions })
+})
+
+// Achievements across all users
+router.get("/achievements/users", async (_req: AuthenticatedRequest, res: Response) => {
+  const list = await prisma.userAchievement.findMany({
+    orderBy: { earnedAt: "desc" },
+    include: {
+      user: { select: { id: true, email: true, fullName: true } },
+      achievement: true,
+    },
+  })
+  res.json(list)
 })
 
 // Award a simple ad-hoc achievement to a user (admin-only)
@@ -366,7 +507,7 @@ router.delete("/courses/:courseId", async (req: AuthenticatedRequest, res: Respo
 })
 
 router.get("/teams", async (_req: AuthenticatedRequest, res: Response) => {
-  const teams = await prisma.team.findMany({ orderBy: { createdAt: "desc" } })
+  const teams = await prisma.team.findMany({ orderBy: { createdAt: "desc" }, include: { _count: { select: { memberships: true } } } })
   res.json(teams)
 })
 
@@ -419,17 +560,73 @@ router.delete("/teams/:teamId", async (req: AuthenticatedRequest, res: Response)
   res.json({ success: true })
 })
 
+// Team members with registration statuses
+router.get("/teams/:teamId/members", async (req: AuthenticatedRequest, res: Response) => {
+  const { teamId } = req.params
+  const status = (req.query.status as string | undefined) || undefined
+  const where: any = { teamId }
+  if (status) where.status = status
+  const members = await prisma.teamMembership.findMany({
+    where,
+    orderBy: { joinedAt: "desc" },
+    include: { user: { select: { id: true, email: true, fullName: true } } },
+  })
+  res.json(members)
+})
+
+// Update team member role/status
+const memberUpdateSchema = z.object({
+  role: z.string().optional(),
+  status: z.string().optional(),
+})
+
+router.put("/teams/:teamId/members/:membershipId", async (req: AuthenticatedRequest, res: Response) => {
+  const { membershipId } = req.params
+  const parsed = memberUpdateSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  const data = parsed.data
+  const updated = await prisma.teamMembership.update({ where: { id: membershipId }, data }).catch(() => null)
+  if (!updated) return res.status(404).json({ error: "Membership not found" })
+  res.json(updated)
+})
+
 // ---- Events moderation ----
 router.get("/events", async (_req: AuthenticatedRequest, res: Response) => {
-  const events = await prisma.event.findMany({ orderBy: { createdAt: "desc" } })
+  const events = await (prisma as any).event.findMany({ orderBy: { createdAt: "desc" } })
   res.json(events)
+})
+
+// List registrations for a specific event
+router.get("/events/:eventId/registrations", async (req: AuthenticatedRequest, res: Response) => {
+  const { eventId } = req.params
+  const regs = await (prisma as any).eventRegistration.findMany({
+    where: { eventId },
+    orderBy: { createdAt: "desc" },
+    include: { user: { select: { id: true, email: true, fullName: true } } },
+  })
+  res.json(regs)
+})
+
+// Approve or reject a registration
+router.post("/events/:eventId/registrations/:regId/approve", async (req: AuthenticatedRequest, res: Response) => {
+  const { regId } = req.params
+  const updated = await (prisma as any).eventRegistration.update({ where: { id: regId }, data: { status: "approved" } }).catch(() => null)
+  if (!updated) return res.status(404).json({ error: "Registration not found" })
+  res.json(updated)
+})
+
+router.post("/events/:eventId/registrations/:regId/reject", async (req: AuthenticatedRequest, res: Response) => {
+  const { regId } = req.params
+  const updated = await (prisma as any).eventRegistration.update({ where: { id: regId }, data: { status: "rejected" } }).catch(() => null)
+  if (!updated) return res.status(404).json({ error: "Registration not found" })
+  res.json(updated)
 })
 
 router.put("/events/:eventId", async (req: AuthenticatedRequest, res: Response) => {
   const { eventId } = req.params
   const data = req.body as any
   try {
-    const updated = await prisma.event.update({
+    const updated = await (prisma as any).event.update({
       where: { id: eventId },
       data: {
         title: data.title,
@@ -438,6 +635,11 @@ router.put("/events/:eventId", async (req: AuthenticatedRequest, res: Response) 
         contact: data.contact,
         date: data.date ? new Date(data.date) : undefined,
         imageUrl: data.imageUrl,
+        format: data.format,
+        isFree: data.isFree,
+        price: data.price,
+        location: data.location,
+        url: data.url,
       },
     })
     res.json(updated)
@@ -446,25 +648,65 @@ router.put("/events/:eventId", async (req: AuthenticatedRequest, res: Response) 
   }
 })
 
+// Create event as admin
+router.post("/events", async (req: AuthenticatedRequest, res: Response) => {
+  const data = req.body as any
+  const created = await (prisma as any).event.create({
+    data: {
+      title: data.title,
+      description: data.description,
+      audience: data.audience,
+      contact: data.contact,
+      date: data.date ? new Date(data.date) : undefined,
+      imageUrl: data.imageUrl,
+      format: data.format ?? "offline",
+      isFree: data.isFree ?? true,
+      price: data.price ?? 0,
+      location: data.location,
+      url: data.url,
+      status: data.status ?? "published",
+      createdById: req.user!.id,
+    },
+  })
+  res.status(201).json(created)
+})
+
 router.post("/events/:eventId/publish", async (req: AuthenticatedRequest, res: Response) => {
   const { eventId } = req.params
-  const ev = await prisma.event.update({ where: { id: eventId }, data: { status: "published" } }).catch(() => null)
+  const ev = await (prisma as any).event.update({ where: { id: eventId }, data: { status: "published" } }).catch(() => null)
   if (!ev) return res.status(404).json({ error: "Event not found" })
   res.json(ev)
 })
 
 router.post("/events/:eventId/reject", async (req: AuthenticatedRequest, res: Response) => {
   const { eventId } = req.params
-  const ev = await prisma.event.update({ where: { id: eventId }, data: { status: "rejected" } }).catch(() => null)
+  const ev = await (prisma as any).event.update({ where: { id: eventId }, data: { status: "rejected" } }).catch(() => null)
   if (!ev) return res.status(404).json({ error: "Event not found" })
   res.json(ev)
+})
+
+// Delete event (admin)
+router.delete("/events/:eventId", async (req: AuthenticatedRequest, res: Response) => {
+  const { eventId } = req.params
+  await (prisma as any).event.delete({ where: { id: eventId } }).catch(() => null)
+  res.json({ success: true })
+})
+
+// Bulk delete all events (admin)
+router.delete("/events", async (_req: AuthenticatedRequest, res: Response) => {
+  const result = await (prisma as any).event.deleteMany({})
+  res.json({ success: true, deleted: result.count ?? undefined })
 })
 
 // ---- Competition submissions moderation ----
 router.get("/competition-submissions", async (req: AuthenticatedRequest, res: Response) => {
   const status = (req.query.status as string | undefined) as any
   const where = status ? { status } : {}
-  const list = await prisma.competitionSubmission.findMany({ where, orderBy: { createdAt: "desc" } })
+  const list = await prisma.competitionSubmission.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    include: { user: { select: { id: true, email: true, fullName: true } } },
+  })
   res.json(list)
 })
 

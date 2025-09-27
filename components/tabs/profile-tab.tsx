@@ -22,6 +22,21 @@ export default function ProfileTab() {
     }
   }, [user])
 
+  // Load my achievements
+  useEffect(() => {
+    apiFetch<Array<{ id: string; earnedAt: string; achievement: { title: string; description?: string } }>>("/achievements/mine")
+      .then((list) =>
+        setAchievements(
+          (list || []).map((ua) => ({
+            id: ua.id,
+            text: ua.achievement?.description || ua.achievement?.title || "Достижение",
+            createdAt: ua.earnedAt ? new Date(ua.earnedAt).getTime() : Date.now(),
+          }))
+        )
+      )
+      .catch(() => setAchievements([]))
+  }, [])
+
   // Load my competition submissions
   useEffect(() => {
     apiFetch<Array<{ id: string; title: string; description?: string; placement?: string; venue?: string; eventDate?: string; status: "pending" | "approved" | "rejected"; imageUrl?: string }>>("/submissions/competitions/mine")

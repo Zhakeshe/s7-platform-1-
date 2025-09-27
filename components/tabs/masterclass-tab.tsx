@@ -1,163 +1,127 @@
 "use client"
-import { useState } from "react"
-import { Search, ExternalLink, Plus, Phone, MessageCircle, Mail } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ExternalLink, Phone, MessageCircle, Mail } from "lucide-react"
+import { apiFetch } from "@/lib/api"
+import { useAuth } from "@/components/auth/auth-context"
+import { toast } from "@/hooks/use-toast"
+
+interface EventItem { id: string; title: string; description?: string; date?: string; imageUrl?: string }
 
 export default function MasterclassTab() {
-  const [activeFilter, setActiveFilter] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
+  const { user } = useAuth()
+  const [events, setEvents] = useState<EventItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [openReg, setOpenReg] = useState<{ open: boolean; id?: string }>({ open: false })
+  const [phone, setPhone] = useState("")
+  const categories = ["Все", "Robotics", "Coding", "AI", "Design"]
+  const [activeCat, setActiveCat] = useState<string>("Все")
 
-  const filters = [
-    { id: "all", label: "Все" },
-    { id: "online", label: "Онлайн" },
-    { id: "offline", label: "Оффлайн" },
-    { id: "free", label: "Бесплатно" },
-  ]
+  const load = async (cat: string) => {
+    setLoading(true)
+    try {
+      const qs = cat && cat !== "Все" ? `?category=${encodeURIComponent(cat)}` : ""
+      const list = await apiFetch<EventItem[]>(`/events${qs}`)
+      setEvents(list || [])
+    } catch {
+      setEvents([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const masterclasses = [
-    {
-      id: 1,
-      title: "Основы FIRST",
-      type: "offline",
-      location: "NIS Aktau",
-      date: "27.09.2025",
-      author: "S7 Robotics",
-      cost: "100Т",
-      status: "Оффлайн",
-    },
-    {
-      id: 2,
-      title: "Основы WRO",
-      type: "offline",
-      location: "NIS Aktau",
-      date: "27.09.2025",
-      author: "S7 Robotics",
-      cost: "100Т",
-      status: "Оффлайн",
-    },
-    {
-      id: 3,
-      title: "Основы AI",
-      type: "offline",
-      location: "Mangystau HUB",
-      date: "10.09.2025",
-      author: "Mangystau IT HUB",
-      cost: "0Т",
-      status: "Оффлайн",
-    },
-    {
-      id: 4,
-      title: "WEB Дизайн с нуля",
-      type: "online",
-      date: "01.09.2025",
-      author: "S7 Robotics",
-      cost: "100Т",
-      status: "Онлайн",
-    },
-  ]
+  useEffect(() => {
+    load(activeCat)
+  }, [activeCat])
 
-  const filteredMasterclasses = masterclasses.filter((masterclass) => {
-    const matchesFilter =
-      activeFilter === "all" ||
-      (activeFilter === "online" && masterclass.type === "online") ||
-      (activeFilter === "offline" && masterclass.type === "offline") ||
-      (activeFilter === "free" && masterclass.cost === "0Т")
+  const openRegister = (id: string) => {
+    if (!user) { toast({ title: "Войдите", description: "Требуется авторизация" }); return }
+    setOpenReg({ open: true, id })
+  }
 
-    const matchesSearch = masterclass.title.toLowerCase().includes(searchQuery.toLowerCase())
-
-    return matchesFilter && matchesSearch
-  })
+  const submitRegister = async () => {
+    if (!openReg.id) return
+    try {
+      await apiFetch(`/events/${openReg.id}/register`, { method: "POST", body: JSON.stringify({ contactPhone: phone || undefined }) })
+      toast({ title: "Заявка отправлена" })
+      setPhone("")
+      setOpenReg({ open: false })
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось подать заявку", variant: "destructive" as any })
+    }
+  }
 
   return (
     <div className="flex-1 p-8 animate-slide-up">
       <div className="mb-8">
-        <h2 className="text-white text-xl mb-6">Скоро</h2>
-
-        {/* Filters */}
-        <div className="flex items-center gap-4 mb-6">
-          {filters.map((filter, index) => (
+        <h2 className="text-white text-xl mb-6">Мастер-классы</h2>
+        <div className="flex items-center gap-2 mb-6">
+          {categories.map((c) => (
             <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`px-4 py-2 rounded-full text-sm transition-all duration-200 animate-slide-up ${
-                activeFilter === filter.id
-                  ? "bg-[#00a3ff] text-white"
-                  : "bg-[#636370]/20 text-[#a0a0b0] hover:text-white hover:bg-[#636370]/30"
-              }`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              key={c}
+              onClick={() => setActiveCat(c)}
+              className={`text-xs font-medium px-3 py-1 rounded-full border ${activeCat === c ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
             >
-              {filter.label}
+              {c}
             </button>
           ))}
+        </div>
 
-          {/* Search */}
-          <div className="relative ml-auto animate-slide-up" style={{ animationDelay: "400ms" }}>
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#a0a0b0] w-4 h-4" />
+        {loading ? (
+          <div className="text-white/70">Загрузка...</div>
+        ) : events.length === 0 ? (
+          <div className="text-center text-white/70 bg-[#16161c] border border-[#636370]/20 rounded-2xl p-10">Пока нет событий</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {events.map((e, index) => (
+              <div key={e.id} className="bg-[#16161c] border border-[#636370]/20 rounded-lg p-6 hover:border-[#00a3ff]/50 transition-all duration-200 group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
+                <div className="flex items-start justify-between mb-4">
+                  <h3 className="text-white text-lg font-medium group-hover:text-[#00a3ff] transition-colors duration-200">{e.title}</h3>
+                  <ExternalLink className="w-5 h-5 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
+                </div>
+
+      {openReg.open && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="w-full max-w-sm bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white">
+            <div className="text-lg font-medium mb-3">Запись на мастер-класс</div>
             <input
-              type="text"
-              placeholder="Поиск"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#636370]/20 text-white placeholder-[#a0a0b0] pl-10 pr-4 py-2 rounded-lg border border-[#636370]/30 focus:border-[#00a3ff] focus:outline-none transition-colors duration-200"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Номер телефона"
+              className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none mb-3"
             />
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => setOpenReg({ open: false })} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
+              <button onClick={submitRegister} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Отправить</button>
+            </div>
           </div>
         </div>
-
-        {/* Masterclass Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredMasterclasses.map((masterclass, index) => (
-            <div
-              key={masterclass.id}
-              className="bg-[#16161c] border border-[#636370]/20 rounded-lg p-6 hover:border-[#00a3ff]/50 transition-all duration-200 cursor-pointer group animate-slide-up"
-              style={{ animationDelay: `${(index + 5) * 100}ms` }}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-white text-lg font-medium group-hover:text-[#00a3ff] transition-colors duration-200">
-                  {masterclass.title}
-                </h3>
-                <ExternalLink className="w-5 h-5 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
+      )}
+                {e.imageUrl && <img src={e.imageUrl} alt={e.title} className="w-full h-40 object-cover rounded-md mb-3" />}
+                <div className="space-y-2 text-sm text-[#a0a0b0]">
+                  {e.description && <div>{e.description}</div>}
+                  {e.date && <div>Дата: {new Date(e.date).toLocaleString('ru-RU')}</div>}
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button onClick={() => openRegister(e.id)} className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium">Записаться</button>
+                </div>
               </div>
-
-              <div className="space-y-2 text-sm text-[#a0a0b0]">
-                {masterclass.location && <div>Локация: {masterclass.location}</div>}
-                <div>Дата: {masterclass.date}</div>
-                <div>Автор: {masterclass.author}</div>
-                <div>Стоимость участия: {masterclass.cost}</div>
-              </div>
-
-              <div className="mt-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs ${
-                    masterclass.type === "online" ? "bg-[#00a3ff] text-white" : "bg-[#636370]/30 text-[#a0a0b0]"
-                  }`}
-                >
-                  {masterclass.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Add Masterclass Section */}
-        <div className="mt-12 pt-8 border-t border-[#636370]/20 animate-slide-up" style={{ animationDelay: "800ms" }}>
-          <p className="text-[#a0a0b0] mb-4">Проводишь мастеркласс? Тогда публикуй его бесплатно:</p>
-          <button aria-label="Добавить мастер-класс" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
-            <Plus className="text-white w-6 h-6" />
-          </button>
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Contact Section */}
-        <div className="mt-8 animate-slide-up" style={{ animationDelay: "900ms" }}>
-          <p className="text-[#a0a0b0] mb-4">Не получается, либо если есть вопросы свяжись с нами:</p>
+        <div className="mt-12 animate-slide-up" style={{ animationDelay: "900ms" }}>
+          <p className="text-[#a0a0b0] mb-4">Есть вопросы? Свяжись с нами:</p>
           <div className="flex gap-4">
-            <button aria-label="Позвонить" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
-              <Phone className="text-white w-5 h-5" />
-            </button>
-            <button aria-label="Написать сообщение" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
-              <MessageCircle className="text-white w-5 h-5" />
-            </button>
-            <button aria-label="Отправить email" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
-              <Mail className="text-white w-5 h-5" />
-            </button>
+            <a href="https://t.me/s7robotics" target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+              <i className="bi bi-telegram text-white text-xl"></i>
+            </a>
+            <a href="https://wa.me/77760457776" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+              <i className="bi bi-whatsapp text-white text-xl"></i>
+            </a>
+            <a href="https://www.instagram.com/s7.robotics?igsh=OGkyaW41enI0ZzQz" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+              <i className="bi bi-instagram text-white text-xl"></i>
+            </a>
           </div>
         </div>
       </div>

