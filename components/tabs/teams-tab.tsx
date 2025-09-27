@@ -50,8 +50,8 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 w-full max-w-md mx-4">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
+      <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 w-full max-w-md mx-4 animate-slide-up max-h-[85vh] overflow-y-auto">
         <h3 className="text-white text-xl font-medium mb-4">Создать команду</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

@@ -93,7 +93,7 @@ export default function S7ToolsTab() {
       {/* Modal: Create Event */}
       {open && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
-          <div className="w-full max-w-lg bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up">
+          <div className="w-full max-w-lg mx-4 bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up max-h-[85vh] overflow-y-auto">
             <div className="text-lg font-medium mb-4">Опубликовать мероприятие</div>
             <div className="grid grid-cols-1 gap-3">
               <input value={form.title} onChange={(e)=>setForm({...form,title:e.target.value})} placeholder="Название" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
