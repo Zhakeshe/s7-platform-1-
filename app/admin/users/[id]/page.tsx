@@ -3,9 +3,11 @@ import { ArrowUpRight } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { awardAchievement, enrollUser, getUserById, listCourses, type Course } from "@/lib/s7db"
 import { toast } from "@/hooks/use-toast"
+import { apiFetch } from "@/lib/api"
 
 export default function Page({ params }: { params: { id: string } }) {
   const [name, setName] = useState<string>("")
+  const [role, setRole] = useState<string>("")
   const [achOpen, setAchOpen] = useState(false)
   const [achText, setAchText] = useState("")
   const [courseOpen, setCourseOpen] = useState(false)
@@ -16,7 +18,40 @@ export default function Page({ params }: { params: { id: string } }) {
     const u = getUserById(params.id)
     setName(u?.fullName || u?.email || params.id)
     setCourses(listCourses())
+    // Try to load from backend for accurate role/name
+    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string }>(`/auth/me`) // fallback: only if viewing self
+      .then(() => {})
+      .catch(() => {})
+    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string }[]>(`/admin/users`)
+      .then((list) => {
+        const found = list.find((x) => x.id === params.id)
+        if (found) {
+          setName(found.fullName || found.email || params.id)
+          setRole(found.role)
+        }
+      })
+      .catch(() => {})
   }, [params.id])
+
+  const promote = async () => {
+    try {
+      await apiFetch(`/admin/users/${params.id}/promote`, { method: "POST" })
+      setRole("ADMIN")
+      toast({ title: "Роль обновлена", description: "Пользователь назначен админом" })
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось назначить админом", variant: "destructive" as any })
+    }
+  }
+
+  const demote = async () => {
+    try {
+      await apiFetch(`/admin/users/${params.id}/demote`, { method: "POST" })
+      setRole("USER")
+      toast({ title: "Роль обновлена", description: "Права администратора сняты" })
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось снять права", variant: "destructive" as any })
+    }
+  }
 
   const issueAchievement = () => {
     if (!achText.trim()) return
@@ -48,8 +83,13 @@ export default function Page({ params }: { params: { id: string } }) {
         </div>
 
         {/* Информация */}
-        <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white">
+        <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-3">
           <div className="text-white/90 font-medium">Информация</div>
+          <div className="text-white/80 text-sm">Роль: <span className="font-semibold">{role || "—"}</span></div>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={promote} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Назначить админом</button>
+            <button onClick={demote} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Снять админа</button>
+          </div>
         </section>
 
         {/* Достижения */}

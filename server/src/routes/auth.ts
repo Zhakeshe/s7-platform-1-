@@ -35,6 +35,11 @@ router.post("/register", async (req: Request, res: Response) => {
   if (existing) return res.status(409).json({ error: "Email already registered" })
 
   const passwordHash = await hashPassword(password)
+  // Bootstrap: first user becomes ADMIN; also special admin email
+  const anyAdmin = await prisma.user.findFirst({ where: { role: "ADMIN" } })
+  const isBootstrapAdmin = !anyAdmin
+  const isSpecialAdmin = email.trim().toLowerCase() === "ch.qynon@gmail.com"
+
   const user = await prisma.user.create({
     data: {
       email,
@@ -43,6 +48,7 @@ router.post("/register", async (req: Request, res: Response) => {
       age,
       educationalInstitution,
       primaryRole,
+      role: isBootstrapAdmin || isSpecialAdmin ? "ADMIN" : undefined,
       profile: { create: {} },
     },
     select: {
@@ -169,4 +175,34 @@ router.get("/me", requireAuth, async (req: AuthenticatedRequest, res: Response) 
     fullName: user.fullName,
     profile: user.profile,
   })
+})
+
+// Update current user's basic fields
+const profileUpdateSchema = z.object({
+  fullName: z.string().min(1).optional(),
+  age: z.number().int().min(10).max(100).optional(),
+  educationalInstitution: z.string().optional(),
+  primaryRole: z.string().optional(),
+})
+
+router.put("/me", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: "Unauthorized" })
+  const parsed = profileUpdateSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  const data = parsed.data
+  try {
+    const updated = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        fullName: data.fullName,
+        age: data.age,
+        educationalInstitution: data.educationalInstitution,
+        primaryRole: data.primaryRole,
+      },
+      select: { id: true, email: true, role: true, fullName: true },
+    })
+    return res.json(updated)
+  } catch (e) {
+    return res.status(500).json({ error: "Failed to update profile" })
+  }
 })

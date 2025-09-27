@@ -61,6 +61,49 @@ export const router = Router()
 
 router.use(requireAuth, requireAdmin)
 
+// User management (admin-only)
+const roleUpdateSchema = z.object({ role: z.enum(["ADMIN", "USER"]) })
+
+router.get("/users", async (_req: AuthenticatedRequest, res: Response) => {
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: "desc" },
+    select: { id: true, email: true, role: true, fullName: true, createdAt: true },
+  })
+  res.json(users)
+})
+
+router.post("/users/:userId/role", async (req: AuthenticatedRequest, res: Response) => {
+  const { userId } = req.params
+  const parsed = roleUpdateSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  try {
+    const updated = await prisma.user.update({ where: { id: userId }, data: { role: parsed.data.role } })
+    return res.json({ id: updated.id, email: updated.email, role: updated.role })
+  } catch {
+    return res.status(404).json({ error: "User not found" })
+  }
+})
+
+router.post("/users/:userId/promote", async (req: AuthenticatedRequest, res: Response) => {
+  const { userId } = req.params
+  try {
+    const updated = await prisma.user.update({ where: { id: userId }, data: { role: "ADMIN" } })
+    return res.json({ id: updated.id, email: updated.email, role: updated.role })
+  } catch {
+    return res.status(404).json({ error: "User not found" })
+  }
+})
+
+router.post("/users/:userId/demote", async (req: AuthenticatedRequest, res: Response) => {
+  const { userId } = req.params
+  try {
+    const updated = await prisma.user.update({ where: { id: userId }, data: { role: "USER" } })
+    return res.json({ id: updated.id, email: updated.email, role: updated.role })
+  } catch {
+    return res.status(404).json({ error: "User not found" })
+  }
+})
+
 router.get("/courses", async (_req: AuthenticatedRequest, res: Response) => {
   const courses = await prisma.course.findMany({
     orderBy: { createdAt: "desc" },

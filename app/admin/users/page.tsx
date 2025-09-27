@@ -2,15 +2,18 @@
 import { ArrowUpRight } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { listUsers, type User } from "@/lib/s7db"
+import { apiFetch } from "@/lib/api"
+
+type Role = "USER" | "ADMIN"
+interface User { id: string; email: string; fullName?: string; role: Role }
 
 export default function Page() {
   const [users, setUsers] = useState<User[]>([])
 
   useEffect(() => {
-    const all = listUsers()
-    const nonAdmins = all.filter((u) => u.role !== "admin")
-    setUsers(nonAdmins.length > 0 ? nonAdmins : all)
+    apiFetch<User[]>("/api/admin/users")
+      .then((list) => setUsers(list))
+      .catch(() => setUsers([]))
   }, [])
 
   return (

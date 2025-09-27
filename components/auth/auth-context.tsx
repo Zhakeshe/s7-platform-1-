@@ -1,16 +1,17 @@
 "use client"
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react"
-import {
-  User,
-  Session,
-  listUsers,
-  loginUser,
-  registerUser,
-  readSession,
-  writeSession,
-  updateUserProfile,
-  migrateAdminKeys,
-} from "@/lib/s7db"
+import { apiFetch, clearTokens, getTokens, setTokens } from "@/lib/api"
+
+// Keep a minimal User shape compatible with existing UI
+export type Role = "user" | "admin"
+export interface User {
+  id: string
+  email: string
+  fullName?: string
+  role: Role
+  level?: number
+  xp?: number
+}
 
 interface AuthContextValue {
   user: User | null
@@ -28,52 +29,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    migrateAdminKeys()
-    // Seed default admin if no users exist
-    try {
-      const all = listUsers()
-      if (!all || all.length === 0) {
-        // admin@s7.kz / admin123
-        registerUser("admin@s7.kz", "admin123", "admin").then(() => {}).catch(() => {})
-      }
-    } catch {}
-
-    const s = readSession()
-    if (!s) { setLoading(false); return }
-    const u = listUsers().find((x) => x.id === s.userId) || null
-    setUser(u)
-    setLoading(false)
+    // Restore session from tokens and fetch current user
+    const tokens = getTokens()
+    if (!tokens) { setLoading(false); return }
+    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string }>("/auth/me")
+      .then((u) => setUser({
+        id: u.id,
+        email: u.email,
+        fullName: u.fullName,
+        role: u.role === "ADMIN" ? "admin" : "user",
+        level: 1,
+        xp: 0,
+      }))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false))
   }, [])
 
   const registerFn = async (email: string, password: string, remember = true) => {
-    const isSpecialAdmin = email.trim().toLowerCase() === 'ch.qynon@gmail.com'
-    const role = isSpecialAdmin ? 'admin' : 'user'
-    const u = await registerUser(email, password, role)
-    setUser(u)
-    const s: Session = { userId: u.id, createdAt: Date.now(), remember }
-    writeSession(s)
+    // Backend handles hashing and role; use email as fallback fullName
+    const body = { email, password, fullName: email }
+    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string } }>(
+      "/auth/register",
+      { method: "POST", body: JSON.stringify(body) }
+    )
+    setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
+    setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: 0 })
   }
 
   const loginFn = async (email: string, password: string, remember = true) => {
-    let u = await loginUser(email, password)
-    // Promote to admin if special email logs in and not already admin
-    if (u.email?.toLowerCase() === 'ch.qynon@gmail.com' && u.role !== 'admin') {
-      u = updateUserProfile(u.id, { role: 'admin' })
-    }
-    setUser(u)
-    const s: Session = { userId: u.id, createdAt: Date.now(), remember }
-    writeSession(s)
+    const body = { email, password }
+    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string } }>(
+      "/auth/login",
+      { method: "POST", body: JSON.stringify(body) }
+    )
+    setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
+    setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: 0 })
   }
 
   const logoutFn = () => {
     setUser(null)
-    writeSession(null)
+    clearTokens()
   }
 
-  const updateProfileFn = (patch: Partial<User>) => {
+  const updateProfileFn = async (patch: Partial<User> & { institution?: string; primaryRole?: string; age?: number }) => {
     if (!user) return
-    const next = updateUserProfile(user.id, patch)
-    setUser(next)
+    try {
+      const body: any = {
+        fullName: patch.fullName,
+        educationalInstitution: patch.institution,
+        primaryRole: patch.primaryRole,
+        age: typeof patch.age === 'number' ? patch.age : undefined,
+      }
+      const updated = await apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string }>(
+        "/auth/me",
+        { method: "PUT", body: JSON.stringify(body) }
+      )
+      setUser({ ...user, fullName: updated.fullName ?? user.fullName })
+    } catch {
+      // keep silent for now; UI already shows toast on caller side
+    }
   }
 
   const value = useMemo<AuthContextValue>(() => ({ user, loading, register: registerFn, login: loginFn, logout: logoutFn, updateProfile: updateProfileFn }), [user, loading])

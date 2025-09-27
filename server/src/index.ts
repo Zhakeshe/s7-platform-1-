@@ -40,7 +40,7 @@ app.get("/health", async (_req, res) => {
 
 app.use("/auth", authRouter)
 app.use("/courses", courseRouter)
-app.use("/admin", adminRouter)
+app.use("/api/admin", adminRouter)
 app.use("/uploads", uploadRouter)
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
