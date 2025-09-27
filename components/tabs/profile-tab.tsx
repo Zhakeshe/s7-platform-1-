@@ -2,23 +2,32 @@
 import { User as UserIcon, Trophy, ExternalLink, Plus } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth/auth-context"
-import { listAchievements } from "@/lib/s7db"
 import { toast } from "@/hooks/use-toast"
+import { apiFetch } from "@/lib/api"
 
 export default function ProfileTab() {
   const { user, updateProfile, loading } = useAuth()
   const [fullName, setFullName] = useState("")
   const [institution, setInstitution] = useState("")
   const [achievements, setAchievements] = useState<{ id: string; text: string; createdAt: number }[]>([])
+  const [subs, setSubs] = useState<Array<{ id: string; title: string; description?: string; placement?: string; venue?: string; eventDate?: string; status: "pending" | "approved" | "rejected"; imageUrl?: string }>>([])
+  const [openAdd, setOpenAdd] = useState(false)
+  const [form, setForm] = useState({ title: "", description: "", projectSummary: "", venue: "", placement: "", eventDate: "", imageUrl: "" })
 
   useEffect(() => {
     if (user) {
       setFullName(user.fullName || "")
-      setInstitution(user.institution || "")
-      const list = listAchievements().filter((a) => a.userId === user.id)
-      setAchievements(list.map((a) => ({ id: a.id, text: a.text, createdAt: a.createdAt })))
+      setInstitution((user as any).institution || "")
+      // TODO: achievements from backend later; keep as is for now
     }
   }, [user])
+
+  // Load my competition submissions
+  useEffect(() => {
+    apiFetch<Array<{ id: string; title: string; description?: string; placement?: string; venue?: string; eventDate?: string; status: "pending" | "approved" | "rejected"; imageUrl?: string }>>("/submissions/competitions/mine")
+      .then(setSubs)
+      .catch(() => setSubs([]))
+  }, [])
 
   if (loading) {
     return (
@@ -173,41 +182,71 @@ export default function ProfileTab() {
           </div>
         </div>
 
-        {/* Competitions */}
-        <div
-          className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
-          style={{ animationDelay: "500ms" }}
-        >
-          <h3 className="text-white text-lg font-medium mb-4">Соревнования</h3>
-          <div className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10 group hover:border-[#00a3ff]/30 transition-all duration-200">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-white font-medium">FLL Challenge</h4>
-              <ExternalLink className="w-4 h-4 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
+        {/* Competition submissions */}
+        <div className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up" style={{ animationDelay: "500ms" }}>
+          <h3 className="text-white text-lg font-medium mb-4">Мои соревнования</h3>
+          {subs.length > 0 ? (
+            <div className="space-y-3">
+              {subs.map((s) => (
+                <div key={s.id} className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-white font-medium">{s.title}</h4>
+                    <span className={`text-xs px-2 py-1 rounded-full ${s.status === 'approved' ? 'bg-[#22c55e]/20 text-[#22c55e]' : s.status === 'rejected' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#f59e0b]/20 text-[#f59e0b]'}`}>{s.status === 'pending' ? 'На проверке' : s.status === 'approved' ? 'Одобрено' : 'Отклонено'}</span>
+                  </div>
+                  {s.imageUrl && <img src={s.imageUrl} alt="image" className="w-full h-40 object-cover rounded-md mb-2" />}
+                  <div className="text-[#a0a0b0] text-sm space-y-1">
+                    {s.description && <p>{s.description}</p>}
+                    {s.placement && (<p><span className="text-white">Место:</span> {s.placement}</p>)}
+                    {s.venue && (<p><span className="text-white">Локация:</span> {s.venue}</p>)}
+                    {s.eventDate && (<p><span className="text-white">Дата:</span> {new Date(s.eventDate).toLocaleDateString('ru-RU')}</p>)}
+                  </div>
+                </div>
+              ))}
             </div>
-            <span className="bg-[#00a3ff] text-white px-2 py-1 rounded text-xs mb-3 inline-block">S7 Alpha</span>
-            <div className="text-[#a0a0b0] text-sm space-y-1">
-              <p>
-                <span className="text-white">Награды:</span> Breakthrough Award
-              </p>
-              <p>
-                <span className="text-white">Дата:</span> 27.01.2025-27.08.2025
-              </p>
-              <p>
-                <span className="text-white">Учреждение:</span> S7 Robotics
-              </p>
-              <p>
-                <span className="text-white">Должность:</span> Капитан
-              </p>
-            </div>
-          </div>
+          ) : (
+            <div className="text-white/70 text-sm">Пока нет заявок</div>
+          )}
 
           <div className="mt-6 pt-6 border-t border-[#636370]/20">
-            <p className="text-[#a0a0b0] text-sm mb-4">Выиграл соревнование? публикуй достижения:</p>
-            <button className="w-12 h-12 bg-[#00a3ff] hover:bg-[#0080cc] rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105">
+            <p className="text-[#a0a0b0] text-sm mb-4">Участвовал в соревновании? Отправь заявку — админ проверит и опубликует:</p>
+            <button onClick={() => setOpenAdd(true)} className="w-12 h-12 bg-[#00a3ff] hover:bg-[#0088cc] rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105">
               <Plus className="w-6 h-6 text-white" />
             </button>
           </div>
         </div>
+
+        {/* Modal: create competition submission */}
+        {openAdd && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
+            <div className="w-full max-w-lg bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up">
+              <div className="text-lg font-medium mb-4">Добавить соревнование</div>
+              <div className="grid grid-cols-1 gap-3">
+                <input value={form.title} onChange={(e)=>setForm({...form,title:e.target.value})} placeholder="Название соревнования" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
+                <textarea value={form.description} onChange={(e)=>setForm({...form,description:e.target.value})} placeholder="Описание проекта" rows={4} className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
+                <input value={form.placement} onChange={(e)=>setForm({...form,placement:e.target.value})} placeholder="Занятое место (например, 1 место)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
+                <input value={form.venue} onChange={(e)=>setForm({...form,venue:e.target.value})} placeholder="Где проходило" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
+                <input value={form.eventDate} onChange={(e)=>setForm({...form,eventDate:e.target.value})} placeholder="Дата (напр. 2025-09-20)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
+                <input value={form.imageUrl} onChange={(e)=>setForm({...form,imageUrl:e.target.value})} placeholder="Ссылка на фото (по желанию)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button onClick={()=>setOpenAdd(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
+                <button onClick={async()=>{
+                  if (!form.title.trim()) return
+                  try {
+                    await apiFetch('/submissions/competitions',{ method:'POST', body: JSON.stringify(form) })
+                    toast({ title: 'Отправлено на модерацию' })
+                    setOpenAdd(false)
+                    setForm({ title: "", description: "", projectSummary: "", venue: "", placement: "", eventDate: "", imageUrl: "" })
+                    const list = await apiFetch<Array<any>>('/submissions/competitions/mine')
+                    setSubs(list)
+                  } catch(e:any) {
+                    toast({ title:'Ошибка', description:e?.message||'Не удалось отправить', variant:'destructive' as any })
+                  }
+                }} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Отправить</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

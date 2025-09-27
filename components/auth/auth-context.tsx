@@ -11,6 +11,10 @@ export interface User {
   role: Role
   level?: number
   xp?: number
+  // optional profile extras used across UI
+  institution?: string
+  primaryRole?: string
+  age?: number
 }
 
 interface AuthContextValue {
@@ -19,7 +23,7 @@ interface AuthContextValue {
   register: (email: string, password: string, remember?: boolean) => Promise<void>
   login: (email: string, password: string, remember?: boolean) => Promise<void>
   logout: () => void
-  updateProfile: (patch: Partial<User>) => void
+  updateProfile: (patch: Partial<User> & { institution?: string; primaryRole?: string; age?: number }) => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)

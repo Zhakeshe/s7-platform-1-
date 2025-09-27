@@ -1,10 +1,8 @@
 export default function SocialPanel() {
   const items = [
-    { href: '#', label: 'Threads', icon: 'bi-at' },
-    { href: 'https://t.me/', label: 'Telegram', icon: 'bi-telegram' },
-    { href: 'https://wa.me/', label: 'WhatsApp', icon: 'bi-whatsapp' },
-    { href: 'mailto:info@example.com', label: 'Email', icon: 'bi-envelope' },
-    { href: 'https://instagram.com/', label: 'Instagram', icon: 'bi-instagram' },
+    { href: 'https://t.me/s7robotics', label: 'Telegram', icon: 'bi-telegram' },
+    { href: 'https://wa.me/77760457776', label: 'WhatsApp', icon: 'bi-whatsapp' },
+    { href: 'https://www.instagram.com/s7.robotics?igsh=OGkyaW41enI0ZzQz', label: 'Instagram', icon: 'bi-instagram' },
   ]
 
   return (

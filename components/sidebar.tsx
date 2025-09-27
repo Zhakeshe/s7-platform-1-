@@ -52,6 +52,8 @@ export default function Sidebar({
     { id: "profile", label: "Профиль", icon: User },
     { id: "masterclass", label: "Мастер классы", icon: GraduationCap },
     { id: "bytesize", label: "ByteSize", icon: FileText },
+    // Admin link in main nav for admins
+    ...(user?.role === 'admin' ? [{ id: "admin", label: "Админ", icon: Shield }] as const : []),
   ]
 
   return (
@@ -110,7 +112,11 @@ export default function Sidebar({
                 <div
                   key={item.id}
                   onClick={() => {
-                    onTabChange(item.id)
+                    if (item.id === 'admin') {
+                      router.push('/admin')
+                    } else {
+                      onTabChange(item.id)
+                    }
                     setIsMobileMenuOpen(false)
                   }}
                   className={`group relative flex items-center ${isCollapsed ? "justify-center p-3" : "space-x-3 px-4 py-3"} rounded-lg transition-all duration-200 cursor-pointer animate-slide-up ${

@@ -28,6 +28,20 @@ enum PurchaseStatus {
   refunded
 }
 
+// Moderation statuses for user submissions
+enum SubmissionStatus {
+  pending
+  approved
+  rejected
+}
+
+// Publication status for public events
+enum EventStatus {
+  pending
+  published
+  rejected
+}
+
 enum LessonMediaType {
   video
   slide
@@ -231,6 +245,37 @@ model UserAchievement {
   adminNote String?
 
   @@unique([userId, achievementId])
+}
+
+// User-submitted competition participation for moderation
+model CompetitionSubmission {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  title       String
+  description String?
+  projectSummary String?
+  venue       String?
+  placement   String?
+  eventDate   DateTime?
+  imageUrl    String?
+  status      SubmissionStatus @default(pending)
+  createdAt   DateTime @default(now())
+}
+
+// Public events (created by users, moderated by admins)
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  audience    String?
+  contact     String?
+  date        DateTime?
+  imageUrl    String?
+  status      EventStatus @default(pending)
+  createdAt   DateTime @default(now())
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
 }
 
 model Team {

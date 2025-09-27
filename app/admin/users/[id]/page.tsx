@@ -1,13 +1,15 @@
 "use client"
 import { ArrowUpRight } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
-import { awardAchievement, enrollUser, getUserById, listCourses, type Course } from "@/lib/s7db"
+import { useEffect, useState } from "react"
 import { toast } from "@/hooks/use-toast"
 import { apiFetch } from "@/lib/api"
 
+type Role = "USER" | "ADMIN"
+interface Course { id: string; title: string }
+
 export default function Page({ params }: { params: { id: string } }) {
   const [name, setName] = useState<string>("")
-  const [role, setRole] = useState<string>("")
+  const [role, setRole] = useState<Role | "">("")
   const [achOpen, setAchOpen] = useState(false)
   const [achText, setAchText] = useState("")
   const [courseOpen, setCourseOpen] = useState(false)
@@ -15,27 +17,27 @@ export default function Page({ params }: { params: { id: string } }) {
   const [courseId, setCourseId] = useState<string>("")
 
   useEffect(() => {
-    const u = getUserById(params.id)
-    setName(u?.fullName || u?.email || params.id)
-    setCourses(listCourses())
-    // Try to load from backend for accurate role/name
-    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string }>(`/auth/me`) // fallback: only if viewing self
-      .then(() => {})
-      .catch(() => {})
-    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string }[]>(`/admin/users`)
+    // Load users and find target
+    apiFetch<{ id: string; email: string; role: Role; fullName?: string }[]>(`/api/admin/users`)
       .then((list) => {
         const found = list.find((x) => x.id === params.id)
         if (found) {
           setName(found.fullName || found.email || params.id)
           setRole(found.role)
+        } else {
+          setName(params.id)
         }
       })
-      .catch(() => {})
+      .catch(() => setName(params.id))
+    // Load courses for issuing access
+    apiFetch<{ id: string; title: string }[]>(`/api/admin/courses`)
+      .then((list) => setCourses(list.map((c) => ({ id: c.id, title: c.title }))))
+      .catch(() => setCourses([]))
   }, [params.id])
 
   const promote = async () => {
     try {
-      await apiFetch(`/admin/users/${params.id}/promote`, { method: "POST" })
+      await apiFetch(`/api/admin/users/${params.id}/promote`, { method: "POST" })
       setRole("ADMIN")
       toast({ title: "Роль обновлена", description: "Пользователь назначен админом" })
     } catch (e: any) {
@@ -45,7 +47,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
   const demote = async () => {
     try {
-      await apiFetch(`/admin/users/${params.id}/demote`, { method: "POST" })
+      await apiFetch(`/api/admin/users/${params.id}/demote`, { method: "POST" })
       setRole("USER")
       toast({ title: "Роль обновлена", description: "Права администратора сняты" })
     } catch (e: any) {
@@ -53,19 +55,27 @@ export default function Page({ params }: { params: { id: string } }) {
     }
   }
 
-  const issueAchievement = () => {
+  const issueAchievement = async () => {
     if (!achText.trim()) return
-    awardAchievement(params.id, achText.trim(), "admin")
-    toast({ title: "Достижение выдано" })
-    setAchText("")
-    setAchOpen(false)
+    try {
+      await apiFetch(`/api/admin/users/${params.id}/achievements`, { method: "POST", body: JSON.stringify({ text: achText.trim() }) })
+      toast({ title: "Достижение выдано" })
+      setAchText("")
+      setAchOpen(false)
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось выдать достижение", variant: "destructive" as any })
+    }
   }
 
-  const issueCourse = () => {
+  const issueCourse = async () => {
     if (!courseId) return
-    enrollUser(params.id, courseId)
-    toast({ title: "Курс выдан" })
-    setCourseOpen(false)
+    try {
+      await apiFetch(`/api/admin/users/${params.id}/enrollments`, { method: "POST", body: JSON.stringify({ courseId }) })
+      toast({ title: "Курс выдан" })
+      setCourseOpen(false)
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось выдать курс", variant: "destructive" as any })
+    }
   }
 
   return (

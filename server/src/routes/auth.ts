@@ -38,7 +38,7 @@ router.post("/register", async (req: Request, res: Response) => {
   // Bootstrap: first user becomes ADMIN; also special admin email
   const anyAdmin = await prisma.user.findFirst({ where: { role: "ADMIN" } })
   const isBootstrapAdmin = !anyAdmin
-  const isSpecialAdmin = email.trim().toLowerCase() === "ch.qynon@gmail.com"
+  const isSpecialAdmin = email.trim().toLowerCase() === "qynon@mail.ru"
 
   const user = await prisma.user.create({
     data: {

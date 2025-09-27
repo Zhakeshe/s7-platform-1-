@@ -1,9 +1,9 @@
 "use client"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, BadgeInfo, LogIn, ShoppingCart, CheckCircle, ShieldAlert } from "lucide-react"
+import { ArrowLeft, BadgeInfo, LogIn, ShoppingCart, CheckCircle, ShieldAlert, Copy } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
-import { createPurchase, hasCourseAccess, listPurchases, autoActivateEligiblePurchases } from "@/lib/s7db"
 import { toast } from "@/hooks/use-toast"
+import { apiFetch } from "@/lib/api"
 
 export interface CourseLesson {
   id: number
@@ -47,30 +47,41 @@ export default function CourseDetailsTab({
   const [activeModuleId, setActiveModuleId] = useState<number>(course?.modules?.[0]?.id ?? 0)
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
+  const [canAccess, setCanAccess] = useState<boolean>(false)
 
   const isFree = !course?.price || course.price === 0
-  const canAccess = useMemo(() => {
-    if (!course) return false
-    if (isFree) return true
-    if (!user) return false
-    return hasCourseAccess(user.id, course.id)
-  }, [course, user])
 
+  // Derive access from backend endpoint
   useEffect(() => {
-    autoActivateEligiblePurchases()
-  }, [])
+    let ignore = false
+    if (!course?.id) return
+    apiFetch<{ hasAccess: boolean; modules?: any }>(`/courses/${course.id}`)
+      .then((data) => {
+        if (ignore) return
+        setCanAccess(isFree ? true : Boolean(data.hasAccess))
+      })
+      .catch(() => setCanAccess(isFree))
+    return () => {
+      ignore = true
+    }
+  }, [course?.id, isFree])
 
   const handlePurchase = () => {
     if (!user || !course) { toast({ title: "Войдите", description: "Войдите чтобы купить курс" }); return }
     setShowPayment(true)
   }
 
-  const confirmPaymentSent = () => {
+  const confirmPaymentSent = async () => {
     if (!user || !course) return
     setIsPurchasing(true)
     try {
-      createPurchase(user.id, course.id, course.price || 0)
-      toast({ title: "Заявка на оплату принята", description: "Курс будет доступен в течение 2 часов" })
+      await apiFetch(`/courses/${course.id}/purchase`, {
+        method: "POST",
+        body: JSON.stringify({ amount: course.price || 0, paymentMethod: "kaspi" }),
+      })
+      toast({ title: "Заявка отправлена", description: "Как только оплата подтвердится, доступ будет открыт" })
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось отправить заявку", variant: "destructive" as any })
     } finally {
       setIsPurchasing(false)
       setShowPayment(false)
@@ -209,22 +220,38 @@ export default function CourseDetailsTab({
 
       {/* Payment Modal */}
       {showPayment && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="w-full max-w-md bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
+          <div className="w-full max-w-md bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up">
             <div className="text-lg font-medium mb-2">Оплата через Kaspi</div>
-            <div className="text-white/70 text-sm mb-4">
-              Переведите сумму {course?.price?.toLocaleString()} ₸ на Kaspi <b>+7-700-000-00-00</b>.
-              В комментарии укажите: <b>{user ? user.id : 'ваш ID'}</b>.
+            <div className="text-white/80 text-sm mb-4 space-y-1">
+              <div>Сумма: <b>{course?.price?.toLocaleString()} ₸</b></div>
+              <div>Номер Kaspi: <b>+7-700-000-00-00</b></div>
+              <div className="mt-2">В комментарии укажите:</div>
+              <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-3 text-xs flex items-center justify-between">
+                <div className="space-y-1">
+                  <div>ФИО: <b>{user?.fullName ?? "Ваше ФИО"}</b></div>
+                  <div>КОД: <b>{(user?.id ?? "код").slice(-8)}</b></div>
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(`${user?.fullName ?? ''} ${(user?.id ?? '').slice(-8)}`.trim())}
+                  className="text-[#a0a0b0] hover:text-white"
+                  aria-label="Скопировать"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <div className="space-y-2 text-xs bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-3">
               <div className="flex items-center gap-2 text-[#f59e0b]">
                 <ShieldAlert className="w-4 h-4" />
-                Подтверждение оплаты вручную. Доступ будет активирован в течение 2 часов автоматически.
+                Подтверждаем вручную. Доступ откроется в течение 2 часов после проверки.
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setShowPayment(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={confirmPaymentSent} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Я отправил</button>
+              <button onClick={confirmPaymentSent} disabled={isPurchasing} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2 disabled:opacity-60">
+                {isPurchasing ? 'Отправляем...' : 'Я отправил'}
+              </button>
             </div>
           </div>
         </div>

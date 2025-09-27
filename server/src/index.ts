@@ -9,6 +9,8 @@ import { prisma } from "./db"
 import { router as authRouter } from "./routes/auth"
 import { router as courseRouter } from "./routes/courses"
 import { router as adminRouter } from "./routes/admin"
+import { router as eventsRouter } from "./routes/events"
+import { router as submissionsRouter } from "./routes/submissions"
 import { router as uploadRouter } from "./routes/uploads"
 import { ensureDir } from "./utils/fs"
 
@@ -41,6 +43,8 @@ app.get("/health", async (_req, res) => {
 app.use("/auth", authRouter)
 app.use("/courses", courseRouter)
 app.use("/api/admin", adminRouter)
+app.use("/events", eventsRouter)
+app.use("/submissions", submissionsRouter)
 app.use("/uploads", uploadRouter)
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
