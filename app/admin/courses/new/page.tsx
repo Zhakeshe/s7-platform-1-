@@ -16,6 +16,10 @@ export default function Page() {
   const router = useRouter()
   const search = useSearchParams()
   const editId = search.get("edit")
+  const isFresh = useMemo(() => {
+    const v = search.get("fresh")
+    return v === "1" || v === "true"
+  }, [search])
   const isEdit = useMemo(() => Boolean(editId), [editId])
   const confirm = useConfirm()
 
@@ -74,7 +78,7 @@ export default function Page() {
 
   // Hydrate from draft when creating
   useEffect(() => {
-    if (editId) return
+    if (editId || isFresh) return
     try {
       const raw = localStorage.getItem("s7_admin_course_draft")
       if (raw) {
@@ -87,7 +91,19 @@ export default function Page() {
         }
       }
     } catch {}
-  }, [editId])
+  }, [editId, isFresh])
+
+  // If explicitly opened in fresh mode, clear draft and reset state once
+  useEffect(() => {
+    if (!isFresh) return
+    try { localStorage.removeItem("s7_admin_course_draft") } catch {}
+    setTitle("")
+    setAuthor("")
+    setDifficulty("Легкий")
+    setModules([{ id: 1, title: "Модуль 1" }])
+    setFree(true)
+    setPrice(0)
+  }, [isFresh])
 
   // Persist draft on changes
   useEffect(() => {

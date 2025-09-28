@@ -70,6 +70,12 @@ router.post("/:courseId/questions", requireAuth, async (req: AuthenticatedReques
 // List questions for a course (optionally filter by moduleId/lessonId)
 router.get("/:courseId/questions", optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { courseId } = req.params
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true, isFree: true, price: true } })
+  if (!course) return res.status(404).json({ error: "Course not found" })
+
+  const hasAccess = await userHasCourseAccess(req.user?.id, course)
+  if (!hasAccess) return res.status(403).json({ error: "No access" })
+
   const { moduleId, lessonId } = req.query as any
   const where: any = { courseId }
   if (moduleId) where.moduleId = moduleId

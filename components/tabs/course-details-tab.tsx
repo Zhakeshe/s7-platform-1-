@@ -71,26 +71,26 @@ export default function CourseDetailsTab({
     }
   }, [course?.id, isFree])
 
-  // Load course-level quiz
+  // Load course-level quiz (only if есть доступ)
   useEffect(() => {
-    if (!course?.id) return
+    if (!course?.id || !canAccess) { setQuizCourse([]); return }
     setLoadingQuiz(true)
     apiFetch<Array<any>>(`/courses/${course.id}/questions`)
       .then((list) => setQuizCourse(list || []))
       .catch(() => setQuizCourse([]))
       .finally(() => setLoadingQuiz(false))
-  }, [course?.id])
+  }, [course?.id, canAccess])
 
-  // Load module-level quiz when module changes
+  // Load module-level quiz when module changes (only if есть доступ)
   useEffect(() => {
-    if (!course?.id || !activeModuleId) { setQuizModule([]); return }
+    if (!course?.id || !activeModuleId || !canAccess) { setQuizModule([]); return }
     setLoadingQuiz(true)
     const params = new URLSearchParams({ moduleId: String(activeModuleId) })
     apiFetch<Array<any>>(`/courses/${course.id}/questions?${params.toString()}`)
       .then((list) => setQuizModule(list || []))
       .catch(() => setQuizModule([]))
       .finally(() => setLoadingQuiz(false))
-  }, [course?.id, activeModuleId])
+  }, [course?.id, activeModuleId, canAccess])
 
   const markAnswer = (setter: (v: any) => void, list: any[], questionId: string, selectedIndex: number, isCorrect: boolean, correctIndex: number) => {
     setter(list.map((q) => (q.id === questionId ? { ...q, selectedIndex, isCorrect, correctIndex } : q)))
@@ -271,16 +271,21 @@ export default function CourseDetailsTab({
             ))}
           </div>
 
-          {/* Quiz Section */}
+          {/* Quiz Section (гейт по доступу) */}
           <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 text-white">
             <div className="text-white font-medium mb-2">Проверка знаний</div>
-            {loadingQuiz && <div className="text-white/60 text-sm">Загрузка вопросов...</div>}
-            {!loadingQuiz && (quizCourse.length + quizModule.length === 0) && (
+            {!canAccess && (
+              <div className="text-white/70 text-sm">
+                Вопросы будут доступны после покупки курса.
+              </div>
+            )}
+            {canAccess && loadingQuiz && <div className="text-white/60 text-sm">Загрузка вопросов...</div>}
+            {canAccess && !loadingQuiz && (quizCourse.length + quizModule.length === 0) && (
               <div className="text-white/60 text-sm">Вопросов пока нет</div>
             )}
 
             {/* Course-level questions */}
-            {quizCourse.length > 0 && (
+            {canAccess && quizCourse.length > 0 && (
               <div className="space-y-3">
                 <div className="text-xs text-white/60">Вопросы по курсу</div>
                 {quizCourse.map((q) => (
@@ -319,7 +324,7 @@ export default function CourseDetailsTab({
             )}
 
             {/* Module-level questions */}
-            {quizModule.length > 0 && (
+            {canAccess && quizModule.length > 0 && (
               <div className="space-y-3 mt-4">
                 <div className="text-xs text-white/60">Вопросы по модулю</div>
                 {quizModule.map((q) => (

@@ -2,9 +2,11 @@
 import Link from "next/link"
 import { ExternalLink, Plus, Phone, MessageCircle, Mail } from "lucide-react"
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { apiFetch } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-context"
 import { toast } from "@/hooks/use-toast"
+import { linkFor } from "@/lib/site-config"
 
 interface EventItem {
   id: string
@@ -77,23 +79,23 @@ export default function S7ToolsTab() {
         <div className="mt-8 animate-slide-up" style={{ animationDelay: "700ms" }}>
           <p className="text-[#a0a0b0] mb-4">Вопросы? Свяжись с нами:</p>
           <div className="flex gap-4">
-            <button aria-label="Позвонить" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+            <a href={linkFor("phone")} className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200" aria-label="Позвонить" title="Позвонить">
               <Phone className="text-white w-5 h-5" />
-            </button>
-            <button aria-label="Написать сообщение" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+            </a>
+            <a href={linkFor("telegram")} target="_blank" rel="noreferrer" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200" aria-label="Telegram" title="Telegram">
               <MessageCircle className="text-white w-5 h-5" />
-            </button>
-            <button aria-label="Отправить email" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+            </a>
+            <a href={linkFor("email")} className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200" aria-label="Email" title="Email">
               <Mail className="text-white w-5 h-5" />
-            </button>
+            </a>
           </div>
         </div>
       </div>
 
-      {/* Modal: Create Event */}
-      {open && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
-          <div className="w-full max-w-lg bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up">
+      {/* Modal: Create Event (portal to body for true centering) */}
+      {open && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000]">
+          <div className="w-[min(92vw,640px)] bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white shadow-xl">
             <div className="text-lg font-medium mb-4">Опубликовать мероприятие</div>
             <div className="grid grid-cols-1 gap-3">
               <input value={form.title} onChange={(e)=>setForm({...form,title:e.target.value})} placeholder="Название" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
@@ -108,7 +110,8 @@ export default function S7ToolsTab() {
               <button onClick={submitEvent} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Отправить</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

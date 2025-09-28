@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-context"
 import { toast } from "@/hooks/use-toast"
+import { linkFor } from "@/lib/site-config"
 
 interface CreateTeamModalProps {
   isOpen: boolean
@@ -288,26 +289,39 @@ export default function TeamsTab() {
         <div className="border-t border-[#636370]/20 pt-8 animate-slide-up" style={{ animationDelay: "600ms" }}>
           <h3 className="text-white text-lg font-medium mb-4">Не получается, либо если есть вопросы свяжись с нами:</h3>
           <div className="flex justify-center space-x-4">
-            <button
+            <a
+              href={linkFor("telegram")}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Мы в Telegram"
               className="w-12 h-12 bg-[#229ED9] rounded-full flex items-center justify-center hover:bg-[#1e8bc3] transition-colors duration-300 animate-slide-up"
               style={{ animationDelay: "700ms" }}
+              title="Telegram"
             >
               <MessageCircle className="w-6 h-6 text-white" />
-            </button>
+            </a>
 
-            <button
+            <a
+              href={linkFor("whatsapp")}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Написать в WhatsApp"
               className="w-12 h-12 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20b858] transition-colors duration-300 animate-slide-up"
               style={{ animationDelay: "800ms" }}
+              title="WhatsApp"
             >
               <Phone className="w-6 h-6 text-white" />
-            </button>
+            </a>
 
-            <button
+            <a
+              href={linkFor("email")}
+              aria-label="Написать на email"
               className="w-12 h-12 bg-[#EA4335] rounded-full flex items-center justify-center hover:bg-[#d33b2c] transition-colors duration-300 animate-slide-up"
               style={{ animationDelay: "900ms" }}
+              title="Email"
             >
               <Mail className="w-6 h-6 text-white" />
-            </button>
+            </a>
           </div>
         </div>
       </section>

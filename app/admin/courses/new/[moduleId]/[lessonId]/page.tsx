@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Image, Upload, Trash, Bold, Italic, Heading2, List } from "lucide-react"
 import dynamic from "next/dynamic"
-import { saveFile, deleteFile } from "@/lib/s7media"
+import { saveFile, deleteFile, getObjectUrl, getFile } from "@/lib/s7media"
 import { toast } from "@/hooks/use-toast"
+import { getTokens } from "@/lib/api"
 const ReactMarkdown = dynamic(() => import("react-markdown").then((m) => m.default as any), { ssr: false }) as any
 
 interface DraftLesson {
@@ -18,6 +19,10 @@ interface DraftLesson {
   videoMediaId?: string
   slideMediaIds?: string[]
   presentationMediaId?: string
+  // uploaded URLs (server-visible)
+  videoUrl?: string
+  presentationUrl?: string
+  slideUrls?: string[]
 }
 
 interface DraftModule {
@@ -57,6 +62,9 @@ export default function Page() {
   const fileInput = useRef<HTMLInputElement | null>(null)
   const slideInput = useRef<HTMLInputElement | null>(null)
   const presentationInput = useRef<HTMLInputElement | null>(null)
+  const [videoPreview, setVideoPreview] = useState<string | null>(null)
+  const [slidePreviews, setSlidePreviews] = useState<string[]>([])
+  const [presPreview, setPresPreview] = useState<string | null>(null)
 
   useEffect(() => {
     setCourse(readDraft())
@@ -128,8 +136,44 @@ export default function Page() {
   const removeVideo = async () => {
     if (!lesson) return
     const id = lesson.videoMediaId
-    updateLesson({ videoName: "", videoMediaId: undefined })
+    updateLesson({ videoName: "", videoMediaId: undefined, videoUrl: undefined })
     if (id) try { await deleteFile(id) } catch {}
+  }
+
+  // Upload buttons
+  const uploadVideoToServer = async () => {
+    if (!lesson?.videoMediaId) return
+    try {
+      const url = await uploadById(lesson.videoMediaId)
+      updateLesson({ videoUrl: url })
+      toast({ title: "Видео загружено на сервер" } as any)
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось загрузить", variant: "destructive" as any })
+    }
+  }
+  const uploadPresentationToServer = async () => {
+    if (!lesson?.presentationMediaId) return
+    try {
+      const url = await uploadById(lesson.presentationMediaId)
+      updateLesson({ presentationUrl: url })
+      toast({ title: "Презентация загружена" } as any)
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось загрузить", variant: "destructive" as any })
+    }
+  }
+  const uploadSlidesToServer = async () => {
+    if (!lesson?.slideMediaIds || lesson.slideMediaIds.length === 0) return
+    try {
+      const urls: string[] = []
+      for (const id of lesson.slideMediaIds) {
+        const url = await uploadById(id)
+        urls.push(url)
+      }
+      updateLesson({ slideUrls: urls })
+      toast({ title: "Слайды загружены" } as any)
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось загрузить", variant: "destructive" as any })
+    }
   }
 
   return (
@@ -169,7 +213,7 @@ export default function Page() {
               }}
             >
               <div
-                className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[320px] flex items-center justify-center text-white cursor-pointer"
+                className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[320px] flex items-center justify-center text-white cursor-pointer overflow-hidden"
                 onClick={() => fileInput.current?.click()}
               >
                 {!lesson?.videoMediaId ? (
@@ -181,10 +225,7 @@ export default function Page() {
                     <div className="text-white/60 text-sm">Не более 1 часа</div>
                   </div>
                 ) : (
-                  <div className="text-center">
-                    <div className="text-lg font-medium">Видео: {lesson.videoName}</div>
-                    <div className="text-white/60 text-sm">Файл сохранён. Можно заменить или удалить.</div>
-                  </div>
+                  <video src={videoPreview || undefined} controls className="w-full h-full object-contain bg-black" />
                 )}
                 <input
                   ref={fileInput}
@@ -200,6 +241,8 @@ export default function Page() {
               {lesson?.videoMediaId && (
                 <div className="flex items-center justify-end gap-3 mt-3">
                   <button onClick={() => fileInput.current?.click()} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Заменить</button>
+                  <button onClick={uploadVideoToServer} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Загрузить на сервер</button>
+                  {lesson.videoUrl && <a href={lesson.videoUrl} target="_blank" className="text-xs text-[#00a3ff] underline">Открыть URL</a>}
                   <button onClick={removeVideo} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm inline-flex items-center gap-1"><Trash className="w-4 h-4"/>Удалить</button>
                 </div>
               )}
@@ -239,6 +282,12 @@ export default function Page() {
               }}
               className="hidden"
             />
+            {lesson?.slideMediaIds && lesson.slideMediaIds.length > 0 && (
+              <div className="flex items-center justify-end gap-3 mt-2">
+                <button onClick={uploadSlidesToServer} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Загрузить все слайды</button>
+                {Array.isArray(lesson.slideUrls) && lesson.slideUrls.length > 0 && <span className="text-xs text-white/60">Загружено: {lesson.slideUrls.length}</span>}
+              </div>
+            )}
 
             {/* Presentation upload */}
             <button
@@ -294,6 +343,13 @@ export default function Page() {
                 >
                   <Trash className="w-4 h-4" />
                 </button>
+              </div>
+            )}
+            {presPreview && (
+              <div className="flex items-center justify-end gap-3">
+                <a href={presPreview} target="_blank" className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Открыть локально</a>
+                <button onClick={uploadPresentationToServer} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Загрузить на сервер</button>
+                {lesson?.presentationUrl && <a href={lesson.presentationUrl} target="_blank" className="text-xs text-[#00a3ff] underline">URL</a>}
               </div>
             )}
           </aside>

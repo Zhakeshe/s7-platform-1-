@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ArrowUpRight, Upload, Image } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { apiFetch, getTokens } from "@/lib/api"
@@ -17,6 +17,8 @@ export default function Page() {
   const [videoUrl, setVideoUrl] = useState<string>("")
   const [coverUrl, setCoverUrl] = useState<string>("")
   const [uploading, setUploading] = useState(false)
+  const videoInputRef = useRef<HTMLInputElement | null>(null)
+  const coverInputRef = useRef<HTMLInputElement | null>(null)
 
   const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"]
   const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"]
@@ -64,21 +66,34 @@ export default function Page() {
       <div className="max-w-3xl space-y-6">
         {/* Upload area */}
         <div className="rounded-3xl border-2 border-[#2a2a35] p-3">
-          <div className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[320px] flex items-center justify-center text-white relative overflow-hidden">
+          <div
+            className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[360px] flex items-center justify-center text-white relative overflow-hidden"
+            onDragOver={(e)=>{e.preventDefault();}}
+            onDrop={async (e)=>{
+              e.preventDefault();
+              const f = e.dataTransfer.files?.[0]; if(!f) return;
+              if (f.type && !ALLOWED_VIDEO_TYPES.includes(f.type)) {
+                toast({ title: "Неподдерживаемый формат видео", description: "Разрешены: MP4, WebM, MOV", variant: "destructive" as any });
+                return;
+              }
+              setUploading(true);
+              try { const url = await uploadMedia(f); setVideoUrl(url); toast({ title: "Видео загружено" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
+            }}
+          >
             {videoUrl ? (
-              <video src={videoUrl} controls className="w-full h-full object-cover" />
+              <video src={videoUrl} controls className="w-full h-full object-contain" />
             ) : (
-              <div className="text-center">
+              <div className="text-center select-none">
                 <div className="w-16 h-16 rounded-full bg-[#2a2a35] flex items-center justify-center mx-auto mb-3">
                   <Upload className="w-7 h-7 text-[#a0a0b0]" />
                 </div>
-                <div className="text-lg font-medium">Загрузите видео</div>
-                <div className="text-white/60 text-sm">Видео до 1 минуты</div>
+                <div className="text-lg font-medium">Перетащите видео сюда</div>
+                <div className="text-white/60 text-sm">или нажмите «Выбрать видео». До 1 минуты</div>
               </div>
             )}
           </div>
           <div className="flex gap-2 mt-3">
-            <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={async (e)=>{
+            <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" hidden onChange={async (e)=>{
               const f = e.target.files?.[0]; if(!f) return;
               if (f.type && !ALLOWED_VIDEO_TYPES.includes(f.type)) {
                 toast({ title: "Неподдерживаемый формат видео", description: "Разрешены: MP4, WebM, MOV", variant: "destructive" as any });
@@ -86,19 +101,22 @@ export default function Page() {
               }
               setUploading(true);
               try { const url = await uploadMedia(f); setVideoUrl(url); toast({ title: "Видео загружено" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
-            }} className="text-white" />
-            <label className="inline-flex items-center gap-2 px-3 py-2 bg-[#16161c] border border-[#2a2a35] rounded-lg text-white cursor-pointer">
+            }} />
+            <button type="button" onClick={()=>videoInputRef.current?.click()} className="inline-flex items-center gap-2 px-3 py-2 bg-[#00a3ff] hover:bg-[#0088cc] rounded-lg text-black font-medium">
+              Выбрать видео
+            </button>
+            <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={async (e)=>{
+              const f = e.target.files?.[0]; if(!f) return;
+              if (f.type && !ALLOWED_COVER_TYPES.includes(f.type)) {
+                toast({ title: "Неподдерживаемый формат обложки", description: "Разрешены: JPG, PNG, WEBP", variant: "destructive" as any });
+                return;
+              }
+              setUploading(true);
+              try { const url = await uploadMedia(f); setCoverUrl(url); toast({ title: "Обложка загружена" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
+            }} />
+            <button type="button" onClick={()=>coverInputRef.current?.click()} className="inline-flex items-center gap-2 px-3 py-2 bg-[#16161c] border border-[#2a2a35] rounded-lg text-white">
               <Image className="w-4 h-4" /> Обложка
-              <input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={async (e)=>{
-                const f = e.target.files?.[0]; if(!f) return;
-                if (f.type && !ALLOWED_COVER_TYPES.includes(f.type)) {
-                  toast({ title: "Неподдерживаемый формат обложки", description: "Разрешены: JPG, PNG, WEBP", variant: "destructive" as any });
-                  return;
-                }
-                setUploading(true);
-                try { const url = await uploadMedia(f); setCoverUrl(url); toast({ title: "Обложка загружена" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
-              }} />
-            </label>
+            </button>
           </div>
         </div>
 
