@@ -3,8 +3,8 @@ import { useEffect, useState } from "react"
 import { ArrowUpRight, Upload, Image } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { apiFetch, getTokens } from "@/lib/api"
-import { useConfirm } from "@/components/ui/confirm-dialog"
 import { toast } from "@/hooks/use-toast"
+import { useConfirm } from "@/components/ui/confirm"
 
 export default function Page() {
   const router = useRouter()

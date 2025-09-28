@@ -3,8 +3,8 @@ import { useEffect, useState } from "react"
 import { ArrowUpRight } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { apiFetch } from "@/lib/api"
-import { useConfirm } from "@/components/ui/confirm-dialog"
 import { toast } from "@/hooks/use-toast"
+import { useConfirm } from "@/components/ui/confirm"
 
 export default function Page() {
   const router = useRouter()
@@ -81,7 +81,6 @@ export default function Page() {
             className="w-full bg-transparent outline-none min-h-28"
           />
         </div>
-
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -94,10 +93,11 @@ export default function Page() {
             Сохранить черновик
           </button>
           <button
-            onClick={() => { saveTeam() }}
+            onClick={saveTeam}
             className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors"
           >
             <span>{isEdit ? "Сохранить" : "Добавить"}</span>
+            <ArrowUpRight className="w-5 h-5" />
           </button>
         </div>
       </div>

@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, BadgeInfo, LogIn, ShoppingCart, CheckCircle, ShieldAlert, Copy } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
+import { useConfirm } from "@/components/ui/confirm"
 import { toast } from "@/hooks/use-toast"
-import { useConfirm } from "@/components/ui/confirm-dialog"
 import { apiFetch } from "@/lib/api"
 
 export interface CourseLesson {
@@ -120,7 +120,7 @@ export default function CourseDetailsTab({
 
   const confirmPaymentSent = async () => {
     if (!user || !course) return
-    const ok = await confirm({ title: 'Вы точно отправили оплату?', confirmText: 'Да, отправил', cancelText: 'Отмена' })
+    const ok = await confirm({ title: 'Вы точно отправили оплату?', confirmText: 'Отправил', cancelText: 'Отмена' })
     if (!ok) return
     setIsPurchasing(true)
     try {

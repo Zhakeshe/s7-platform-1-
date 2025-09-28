@@ -16,20 +16,21 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      // Centered viewport, allow click only on toast itself
-      'fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none',
+      // Bottom-left stacked toasts
+      'fixed bottom-4 left-4 z-[100] flex max-h-screen w-full max-w-sm flex-col gap-3 p-0',
       className,
     )}
+    {...props}
   />
 ))
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 const toastVariants = cva(
-  'group pointer-events-auto relative flex w-full max-w-md items-center justify-center gap-3 overflow-hidden rounded-2xl border p-5 shadow-2xl transition-all backdrop-blur-sm',
+  'group pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden rounded-xl border p-4 shadow-lg transition-all backdrop-blur-sm',
   {
     variants: {
       variant: {
-        default: 'border-[#636370]/30 bg-[#16161c]/95 text-white',
+        default: 'border-[#22c55e]/30 bg-[#0c1b14]/95 text-white',
         destructive: 'group border-[#ef4444]/40 bg-[#2a1414]/95 text-white',
       },
     },

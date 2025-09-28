@@ -4,7 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/components/auth/auth-context'
 import { Toaster } from '@/components/ui/toaster'
-import { ConfirmProvider } from '@/components/ui/confirm-dialog'
+import { ConfirmProvider } from '@/components/ui/confirm'
 import './globals.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
