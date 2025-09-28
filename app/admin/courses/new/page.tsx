@@ -49,6 +49,19 @@ export default function Page() {
           "s7_admin_course_draft",
           JSON.stringify({ title: found.title, author: found.author, modules: found.modules || [] })
         )
+      } else {
+        // Fallback to backend fetch if not in local storage
+        apiFetch<any[]>("/api/admin/courses")
+          .then((list) => {
+            const foundSrv = (list || []).find((c: any) => c.id === editId)
+            if (!foundSrv) return
+            setTitle(foundSrv.title || "")
+            setAuthor(foundSrv.author || "")
+            setModules(((foundSrv.modules || []).map((m: any) => ({ id: m.id, title: m.title }))) || [{ id: 1, title: "Модуль 1" }])
+            if (typeof foundSrv.price === "number" && foundSrv.price > 0) { setFree(false); setPrice(foundSrv.price) } else { setFree(true); setPrice(0) }
+            try { localStorage.setItem("s7_admin_course_draft", JSON.stringify({ title: foundSrv.title, author: foundSrv.author, modules: foundSrv.modules || [] })) } catch {}
+          })
+          .catch(() => {})
       }
     } catch {}
   }, [editId])
@@ -104,6 +117,7 @@ export default function Page() {
   }
 
   const publish = async () => {
+    if (typeof window !== 'undefined' && !window.confirm('Опубликовать курс?')) return
     // Build from draft if exists (contains lessons + rich fields)
     let finalModules = modules.map((m) => ({ id: m.id, title: m.title, lessons: [{ id: 1, title: "Введение", time: "10:21" }] }))
     try {
@@ -228,6 +242,34 @@ export default function Page() {
               className="bg-[#0f0f14] border border-[#2a2a35] text-white/80 text-xs rounded-full px-3 py-1 outline-none"
             />
           </div>
+
+        {/* Danger Zone: Delete when editing */}
+        {isEdit && (
+          <div className="pt-2">
+            <button
+              onClick={async () => {
+                if (typeof window !== 'undefined' && !window.confirm('Удалить этот курс?')) return
+                try {
+                  await apiFetch(`/api/admin/courses/${editId}` as any, { method: 'DELETE' })
+                  try {
+                    const raw = localStorage.getItem('s7_admin_courses')
+                    const list = raw ? JSON.parse(raw) : []
+                    const next = (list || []).filter((c: any) => c.id !== editId)
+                    localStorage.setItem('s7_admin_courses', JSON.stringify(next))
+                    localStorage.removeItem('s7_admin_course_draft')
+                  } catch {}
+                  toast({ title: 'Курс удалён' } as any)
+                  router.push('/admin/courses')
+                } catch (e: any) {
+                  toast({ title: 'Ошибка', description: e?.message || 'Не удалось удалить', variant: 'destructive' as any })
+                }
+              }}
+              className="w-full rounded-2xl bg-[#ef4444] hover:bg-[#dc2626] text-white font-medium py-3"
+            >
+              Удалить курс
+            </button>
+          </div>
+        )}
         </div>
 
         {/* Modules */}
@@ -273,14 +315,34 @@ export default function Page() {
           <LogIn className="w-5 h-5 text-[#a0a0b0]" />
         </button>
 
-        {/* Publish Button */}
-        <button
-          onClick={publish}
-          className="w-full rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
-        >
-          Опубликовать
-          <ArrowUpRight className="w-5 h-5" />
-        </button>
+        {/* Draft + Publish */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                const draft = {
+                  title,
+                  author,
+                  modules: modules.map((m) => ({ id: m.id, title: m.title })),
+                  price: free ? 0 : price,
+                }
+                localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
+                toast({ title: 'Черновик сохранён' } as any)
+              } catch {}
+            }}
+            className="rounded-2xl bg-[#2a2a35] hover:bg-[#333344] text-white font-medium py-4 transition-colors"
+          >
+            Сохранить черновик
+          </button>
+          <button
+            onClick={publish}
+            className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
+          >
+            Опубликовать
+            <ArrowUpRight className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Price toggle */}
         <div className="flex items-center gap-3">

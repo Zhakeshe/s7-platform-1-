@@ -371,9 +371,31 @@ model ByteSizeLike {
   id        String   @id @default(cuid())
   item      ByteSizeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  createdAt DateTime @default(now())
+}
 
-  @@unique([itemId, userId])
+// Quiz: questions per course/module/lesson and user answers
+model CourseQuestion {
+  id           String   @id @default(cuid())
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId     String
+  moduleId     String?
+  lessonId     String?
+  text         String
+  options      Json     // array of strings
+  correctIndex Int
+  author       User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId     String?
+  createdAt    DateTime @default(now())
+  answers      CourseAnswer[]
+}
+
+model CourseAnswer {
+  id           String   @id @default(cuid())
+  question     CourseQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId   String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  selectedIndex Int
+  isCorrect    Boolean
+  createdAt    DateTime @default(now())
 }

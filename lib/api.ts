@@ -54,8 +54,10 @@ export async function apiFetch<T = any>(path: string, init: RequestInit = {}): P
   const headers = new Headers(init.headers || {})
   if (!headers.has("content-type") && init.body) headers.set("content-type", "application/json")
   if (tokens?.accessToken) headers.set("authorization", `Bearer ${tokens.accessToken}`)
+  // Prevent any stale caching on client
+  if (!headers.has("cache-control")) headers.set("cache-control", "no-cache")
 
-  const doFetch = async (): Promise<Response> => fetch(path, { ...init, headers })
+  const doFetch = async (): Promise<Response> => fetch(path, { ...init, headers, cache: "no-store" })
 
   let res = await doFetch()
   if (res.status === 401 && tokens?.refreshToken) {

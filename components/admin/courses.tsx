@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
 import { apiFetch } from "@/lib/api"
+import { toast } from "@/hooks/use-toast"
 
 interface AdminCourse {
   id: string
@@ -13,7 +14,7 @@ interface AdminCourse {
   modules: Array<{ id: string; title: string; lessons: Array<{ id: string; title: string }> }>
 }
 
-function CourseCard({ id, title, level, price, lessonsCount }: { id: string; title: string; level: string; price: number; lessonsCount: number }) {
+function CourseCard({ id, title, level, price, lessonsCount, onDeleted }: { id: string; title: string; level: string; price: number; lessonsCount: number; onDeleted: (id: string) => void }) {
   return (
     <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative">
       <div className="absolute top-4 right-4 text-white/70">
@@ -26,6 +27,29 @@ function CourseCard({ id, title, level, price, lessonsCount }: { id: string; tit
       <div className="text-[#a0a0b0] text-sm space-y-1">
         <div>Уроков: {lessonsCount}</div>
         <div>Стоимость: {price > 0 ? `${Number(price).toLocaleString()}₸` : '0₸'}</div>
+      </div>
+      <div className="absolute bottom-4 left-4 flex items-center gap-2">
+        <Link href={`/admin/courses/${encodeURIComponent(id)}/quiz`} className="text-xs bg-[#2a2a35] text-white/80 rounded-full px-3 py-1 hover:bg-[#333344]">
+          Вопросы
+        </Link>
+        <Link href={`/admin/courses/${encodeURIComponent(id)}/analytics`} className="text-xs bg-[#2a2a35] text-white/80 rounded-full px-3 py-1 hover:bg-[#333344]">
+          Аналитика
+        </Link>
+        <button
+          onClick={async () => {
+            if (typeof window !== 'undefined' && !window.confirm('Удалить курс?')) return
+            try {
+              await apiFetch(`/api/admin/courses/${id}`, { method: 'DELETE' })
+              toast({ title: 'Курс удалён' } as any)
+              onDeleted(id)
+            } catch (e: any) {
+              toast({ title: 'Ошибка', description: e?.message || 'Не удалось удалить', variant: 'destructive' as any })
+            }
+          }}
+          className="text-xs bg-[#ef4444] text-white rounded-full px-3 py-1 hover:bg-[#dc2626]"
+        >
+          Удалить
+        </button>
       </div>
       <Link
         href={`/admin/courses/new?edit=${encodeURIComponent(id)}`}
@@ -73,6 +97,7 @@ export default function AdminCourses() {
               level={c.difficulty}
               price={Number((c as any).price || 0)}
               lessonsCount={c.modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)}
+              onDeleted={(id) => setCourses((prev) => prev.filter((x) => x.id !== id))}
             />
           ))
         )}

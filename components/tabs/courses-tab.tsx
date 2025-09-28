@@ -1,6 +1,6 @@
 import { ArrowUpRight, Search } from "lucide-react"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { apiFetch } from "@/lib/api"
 
 export default function CoursesTab({
@@ -14,6 +14,7 @@ export default function CoursesTab({
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all")
   const [loadingContinue, setLoadingContinue] = useState(true)
   const [loadingRecommended, setLoadingRecommended] = useState(true)
+  const reqIdRef = useRef(0)
 
   // Load continue list
   useEffect(() => {
@@ -36,12 +37,14 @@ export default function CoursesTab({
 
   // Load recommended list with filters/search
   const loadRecommended = () => {
+    const currentReq = ++reqIdRef.current
     setLoadingRecommended(true)
     const params = new URLSearchParams()
     if (search.trim()) params.set("search", search.trim())
     if (filter !== "all") params.set("filter", filter)
     apiFetch<any[]>(`/courses${params.toString() ? `?${params.toString()}` : ""}`)
       .then((list) => {
+        if (currentReq !== reqIdRef.current) return
         const mapped: CourseDetails[] = (list || []).map((c: any) => ({
           id: c.id,
           title: c.title,
@@ -52,14 +55,20 @@ export default function CoursesTab({
         }))
         setRecommended(mapped)
       })
-      .catch(() => setRecommended([]))
-      .finally(() => setLoadingRecommended(false))
+      .catch(() => { if (currentReq === reqIdRef.current) setRecommended([]) })
+      .finally(() => { if (currentReq === reqIdRef.current) setLoadingRecommended(false) })
   }
 
   useEffect(() => {
     loadRecommended()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter])
+
+  // Load once on mount to avoid any delayed initial appearance
+  useEffect(() => {
+    loadRecommended()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Debounce search
   useEffect(() => {

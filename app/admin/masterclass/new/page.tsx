@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowUpRight, LogIn } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
@@ -20,8 +20,32 @@ export default function Page() {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [customCats, setCustomCats] = useState("")
 
+  // Restore draft
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('s7_admin_mc_draft')
+      if (!raw) return
+      const d = JSON.parse(raw)
+      if (d.title) setTitle(d.title)
+      if (d.description) setDescription(d.description)
+      if (d.format) setFormat(d.format)
+      if (typeof d.isFree === 'boolean') setIsFree(d.isFree)
+      if (typeof d.price === 'number') setPrice(d.price)
+      if (d.date) setDate(d.date)
+      if (d.location) setLocation(d.location)
+      if (d.url) setUrl(d.url)
+      if (Array.isArray(d.categories)) {
+        const map: Record<string, boolean> = {}
+        d.categories.forEach((c: string) => map[c] = true)
+        setSelected(map)
+      }
+      if (d.customCats) setCustomCats(d.customCats)
+    } catch {}
+  }, [])
+
   const publish = async () => {
     if (!title.trim()) { toast({ title: "Название обязательно" }); return }
+    if (typeof window !== 'undefined' && !window.confirm('Опубликовать мастер-класс?')) return
     setLoading(true)
     try {
       const cats = [
@@ -44,6 +68,7 @@ export default function Page() {
         }),
       })
       toast({ title: "Событие создано" })
+      try { localStorage.removeItem('s7_admin_mc_draft') } catch {}
       router.push("/admin/masterclass")
     } catch (e: any) {
       toast({ title: "Ошибка", description: e?.message || "Не удалось создать событие", variant: "destructive" as any })
@@ -132,11 +157,29 @@ export default function Page() {
           )}
         </div>
 
-        {/* Publish Button */}
-        <button onClick={publish} disabled={loading} className="w-full rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors">
-          {loading ? 'Сохраняем...' : 'Опубликовать'}
-          <ArrowUpRight className="w-5 h-5" />
-        </button>
+        {/* Draft + Publish */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              const cats = [
+                ...Object.keys(selected).filter((k) => selected[k]),
+                ...customCats.split(',').map((s) => s.trim()).filter(Boolean),
+              ]
+              try {
+                localStorage.setItem('s7_admin_mc_draft', JSON.stringify({ title, description, format, isFree, price, date, location, url, categories: cats, customCats }))
+                toast({ title: 'Черновик сохранён' })
+              } catch {}
+            }}
+            className="flex-1 rounded-2xl bg-[#2a2a35] hover:bg-[#333344] text-white font-medium py-4 transition-colors"
+          >
+            Сохранить черновик
+          </button>
+          <button onClick={publish} disabled={loading} className="flex-1 rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors">
+            {loading ? 'Сохраняем...' : 'Опубликовать'}
+            <ArrowUpRight className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Price toggle */}
         <div className="flex items-center gap-3">

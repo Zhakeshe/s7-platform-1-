@@ -6,6 +6,8 @@ import { useAuth } from "@/components/auth/auth-context"
 import { hasCourseAccess, autoActivateEligiblePurchases } from "@/lib/s7db"
 import dynamic from "next/dynamic"
 import { getObjectUrl } from "@/lib/s7media"
+import { apiFetch } from "@/lib/api"
+import { toast } from "@/hooks/use-toast"
 const ReactMarkdown = dynamic(() => import("react-markdown").then((m) => m.default as any), { ssr: false }) as any
 
 export default function CourseLessonTab({
@@ -52,6 +54,9 @@ export default function CourseLessonTab({
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [slideUrls, setSlideUrls] = useState<(string | null)[]>([])
   const [presUrl, setPresUrl] = useState<string | null>(null)
+  // Lesson quiz state
+  const [lessonQuiz, setLessonQuiz] = useState<Array<any>>([])
+  const [loadingQuiz, setLoadingQuiz] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -77,6 +82,30 @@ export default function CourseLessonTab({
     })()
     return () => { alive = false }
   }, [lesson?.videoMediaId, lesson?.slideMediaIds, lesson?.presentationMediaId])
+
+  // Load lesson-level quiz from backend
+  useEffect(() => {
+    if (!course?.id || moduleId == null || lessonId == null) { setLessonQuiz([]); return }
+    setLoadingQuiz(true)
+    const params = new URLSearchParams({ lessonId: String(lessonId) })
+    apiFetch<Array<any>>(`/courses/${course.id}/questions?${params.toString()}`)
+      .then((list) => setLessonQuiz(list || []))
+      .catch(() => setLessonQuiz([]))
+      .finally(() => setLoadingQuiz(false))
+  }, [course?.id, moduleId, lessonId])
+
+  const answerLessonQuestion = async (questionId: string, selectedIndex: number) => {
+    try {
+      const res = await apiFetch<{ isCorrect: boolean; correctIndex: number }>(`/courses/questions/${questionId}/answer`, {
+        method: "POST",
+        body: JSON.stringify({ selectedIndex })
+      })
+      setLessonQuiz((prev) => prev.map((q) => (q.id === questionId ? { ...q, selectedIndex, isCorrect: res.isCorrect, correctIndex: res.correctIndex } : q)))
+      toast({ title: res.isCorrect ? 'Верно' : 'Неверно', description: res.isCorrect ? 'Отличная работа!' : 'Правильный вариант подсвечен' })
+    } catch (e: any) {
+      toast({ title: 'Ошибка', description: e?.message || 'Не удалось отправить ответ', variant: 'destructive' as any })
+    }
+  }
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
@@ -140,38 +169,54 @@ export default function CourseLessonTab({
               </div>
             )}
 
-            {/* Quiz (placeholder) */}
+            {/* Lesson Quiz */}
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 bg-[#0f2d3a] border border-[#174a5d] text-[#7ed8ff]">
                 <Info className="w-4 h-4" />
-                <span>Проверьте свои знания чтобы продолжить</span>
+                <span>Проверьте свои знания по этому уроку</span>
               </div>
               <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-3">
-                <div className="text-white/80">Вопрос</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {[
-                    { key: "A", label: "A" },
-                    { key: "B", label: "B" },
-                    { key: "C", label: "C" },
-                    { key: "D", label: "D" },
-                  ].map((opt) => (
-                    <button
-                      key={opt.key}
-                      onClick={() => setSelectedOption(opt.key)}
-                      aria-pressed={selectedOption === opt.key}
-                      className={`flex items-center gap-3 rounded-full px-4 py-3 bg-[#0f0f14] border text-left hover:bg-[#1a1a22] transition-colors ${
-                        selectedOption === opt.key
-                          ? "border-[#00a3ff] ring-2 ring-[#00a3ff]"
-                          : "border-[#2a2a35]"
-                      }`}
-                    >
-                      <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
-                        {opt.key}
-                      </span>
-                      <span className="text-white/80 flex-1">{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
+                {loadingQuiz && <div className="text-white/60">Загрузка вопросов...</div>}
+                {!loadingQuiz && lessonQuiz.length === 0 && <div className="text-white/60">Вопросов пока нет</div>}
+                {!loadingQuiz && lessonQuiz.length > 0 && (
+                  <div className="space-y-4">
+                    {lessonQuiz.map((q) => (
+                      <div key={q.id} className="space-y-2">
+                        <div className="text-white/80">{q.text}</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {(q.options || []).map((opt: string, idx: number) => {
+                            const isSelected = q.selectedIndex === idx
+                            const isCorrect = q.correctIndex === idx
+                            const showCorrect = typeof q.correctIndex === 'number'
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => answerLessonQuestion(q.id, idx)}
+                                disabled={showCorrect}
+                                className={`flex items-center gap-3 rounded-full px-4 py-3 border text-left transition-colors ${
+                                  showCorrect
+                                    ? isCorrect
+                                      ? 'bg-[#22c55e]/15 border-[#22c55e]/40 text-white'
+                                      : isSelected
+                                        ? 'bg-[#ef4444]/15 border-[#ef4444]/40 text-white'
+                                        : 'bg-transparent border-[#2a2a35] text-white/80'
+                                    : isSelected
+                                      ? 'bg-[#1b1b22] border-[#2a2a35] text-white'
+                                      : 'bg-[#0f0f14] border-[#2a2a35] hover:bg-[#1a1a22]'
+                                }`}
+                              >
+                                <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                                  {idx + 1}
+                                </span>
+                                <span className="text-white/80 flex-1">{opt}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </section>

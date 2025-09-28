@@ -43,7 +43,7 @@ export default function LoginPage() {
       }
 
       await register(email.trim(), password)
-      updateProfile({ fullName: name.trim(), institution: institution.trim(), age: ageNum, primaryRole: primaryRole.trim() })
+      await updateProfile({ fullName: name.trim(), institution: institution.trim(), age: ageNum, primaryRole: primaryRole.trim() })
       toast({ title: "Регистрация успешна", description: "Заполните профиль в разделе Профиль" })
       router.push("/dashboard")
     } catch (e: any) {

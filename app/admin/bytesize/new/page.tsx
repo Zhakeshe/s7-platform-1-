@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowUpRight, Upload, Image } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { apiFetch, getTokens } from "@/lib/api"
@@ -15,6 +15,20 @@ export default function Page() {
   const [videoUrl, setVideoUrl] = useState<string>("")
   const [coverUrl, setCoverUrl] = useState<string>("")
   const [uploading, setUploading] = useState(false)
+
+  // Restore draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('s7_admin_bytesize_draft')
+      if (!raw) return
+      const d = JSON.parse(raw)
+      if (d.title) setTitle(d.title)
+      if (d.description) setDescription(d.description)
+      if (Array.isArray(d.category)) setCategory(d.category)
+      if (d.videoUrl) setVideoUrl(d.videoUrl)
+      if (d.coverUrl) setCoverUrl(d.coverUrl)
+    } catch {}
+  }, [])
 
   const uploadMedia = async (file: File): Promise<string> => {
     const tokens = getTokens()
@@ -119,24 +133,38 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Publish button */}
+        {/* Draft + Publish */}
         <div className="pt-2">
-          <button
-            disabled={uploading || !videoUrl || !title.trim()}
-            onClick={async () => {
-              try {
-                await apiFetch("/api/admin/bytesize", { method: "POST", body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, videoUrl, coverImageUrl: coverUrl || undefined, tags: category }) })
-                toast({ title: "Видео опубликовано" })
-                router.push("/admin/bytesize")
-              } catch(e:any) {
-                toast({ title: "Ошибка", description: e?.message || "Не удалось опубликовать", variant: "destructive" as any })
-              }
-            }}
-            className="w-full rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
-          >
-            Опубликовать
-            <ArrowUpRight className="w-5 h-5" />
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                try { localStorage.setItem('s7_admin_bytesize_draft', JSON.stringify({ title, description, category, videoUrl, coverUrl })) } catch {}
+                toast({ title: 'Черновик сохранён' })
+              }}
+              className="rounded-2xl bg-[#2a2a35] hover:bg-[#333344] text-white font-medium py-4 transition-colors"
+            >
+              Сохранить черновик
+            </button>
+            <button
+              disabled={uploading || !videoUrl || !title.trim()}
+              onClick={async () => {
+                if (typeof window !== 'undefined' && !window.confirm('Опубликовать видео?')) return
+                try {
+                  await apiFetch("/api/admin/bytesize", { method: "POST", body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, videoUrl, coverImageUrl: coverUrl || undefined, tags: category }) })
+                  toast({ title: "Видео опубликовано" })
+                  try { localStorage.removeItem('s7_admin_bytesize_draft') } catch {}
+                  router.push("/admin/bytesize")
+                } catch(e:any) {
+                  toast({ title: "Ошибка", description: e?.message || "Не удалось опубликовать", variant: "destructive" as any })
+                }
+              }}
+              className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
+            >
+              Опубликовать
+              <ArrowUpRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
     </main>

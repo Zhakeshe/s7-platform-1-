@@ -25,7 +25,9 @@ export default function Sidebar({
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const handleLogout = async () => {
-    logout()
+    const ok = typeof window !== 'undefined' ? window.confirm('Вы действительно хотите выйти?') : true
+    if (!ok) return
+    await logout()
     router.push('/')
   }
 

@@ -27,15 +27,29 @@ export default function Page() {
       .catch(() => {})
   }, [editId])
 
+  // Restore draft if creating new
+  useEffect(() => {
+    if (editId) return
+    try {
+      const raw = localStorage.getItem('s7_admin_team_draft')
+      if (!raw) return
+      const d = JSON.parse(raw)
+      if (d.title) setTitle(d.title)
+      if (d.description) setDescription(d.description)
+    } catch {}
+  }, [editId])
+
   const saveTeam = async () => {
     if (!title.trim()) return
     try {
+      if (typeof window !== 'undefined' && !window.confirm(isEdit ? 'Сохранить изменения?' : 'Создать команду?')) return
       if (isEdit) {
         await apiFetch(`/api/admin/teams/${editId}`, { method: "PUT", body: JSON.stringify({ name: title.trim(), description: description.trim() || undefined }) })
       } else {
         await apiFetch(`/api/admin/teams`, { method: "POST", body: JSON.stringify({ name: title.trim(), description: description.trim() || undefined }) })
       }
       toast({ title: isEdit ? "Сохранено" : "Создано" })
+      try { localStorage.removeItem('s7_admin_team_draft') } catch {}
       router.push("/admin/teams")
     } catch (e: any) {
       toast({ title: "Ошибка", description: e?.message || "Не удалось сохранить", variant: "destructive" as any })
@@ -65,13 +79,27 @@ export default function Page() {
           />
         </div>
 
-        <button
-          onClick={saveTeam}
-          className="w-full rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors"
-        >
-          <span>{isEdit ? "Сохранить" : "Добавить"}</span>
-          <ArrowUpRight className="w-5 h-5" />
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              try { localStorage.setItem('s7_admin_team_draft', JSON.stringify({ title, description })) } catch {}
+              toast({ title: 'Черновик сохранён' })
+            }}
+            className="rounded-2xl bg-[#2a2a35] hover:bg-[#333344] text-white font-medium py-4 transition-colors"
+          >
+            Сохранить черновик
+          </button>
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined' && !window.confirm(isEdit ? 'Сохранить изменения?' : 'Создать команду?')) return
+              saveTeam()
+            }}
+            className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors"
+          >
+            <span>{isEdit ? "Сохранить" : "Добавить"}</span>
+          </button>
+        </div>
       </div>
     </main>
   )

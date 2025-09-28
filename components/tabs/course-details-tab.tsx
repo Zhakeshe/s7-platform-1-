@@ -48,6 +48,9 @@ export default function CourseDetailsTab({
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [canAccess, setCanAccess] = useState<boolean>(false)
+  const [quizCourse, setQuizCourse] = useState<Array<any>>([])
+  const [quizModule, setQuizModule] = useState<Array<any>>([])
+  const [loadingQuiz, setLoadingQuiz] = useState(false)
 
   const isFree = !course?.price || course.price === 0
 
@@ -66,6 +69,48 @@ export default function CourseDetailsTab({
     }
   }, [course?.id, isFree])
 
+  // Load course-level quiz
+  useEffect(() => {
+    if (!course?.id) return
+    setLoadingQuiz(true)
+    apiFetch<Array<any>>(`/courses/${course.id}/questions`)
+      .then((list) => setQuizCourse(list || []))
+      .catch(() => setQuizCourse([]))
+      .finally(() => setLoadingQuiz(false))
+  }, [course?.id])
+
+  // Load module-level quiz when module changes
+  useEffect(() => {
+    if (!course?.id || !activeModuleId) { setQuizModule([]); return }
+    setLoadingQuiz(true)
+    const params = new URLSearchParams({ moduleId: String(activeModuleId) })
+    apiFetch<Array<any>>(`/courses/${course.id}/questions?${params.toString()}`)
+      .then((list) => setQuizModule(list || []))
+      .catch(() => setQuizModule([]))
+      .finally(() => setLoadingQuiz(false))
+  }, [course?.id, activeModuleId])
+
+  const markAnswer = (setter: (v: any) => void, list: any[], questionId: string, selectedIndex: number, isCorrect: boolean, correctIndex: number) => {
+    setter(list.map((q) => (q.id === questionId ? { ...q, selectedIndex, isCorrect, correctIndex } : q)))
+  }
+
+  const answerQuestion = async (questionId: string, selectedIndex: number, scope: 'course' | 'module') => {
+    try {
+      const res = await apiFetch<{ isCorrect: boolean; correctIndex: number }>(`/courses/questions/${questionId}/answer`, {
+        method: "POST",
+        body: JSON.stringify({ selectedIndex })
+      })
+      if (scope === 'course') {
+        markAnswer(setQuizCourse, quizCourse, questionId, selectedIndex, res.isCorrect, res.correctIndex)
+      } else {
+        markAnswer(setQuizModule, quizModule, questionId, selectedIndex, res.isCorrect, res.correctIndex)
+      }
+      toast({ title: res.isCorrect ? 'Верно' : 'Неверно', description: res.isCorrect ? 'Отличная работа!' : 'Правильный вариант подсвечен' })
+    } catch (e: any) {
+      toast({ title: 'Ошибка', description: e?.message || 'Не удалось отправить ответ', variant: 'destructive' as any })
+    }
+  }
+
   const handlePurchase = () => {
     if (!user || !course) { toast({ title: "Войдите", description: "Войдите чтобы купить курс" }); return }
     setShowPayment(true)
@@ -73,6 +118,10 @@ export default function CourseDetailsTab({
 
   const confirmPaymentSent = async () => {
     if (!user || !course) return
+    if (typeof window !== 'undefined') {
+      const ok = window.confirm('Вы точно отправили оплату?')
+      if (!ok) return
+    }
     setIsPurchasing(true)
     try {
       const senderCode = (user.id || '').slice(-8)
@@ -220,6 +269,93 @@ export default function CourseDetailsTab({
                 <div className="text-white/60 text-sm">{lesson.time ?? "10:21"}</div>
               </button>
             ))}
+          </div>
+
+          {/* Quiz Section */}
+          <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 text-white">
+            <div className="text-white font-medium mb-2">Проверка знаний</div>
+            {loadingQuiz && <div className="text-white/60 text-sm">Загрузка вопросов...</div>}
+            {!loadingQuiz && (quizCourse.length + quizModule.length === 0) && (
+              <div className="text-white/60 text-sm">Вопросов пока нет</div>
+            )}
+
+            {/* Course-level questions */}
+            {quizCourse.length > 0 && (
+              <div className="space-y-3">
+                <div className="text-xs text-white/60">Вопросы по курсу</div>
+                {quizCourse.map((q) => (
+                  <div key={q.id} className="rounded-lg border border-[#2a2a35] p-3">
+                    <div className="text-sm mb-2">{q.text}</div>
+                    <div className="space-y-2">
+                      {(q.options || []).map((opt: string, idx: number) => {
+                        const isSelected = q.selectedIndex === idx
+                        const isCorrect = q.correctIndex === idx
+                        const showCorrect = typeof q.correctIndex === 'number'
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => answerQuestion(q.id, idx, 'course')}
+                            disabled={showCorrect}
+                            className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${
+                              showCorrect
+                                ? isCorrect
+                                  ? 'bg-[#22c55e]/15 border-[#22c55e]/40 text-white'
+                                  : isSelected
+                                    ? 'bg-[#ef4444]/15 border-[#ef4444]/40 text-white'
+                                    : 'bg-transparent border-[#2a2a35] text-white/80'
+                                : isSelected
+                                  ? 'bg-[#1b1b22] border-[#2a2a35] text-white'
+                                  : 'bg-transparent border-[#2a2a35] text-white/80 hover:bg-[#1b1b22]'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Module-level questions */}
+            {quizModule.length > 0 && (
+              <div className="space-y-3 mt-4">
+                <div className="text-xs text-white/60">Вопросы по модулю</div>
+                {quizModule.map((q) => (
+                  <div key={q.id} className="rounded-lg border border-[#2a2a35] p-3">
+                    <div className="text-sm mb-2">{q.text}</div>
+                    <div className="space-y-2">
+                      {(q.options || []).map((opt: string, idx: number) => {
+                        const isSelected = q.selectedIndex === idx
+                        const isCorrect = q.correctIndex === idx
+                        const showCorrect = typeof q.correctIndex === 'number'
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => answerQuestion(q.id, idx, 'module')}
+                            disabled={showCorrect}
+                            className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${
+                              showCorrect
+                                ? isCorrect
+                                  ? 'bg-[#22c55e]/15 border-[#22c55e]/40 text-white'
+                                  : isSelected
+                                    ? 'bg-[#ef4444]/15 border-[#ef4444]/40 text-white'
+                                    : 'bg-transparent border-[#2a2a35] text-white/80'
+                                : isSelected
+                                  ? 'bg-[#1b1b22] border-[#2a2a35] text-white'
+                                  : 'bg-transparent border-[#2a2a35] text-white/80 hover:bg-[#1b1b22]'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </aside>
       </div>

@@ -22,8 +22,8 @@ interface AuthContextValue {
   loading: boolean
   register: (email: string, password: string, remember?: boolean) => Promise<void>
   login: (email: string, password: string, remember?: boolean) => Promise<void>
-  logout: () => void
-  updateProfile: (patch: Partial<User> & { institution?: string; primaryRole?: string; age?: number }) => void
+  logout: () => Promise<void>
+  updateProfile: (patch: Partial<User> & { institution?: string; primaryRole?: string; age?: number }) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -70,9 +70,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: 0 })
   }
 
-  const logoutFn = () => {
-    setUser(null)
-    clearTokens()
+  const logoutFn = async () => {
+    try {
+      const t = getTokens()
+      if (t?.refreshToken) {
+        await fetch("/auth/logout", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ refreshToken: t.refreshToken }),
+        }).catch(() => null)
+      }
+    } finally {
+      setUser(null)
+      clearTokens()
+    }
   }
 
   const updateProfileFn = async (patch: Partial<User> & { institution?: string; primaryRole?: string; age?: number }) => {
