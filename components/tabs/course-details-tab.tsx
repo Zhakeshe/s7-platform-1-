@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth/auth-context"
 import { useConfirm } from "@/components/ui/confirm"
 import { toast } from "@/hooks/use-toast"
 import { apiFetch } from "@/lib/api"
+import { social } from "@/lib/site-config"
 
 export interface CourseLesson {
   id: number
@@ -372,7 +373,7 @@ export default function CourseDetailsTab({
             <div className="text-lg font-medium mb-2">Оплата через Kaspi</div>
             <div className="text-white/80 text-sm mb-4 space-y-1">
               <div>Сумма: <b>{course?.price?.toLocaleString()} ₸</b></div>
-              <div>Номер Kaspi: <b>+7-700-000-00-00</b></div>
+              <div>Номер Kaspi: <b>{social.phone}</b></div>
               <div className="mt-2">В комментарии укажите:</div>
               <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-3 text-xs flex items-center justify-between">
                 <div className="space-y-1">

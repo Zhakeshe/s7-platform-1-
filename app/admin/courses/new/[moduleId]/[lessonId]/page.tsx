@@ -70,6 +70,41 @@ export default function Page() {
     setCourse(readDraft())
   }, [])
 
+  // Ensure draft skeleton exists for this module/lesson so inputs are editable
+  useEffect(() => {
+    if (!moduleId || !lessonId) return
+    // if course not loaded yet, wait for next effect
+    if (course == null) {
+      const draft: DraftCourse = {
+        title: "",
+        author: "",
+        modules: [
+          { id: moduleId, title: `Модуль ${moduleId}` as any, lessons: [{ id: lessonId, title: "Название урока", time: "" }] },
+        ],
+      }
+      setCourse(draft)
+      writeDraft(draft)
+      return
+    }
+    // add missing module/lesson if needed
+    const mod = course.modules.find((m) => m.id === moduleId)
+    if (!mod) {
+      const next: DraftCourse = {
+        ...course,
+        modules: [...course.modules, { id: moduleId, title: `Модуль ${moduleId}`, lessons: [{ id: lessonId, title: "Название урока", time: "" }] }],
+      }
+      setCourse(next)
+      writeDraft(next)
+      return
+    }
+    if (!mod.lessons.find((l) => l.id === lessonId)) {
+      const newModules = course.modules.map((m) => (m.id === moduleId ? { ...m, lessons: [...m.lessons, { id: lessonId, title: "Название урока", time: "" }] } : m))
+      const next: DraftCourse = { ...course, modules: newModules }
+      setCourse(next)
+      writeDraft(next)
+    }
+  }, [course, moduleId, lessonId])
+
   const module = course?.modules?.find((m) => m.id === moduleId)
   const lessonIndex = module?.lessons?.findIndex((l) => l.id === lessonId) ?? -1
   const lesson = lessonIndex >= 0 && module ? module.lessons[lessonIndex] : undefined
@@ -87,6 +122,46 @@ export default function Page() {
     const next = { ...course, modules: newModules }
     setCourse(next)
     writeDraft(next)
+  }
+
+  // Build local previews from IndexedDB media ids
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      if (!lesson) return
+      if (lesson.videoMediaId) {
+        const u = await getObjectUrl(lesson.videoMediaId)
+        if (alive) setVideoPreview(u)
+      } else setVideoPreview(null)
+      if (Array.isArray(lesson.slideMediaIds) && lesson.slideMediaIds.length) {
+        const urls = await Promise.all(lesson.slideMediaIds.map((id) => getObjectUrl(id)))
+        if (alive) setSlidePreviews((urls.filter(Boolean) as string[]))
+      } else setSlidePreviews([])
+      if (lesson.presentationMediaId) {
+        const u = await getObjectUrl(lesson.presentationMediaId)
+        if (alive) setPresPreview(u)
+      } else setPresPreview(null)
+    })()
+    return () => { alive = false }
+  }, [lesson?.videoMediaId, lesson?.slideMediaIds, lesson?.presentationMediaId])
+
+  // Helper: upload a local media by its id to server and return absolute URL
+  const uploadById = async (mediaId: string): Promise<string> => {
+    const rec = await getFile(mediaId)
+    if (!rec) throw new Error("Файл не найден")
+    const fd = new FormData()
+    const file = new File([rec.blob], rec.name, { type: rec.type })
+    fd.append("file", file)
+    const tokens = getTokens()
+    const res = await fetch("/uploads/media", { method: "POST", headers: tokens?.accessToken ? { authorization: `Bearer ${tokens.accessToken}` } : undefined, body: fd })
+    if (!res.ok) {
+      const text = await res.text().catch(() => "Upload failed")
+      throw new Error(text || `Upload failed (${res.status})`)
+    }
+    const data = await res.json()
+    const u = String(data.url || "")
+    const abs = u.startsWith("http://") || u.startsWith("https://") ? u : new URL(u, window.location.origin).href
+    return abs
   }
 
   const saveLessonDraft = (goBack?: boolean) => {

@@ -1,5 +1,6 @@
 import { ArrowUpRight, Plus, MessageCircle, Phone, Mail } from "lucide-react"
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-context"
@@ -80,9 +81,9 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 w-full max-w-md mx-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000]">
+      <div className="w-[min(92vw,640px)] bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white shadow-xl">
         <h3 className="text-white text-xl font-medium mb-4">Создать команду</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -194,7 +195,8 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

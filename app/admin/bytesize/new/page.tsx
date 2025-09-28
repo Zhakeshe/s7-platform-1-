@@ -56,7 +56,10 @@ export default function Page() {
       throw new Error(t || `Upload failed (${res.status})`)
     }
     const data = await res.json()
-    return data.url as string
+    const u = String(data.url || "")
+    // ensure absolute URL for backend zod url()
+    const abs = u.startsWith("http://") || u.startsWith("https://") ? u : new URL(u, window.location.origin).href
+    return abs
   }
 
   return (
