@@ -4,6 +4,7 @@ import { ArrowUpRight, LogIn } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { listCourses, saveCourses } from "@/lib/s7db"
 import { apiFetch } from "@/lib/api"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 import { toast } from "@/hooks/use-toast"
 
 interface ModuleItem {
@@ -16,6 +17,7 @@ export default function Page() {
   const search = useSearchParams()
   const editId = search.get("edit")
   const isEdit = useMemo(() => Boolean(editId), [editId])
+  const confirm = useConfirm()
 
   const [title, setTitle] = useState("")
   const [author, setAuthor] = useState("")
@@ -117,7 +119,8 @@ export default function Page() {
   }
 
   const publish = async () => {
-    if (typeof window !== 'undefined' && !window.confirm('Опубликовать курс?')) return
+    const ok = await confirm({ title: 'Опубликовать курс?', confirmText: 'Опубликовать', cancelText: 'Отмена' })
+    if (!ok) return
     // Build from draft if exists (contains lessons + rich fields)
     let finalModules = modules.map((m) => ({ id: m.id, title: m.title, lessons: [{ id: 1, title: "Введение", time: "10:21" }] }))
     try {
@@ -248,7 +251,8 @@ export default function Page() {
           <div className="pt-2">
             <button
               onClick={async () => {
-                if (typeof window !== 'undefined' && !window.confirm('Удалить этот курс?')) return
+                const ok = await confirm({ title: 'Удалить этот курс?', confirmText: 'Удалить', cancelText: 'Отмена', destructive: true })
+                if (!ok) return
                 try {
                   await apiFetch(`/api/admin/courses/${editId}` as any, { method: 'DELETE' })
                   try {

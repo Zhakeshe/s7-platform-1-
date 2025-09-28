@@ -3,10 +3,12 @@ import { useEffect, useState } from "react"
 import { ArrowUpRight, Upload, Image } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { apiFetch, getTokens } from "@/lib/api"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 import { toast } from "@/hooks/use-toast"
 
 export default function Page() {
   const router = useRouter()
+  const confirm = useConfirm()
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const presets = ["Robotics", "Coding", "AI", "Design", "Education", "News", "Tips"]
@@ -149,7 +151,8 @@ export default function Page() {
             <button
               disabled={uploading || !videoUrl || !title.trim()}
               onClick={async () => {
-                if (typeof window !== 'undefined' && !window.confirm('Опубликовать видео?')) return
+                const ok = await confirm({ title: 'Опубликовать видео?', confirmText: 'Опубликовать', cancelText: 'Отмена' })
+                if (!ok) return
                 try {
                   await apiFetch("/api/admin/bytesize", { method: "POST", body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, videoUrl, coverImageUrl: coverUrl || undefined, tags: category }) })
                   toast({ title: "Видео опубликовано" })

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
 import { apiFetch } from "@/lib/api"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 import { toast } from "@/hooks/use-toast"
 
 interface AdminCourse {
@@ -15,6 +16,7 @@ interface AdminCourse {
 }
 
 function CourseCard({ id, title, level, price, lessonsCount, onDeleted }: { id: string; title: string; level: string; price: number; lessonsCount: number; onDeleted: (id: string) => void }) {
+  const confirm = useConfirm()
   return (
     <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative">
       <div className="absolute top-4 right-4 text-white/70">
@@ -37,7 +39,8 @@ function CourseCard({ id, title, level, price, lessonsCount, onDeleted }: { id: 
         </Link>
         <button
           onClick={async () => {
-            if (typeof window !== 'undefined' && !window.confirm('Удалить курс?')) return
+            const ok = await confirm({ title: 'Удалить курс?', confirmText: 'Удалить', cancelText: 'Отмена', destructive: true })
+            if (!ok) return
             try {
               await apiFetch(`/api/admin/courses/${id}`, { method: 'DELETE' })
               toast({ title: 'Курс удалён' } as any)

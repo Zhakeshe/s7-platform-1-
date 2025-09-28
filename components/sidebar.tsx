@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Home, BookOpen, User, Users, GraduationCap, FileText, Wrench, ChevronLeft, ChevronRight, LogOut, Shield } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 import { useRouter } from "next/navigation"
 
 interface SidebarProps {
@@ -23,9 +24,16 @@ export default function Sidebar({
   const { user, logout } = useAuth()
   const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const confirm = useConfirm()
 
   const handleLogout = async () => {
-    const ok = typeof window !== 'undefined' ? window.confirm('Вы действительно хотите выйти?') : true
+    const ok = await confirm({
+      title: 'Выйти из аккаунта?',
+      description: 'Вы сможете войти в любой момент снова.',
+      confirmText: 'Выйти',
+      cancelText: 'Отмена',
+      destructive: true,
+    })
     if (!ok) return
     await logout()
     router.push('/')

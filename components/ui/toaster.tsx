@@ -11,10 +11,16 @@ import {
 } from '@/components/ui/toast'
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts, dismiss } = useToast()
 
   return (
     <ToastProvider>
+      {toasts.length > 0 && (
+        <div
+          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm pointer-events-auto"
+          onClick={() => dismiss()}
+        />
+      )}
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>

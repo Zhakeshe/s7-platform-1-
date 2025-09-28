@@ -3,10 +3,12 @@ import { useEffect, useState } from "react"
 import { ArrowUpRight, LogIn } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 import { toast } from "@/hooks/use-toast"
 
 export default function Page() {
   const router = useRouter()
+  const confirm = useConfirm()
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [format, setFormat] = useState<"online" | "offline" | "hybrid">("offline")
@@ -45,7 +47,8 @@ export default function Page() {
 
   const publish = async () => {
     if (!title.trim()) { toast({ title: "Название обязательно" }); return }
-    if (typeof window !== 'undefined' && !window.confirm('Опубликовать мастер-класс?')) return
+    const ok = await confirm({ title: 'Опубликовать мастер-класс?', confirmText: 'Опубликовать', cancelText: 'Отмена' })
+    if (!ok) return
     setLoading(true)
     try {
       const cats = [

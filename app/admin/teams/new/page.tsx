@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { ArrowUpRight } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { apiFetch } from "@/lib/api"
+import { useConfirm } from "@/components/ui/confirm-dialog"
 import { toast } from "@/hooks/use-toast"
 
 export default function Page() {
@@ -12,6 +13,7 @@ export default function Page() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const isEdit = Boolean(editId)
+  const confirm = useConfirm()
 
   useEffect(() => {
     if (!editId) return
@@ -42,7 +44,8 @@ export default function Page() {
   const saveTeam = async () => {
     if (!title.trim()) return
     try {
-      if (typeof window !== 'undefined' && !window.confirm(isEdit ? 'Сохранить изменения?' : 'Создать команду?')) return
+      const ok = await confirm({ title: isEdit ? 'Сохранить изменения?' : 'Создать команду?', confirmText: isEdit ? 'Сохранить' : 'Создать', cancelText: 'Отмена' })
+      if (!ok) return
       if (isEdit) {
         await apiFetch(`/api/admin/teams/${editId}`, { method: "PUT", body: JSON.stringify({ name: title.trim(), description: description.trim() || undefined }) })
       } else {
@@ -91,10 +94,7 @@ export default function Page() {
             Сохранить черновик
           </button>
           <button
-            onClick={() => {
-              if (typeof window !== 'undefined' && !window.confirm(isEdit ? 'Сохранить изменения?' : 'Создать команду?')) return
-              saveTeam()
-            }}
+            onClick={() => { saveTeam() }}
             className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors"
           >
             <span>{isEdit ? "Сохранить" : "Добавить"}</span>
