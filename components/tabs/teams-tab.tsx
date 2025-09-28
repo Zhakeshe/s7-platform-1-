@@ -224,9 +224,15 @@ export default function TeamsTab() {
     <main className="flex-1 p-8 overflow-y-auto animate-slide-up">
       {/* Open Teams Section */}
       <section className="mb-12">
-        <h2 className="text-white text-xl font-medium mb-6 animate-slide-up" style={{ animationDelay: "200ms" }}>
-          Команды
-        </h2>
+        <div className="flex items-center justify-between mb-6 animate-slide-up" style={{ animationDelay: "200ms" }}>
+          <h2 className="text-white text-xl font-medium">Команды</h2>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium"
+          >
+            Создать команду
+          </button>
+        </div>
         {teams.length === 0 ? (
           <div className="text-white/70 bg-[#16161c] border border-[#636370]/20 rounded-2xl p-8">Пока нет команд</div>
         ) : (

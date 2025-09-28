@@ -18,6 +18,9 @@ export default function Page() {
   const [coverUrl, setCoverUrl] = useState<string>("")
   const [uploading, setUploading] = useState(false)
 
+  const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"]
+  const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"]
+
   // Restore draft on mount
   useEffect(() => {
     try {
@@ -41,7 +44,15 @@ export default function Page() {
       headers: tokens?.accessToken ? { authorization: `Bearer ${tokens.accessToken}` } : undefined,
       body: fd,
     })
-    if (!res.ok) throw new Error(await res.text().catch(() => "Upload failed"))
+    if (!res.ok) {
+      const ct = res.headers.get("content-type") || ""
+      if (ct.includes("application/json")) {
+        const j = await res.json().catch(() => null)
+        throw new Error(j?.error || `Upload failed (${res.status})`)
+      }
+      const t = await res.text().catch(() => "Upload failed")
+      throw new Error(t || `Upload failed (${res.status})`)
+    }
     const data = await res.json()
     return data.url as string
   }
@@ -67,14 +78,24 @@ export default function Page() {
             )}
           </div>
           <div className="flex gap-2 mt-3">
-            <input type="file" accept="video/*" onChange={async (e)=>{
-              const f = e.target.files?.[0]; if(!f) return; setUploading(true);
+            <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={async (e)=>{
+              const f = e.target.files?.[0]; if(!f) return;
+              if (f.type && !ALLOWED_VIDEO_TYPES.includes(f.type)) {
+                toast({ title: "Неподдерживаемый формат видео", description: "Разрешены: MP4, WebM, MOV", variant: "destructive" as any });
+                return;
+              }
+              setUploading(true);
               try { const url = await uploadMedia(f); setVideoUrl(url); toast({ title: "Видео загружено" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
             }} className="text-white" />
             <label className="inline-flex items-center gap-2 px-3 py-2 bg-[#16161c] border border-[#2a2a35] rounded-lg text-white cursor-pointer">
               <Image className="w-4 h-4" /> Обложка
-              <input type="file" accept="image/*" hidden onChange={async (e)=>{
-                const f = e.target.files?.[0]; if(!f) return; setUploading(true);
+              <input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={async (e)=>{
+                const f = e.target.files?.[0]; if(!f) return;
+                if (f.type && !ALLOWED_COVER_TYPES.includes(f.type)) {
+                  toast({ title: "Неподдерживаемый формат обложки", description: "Разрешены: JPG, PNG, WEBP", variant: "destructive" as any });
+                  return;
+                }
+                setUploading(true);
                 try { const url = await uploadMedia(f); setCoverUrl(url); toast({ title: "Обложка загружена" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
               }} />
             </label>

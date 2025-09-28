@@ -1,9 +1,10 @@
 "use client"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Image, Upload, Trash, Bold, Italic, Heading2, List } from "lucide-react"
 import dynamic from "next/dynamic"
 import { saveFile, deleteFile } from "@/lib/s7media"
+import { toast } from "@/hooks/use-toast"
 const ReactMarkdown = dynamic(() => import("react-markdown").then((m) => m.default as any), { ssr: false }) as any
 
 interface DraftLesson {
@@ -50,6 +51,7 @@ export default function Page() {
   const params = useParams<{ moduleId: string; lessonId: string }>()
   const moduleId = useMemo(() => Number(params.moduleId), [params.moduleId])
   const lessonId = useMemo(() => Number(params.lessonId), [params.lessonId])
+  const router = useRouter()
 
   const [course, setCourse] = useState<DraftCourse | null>(null)
   const fileInput = useRef<HTMLInputElement | null>(null)
@@ -77,6 +79,15 @@ export default function Page() {
     const next = { ...course, modules: newModules }
     setCourse(next)
     writeDraft(next)
+  }
+
+  const saveLessonDraft = (goBack?: boolean) => {
+    if (!course) return
+    try {
+      writeDraft(course)
+      toast({ title: "Сохранено", description: "Урок сохранён в черновик" } as any)
+      if (goBack) router.push(`/admin/courses/new/${moduleId}`)
+    } catch {}
   }
 
   const onSelectVideo = async (file: File) => {
@@ -312,6 +323,11 @@ export default function Page() {
             </div>
           </div>
         </section>
+      </div>
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-2">
+        <button onClick={() => saveLessonDraft(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-4 py-2 text-white/90">Сохранить</button>
+        <button onClick={() => saveLessonDraft(true)} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] px-4 py-2 text-black font-medium">Сохранить и выйти</button>
       </div>
     </main>
   )

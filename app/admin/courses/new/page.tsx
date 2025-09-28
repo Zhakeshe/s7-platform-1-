@@ -1,6 +1,6 @@
 "use client"
 import { useMemo, useState, useEffect } from "react"
-import { ArrowUpRight, LogIn } from "lucide-react"
+import { ArrowUpRight, LogIn, Trash } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { listCourses, saveCourses } from "@/lib/s7db"
 import { apiFetch } from "@/lib/api"
@@ -26,6 +26,8 @@ export default function Page() {
   const [price, setPrice] = useState<number>(0)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [dragId, setDragId] = useState<number | null>(null)
+  const [difficulty, setDifficulty] = useState<string>("Легкий")
+  const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
     if (!editId) return
@@ -36,6 +38,7 @@ export default function Page() {
       if (found) {
         setTitle(found.title || "")
         setAuthor(found.author || "")
+        if (found.difficulty) setDifficulty(found.difficulty)
         setModules(
           (found.modules || []).map((m: any) => ({ id: m.id, title: m.title })) || [{ id: 1, title: "Модуль 1" }]
         )
@@ -59,6 +62,7 @@ export default function Page() {
             if (!foundSrv) return
             setTitle(foundSrv.title || "")
             setAuthor(foundSrv.author || "")
+            if (foundSrv.difficulty) setDifficulty(foundSrv.difficulty)
             setModules(((foundSrv.modules || []).map((m: any) => ({ id: m.id, title: m.title }))) || [{ id: 1, title: "Модуль 1" }])
             if (typeof foundSrv.price === "number" && foundSrv.price > 0) { setFree(false); setPrice(foundSrv.price) } else { setFree(true); setPrice(0) }
             try { localStorage.setItem("s7_admin_course_draft", JSON.stringify({ title: foundSrv.title, author: foundSrv.author, modules: foundSrv.modules || [] })) } catch {}
@@ -77,6 +81,7 @@ export default function Page() {
         const d = JSON.parse(raw)
         if (d.title) setTitle(d.title)
         if (d.author) setAuthor(d.author)
+        if (d.difficulty) setDifficulty(d.difficulty)
         if (Array.isArray(d.modules) && d.modules.length) {
           setModules(d.modules.map((m: any) => ({ id: m.id, title: m.title })))
         }
@@ -90,12 +95,13 @@ export default function Page() {
       const draft = {
         title,
         author,
+        difficulty,
         modules: modules.map((m) => ({ id: m.id, title: m.title, lessons: [] })),
         price: free ? 0 : price,
       }
       localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
     } catch {}
-  }, [title, author, modules, free, price])
+  }, [title, author, difficulty, modules, free, price])
 
   const addModule = () => {
     const nextId = modules.length ? Math.max(...modules.map((m) => m.id)) + 1 : 1
@@ -104,6 +110,18 @@ export default function Page() {
 
   const renameModule = (id: number, newTitle: string) => {
     setModules((prev) => prev.map((m) => (m.id === id ? { ...m, title: newTitle } : m)))
+  }
+
+  const removeModule = async (id: number) => {
+    const ok = await confirm({ title: `Удалить модуль ${id}?`, confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
+    if (!ok) return
+    setModules((prev) => {
+      const filtered = prev.filter((m) => m.id !== id)
+      // reindex ids to keep 1..n for UI
+      return filtered.map((m, idx) => ({ ...m, id: idx + 1 }))
+    })
+    // draft persistence is handled by useEffect([modules]) below
+    try { toast({ title: 'Модуль удалён' } as any) } catch {}
   }
 
   const reorderModules = (fromId: number, toId: number) => {
@@ -151,7 +169,7 @@ export default function Page() {
     const newCourse = {
       id: title.toLowerCase().replace(/\s+/g, "-"),
       title,
-      difficulty: free ? "Легкий" : "Средний",
+      difficulty,
       author,
       price: free ? 0 : price,
       modules: finalModules,
@@ -164,7 +182,7 @@ export default function Page() {
         const payload = {
           title: title.trim(),
           description: title.trim(),
-          difficulty: free ? "Легкий" : "Средний",
+          difficulty,
           price: free ? 0 : Number(price || 0),
           isFree: free,
           isPublished: true,
@@ -227,23 +245,47 @@ export default function Page() {
 
       <div className="max-w-2xl space-y-5">
         {/* Title Card */}
-        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-5 text-white">
+        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-5 text-white relative">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Название"
             className="w-full bg-transparent outline-none text-2xl md:text-3xl font-semibold placeholder-white/40"
           />
-          <div className="mt-3 flex items-center gap-3">
-            <span className="inline-flex items-center text-xs font-medium px-3 py-1 rounded-full bg-[#f59e0b] text-black">
+          <div className="mt-3 flex items-center gap-3 relative">
+            <button
+              type="button"
+              onClick={() => setShowFilters((s)=>!s)}
+              className="inline-flex items-center text-xs font-medium px-3 py-1 rounded-full bg-[#f59e0b] text-black"
+            >
               фильтр
-            </span>
+            </button>
             <input
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
               placeholder="Имя автора"
               className="bg-[#0f0f14] border border-[#2a2a35] text-white/80 text-xs rounded-full px-3 py-1 outline-none"
             />
+            {showFilters && (
+              <div className="absolute top-full left-0 mt-2 w-72 bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3 shadow-xl z-10">
+                <div className="text-white/80 text-xs mb-2">Сложность</div>
+                <div className="flex items-center gap-2">
+                  {( ["Легкий","Средний","Сложный"] as string[] ).map((lvl) => (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={() => setDifficulty(lvl)}
+                      className={`px-3 py-1 rounded-full text-xs border ${difficulty === lvl ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                    >
+                      {lvl}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-end mt-3">
+                  <button onClick={()=>setShowFilters(false)} className="text-xs px-3 py-1 rounded-lg bg-[#2a2a35] hover:bg-[#333344] text-white/80">Готово</button>
+                </div>
+              </div>
+            )}
           </div>
 
         {/* Danger Zone: Delete when editing */}
@@ -302,9 +344,14 @@ export default function Page() {
                 </button>
               )}
             </div>
-            <a href={`/admin/courses/new/${m.id}`} aria-label="Открыть уроки" className="text-[#a0a0b0] hover:text-white">
-              <LogIn className="w-5 h-5" />
-            </a>
+            <div className="flex items-center gap-2">
+              <a href={`/admin/courses/new/${m.id}`} aria-label="Открыть уроки" className="text-[#a0a0b0] hover:text-white">
+                <LogIn className="w-5 h-5" />
+              </a>
+              <button onClick={() => removeModule(m.id)} aria-label="Удалить модуль" className="text-[#a0a0b0] hover:text-[#ef4444] transition-colors">
+                <Trash className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         ))}
 
@@ -328,6 +375,7 @@ export default function Page() {
                 const draft = {
                   title,
                   author,
+                  difficulty,
                   modules: modules.map((m) => ({ id: m.id, title: m.title })),
                   price: free ? 0 : price,
                 }

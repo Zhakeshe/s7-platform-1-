@@ -56,8 +56,16 @@ export default function AdminSidebar() {
         </div>
       </div>
       
-      {/* Logout */}
-      <div className="mt-auto pt-4 border-t border-[#636370]/20">
+      {/* Back to main site */}
+      <div className="mt-auto pt-4 border-t border-[#636370]/20 space-y-2">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-[#16161c] transition-colors w-full"
+        >
+          <Home className="w-5 h-5" />
+          <span>На главную</span>
+        </Link>
+        {/* Logout */}
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-[#16161c] transition-colors w-full"

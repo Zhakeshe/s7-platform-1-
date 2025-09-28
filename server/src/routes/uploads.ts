@@ -23,22 +23,46 @@ const storage = multer.diskStorage({
   },
 })
 
-const upload = multer({ storage })
+// Whitelisted content types
+const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
+const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]) // mp4, webm, mov
+const ALLOWED_TYPES = new Set<string>([...IMAGE_TYPES, ...VIDEO_TYPES])
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200 MB
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype) return cb(new Error("UNSUPPORTED_MEDIA_TYPE"))
+    if (ALLOWED_TYPES.has(file.mimetype)) return cb(null, true)
+    return cb(new Error("UNSUPPORTED_MEDIA_TYPE"))
+  },
+})
 
 export const router = Router()
 
 router.use(requireAuth)
 
-router.post("/media", upload.single("file"), (req: AuthenticatedRequest, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" })
-  const relativePath = req.file.filename
-  const url = `/media/${relativePath}`
-  res.status(201).json({
-    filename: req.file.originalname,
-    mimeType: req.file.mimetype,
-    size: req.file.size,
-    storagePath: req.file.path,
-    url,
+router.post("/media", (req: AuthenticatedRequest, res) => {
+  upload.single("file")(req as any, res as any, (err: any) => {
+    if (err) {
+      if (String(err?.message).includes("UNSUPPORTED_MEDIA_TYPE")) {
+        return res.status(415).json({ error: "Unsupported file type. Allowed: jpg, png, webp, mp4, webm, mov" })
+      }
+      if (String((err as any)?.code) === "LIMIT_FILE_SIZE") {
+        return res.status(413).json({ error: "File too large. Max 200MB" })
+      }
+      return res.status(400).json({ error: String(err?.message || err) })
+    }
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" })
+    const relativePath = (req.file as any).filename
+    const url = `/media/${relativePath}`
+    return res.status(201).json({
+      filename: (req.file as any).originalname,
+      mimeType: (req.file as any).mimetype,
+      size: (req.file as any).size,
+      storagePath: (req.file as any).path,
+      url,
+    })
   })
 })
 

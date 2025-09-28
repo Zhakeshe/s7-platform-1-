@@ -13,6 +13,11 @@ export function getTokens(): Tokens | null {
     const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY)
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
     if (accessToken && refreshToken) return { accessToken, refreshToken }
+    // fallback to cookies if localStorage is empty or unavailable
+    const cookieMap = getCookieMap()
+    const ca = cookieMap[ACCESS_TOKEN_KEY]
+    const cr = cookieMap[REFRESH_TOKEN_KEY]
+    if (ca && cr) return { accessToken: ca, refreshToken: cr }
     return null
   } catch {
     return null
@@ -23,6 +28,9 @@ export function setTokens(t: Tokens) {
   try {
     localStorage.setItem(ACCESS_TOKEN_KEY, t.accessToken)
     localStorage.setItem(REFRESH_TOKEN_KEY, t.refreshToken)
+    // also persist in cookies (30 days)
+    setCookie(ACCESS_TOKEN_KEY, t.accessToken, 30)
+    setCookie(REFRESH_TOKEN_KEY, t.refreshToken, 30)
   } catch {}
 }
 
@@ -30,6 +38,43 @@ export function clearTokens() {
   try {
     localStorage.removeItem(ACCESS_TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
+    deleteCookie(ACCESS_TOKEN_KEY)
+    deleteCookie(REFRESH_TOKEN_KEY)
+  } catch {}
+}
+
+// --- Cookie helpers ---
+function getCookieMap(): Record<string, string> {
+  try {
+    return document.cookie
+      .split(";")
+      .map((v) => v.trim())
+      .filter(Boolean)
+      .reduce((acc: Record<string, string>, pair) => {
+        const idx = pair.indexOf("=")
+        if (idx === -1) return acc
+        const k = decodeURIComponent(pair.slice(0, idx))
+        const val = decodeURIComponent(pair.slice(idx + 1))
+        acc[k] = val
+        return acc
+      }, {})
+  } catch {
+    return {}
+  }
+}
+
+function setCookie(name: string, value: string, days: number) {
+  try {
+    const d = new Date()
+    d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000)
+    const expires = `expires=${d.toUTCString()}`
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`
+  } catch {}
+}
+
+function deleteCookie(name: string) {
+  try {
+    document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`
   } catch {}
 }
 

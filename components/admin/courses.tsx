@@ -67,6 +67,9 @@ function CourseCard({ id, title, level, price, lessonsCount, onDeleted }: { id: 
 export default function AdminCourses() {
   const [courses, setCourses] = useState<AdminCourse[]>([])
   const [loading, setLoading] = useState(true)
+  const [difficulty, setDifficulty] = useState<string>("Все")
+  const [price, setPrice] = useState<"all" | "free" | "paid">("all")
+  const [q, setQ] = useState("")
 
   useEffect(() => {
     apiFetch<AdminCourse[]>("/api/admin/courses")
@@ -78,6 +81,40 @@ export default function AdminCourses() {
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <h2 className="text-white text-xl font-medium mb-6">Курсы</h2>
+      {/* Filters */}
+      <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 text-white mb-6">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="flex items-center gap-2">
+            {(["Все","Легкий","Средний","Сложный"] as string[]).map((lvl)=> (
+              <button
+                key={lvl}
+                className={`text-xs px-3 py-1 rounded-full border ${difficulty===lvl ? 'bg-[#00a3ff] text-black border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                onClick={()=>setDifficulty(lvl)}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            {(["all","free","paid"] as Array<"all"|"free"|"paid">).map((p)=> (
+              <button
+                key={p}
+                className={`text-xs px-3 py-1 rounded-full border ${price===p ? 'bg-white text-black border-white' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                onClick={()=>setPrice(p)}
+              >
+                {p === 'all' ? 'Все' : p === 'free' ? 'Бесплатные' : 'Платные'}
+              </button>
+            ))}
+          </div>
+          <div className="flex-1" />
+          <input
+            value={q}
+            onChange={(e)=>setQ(e.target.value)}
+            placeholder="Поиск по названию"
+            className="w-full md:w-64 bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none text-white/80"
+          />
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Link href="/admin/courses/new" className="block">
           <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative hover:bg-[#1b1b22] transition-colors">
@@ -92,7 +129,11 @@ export default function AdminCourses() {
         ) : courses.length === 0 ? (
           <div className="text-white/60">Курсов пока нет</div>
         ) : (
-          courses.map((c) => (
+          courses
+            .filter((c) => (difficulty === "Все" ? true : (c.difficulty || "").toLowerCase() === difficulty.toLowerCase()))
+            .filter((c) => (price === 'all' ? true : price === 'free' ? (c as any).isFree || Number((c as any).price || 0) === 0 : Number((c as any).price || 0) > 0))
+            .filter((c) => (q.trim() ? c.title.toLowerCase().includes(q.trim().toLowerCase()) : true))
+            .map((c) => (
             <CourseCard
               key={c.id}
               id={c.id}

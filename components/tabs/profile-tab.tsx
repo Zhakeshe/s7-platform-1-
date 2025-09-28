@@ -24,18 +24,23 @@ export default function ProfileTab() {
 
   // Load my achievements
   useEffect(() => {
-    apiFetch<Array<{ id: string; earnedAt: string; achievement: { title: string; description?: string } }>>("/achievements/mine")
-      .then((list) =>
-        setAchievements(
-          (list || []).map((ua) => ({
-            id: ua.id,
-            text: ua.achievement?.description || ua.achievement?.title || "Достижение",
-            createdAt: ua.earnedAt ? new Date(ua.earnedAt).getTime() : Date.now(),
-          }))
-        )
-      )
-      .catch(() => setAchievements([]))
+    reloadAchievements().catch(() => {})
   }, [])
+
+  const reloadAchievements = async () => {
+    try {
+      const list = await apiFetch<Array<{ id: string; earnedAt: string; achievement: { title: string; description?: string } }>>("/achievements/mine")
+      setAchievements(
+        (list || []).map((ua) => ({
+          id: ua.id,
+          text: ua.achievement?.description || ua.achievement?.title || "Достижение",
+          createdAt: ua.earnedAt ? new Date(ua.earnedAt).getTime() : Date.now(),
+        }))
+      )
+    } catch {
+      setAchievements([])
+    }
+  }
 
   // Load my competition submissions
   useEffect(() => {
@@ -157,7 +162,10 @@ export default function ProfileTab() {
           className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
           style={{ animationDelay: "300ms" }}
         >
-          <h3 className="text-white text-lg font-medium mb-4">Достижения</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white text-lg font-medium">Достижения</h3>
+            <button onClick={reloadAchievements} className="text-sm rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80">Обновить</button>
+          </div>
           {achievements.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {achievements.map((a) => (
