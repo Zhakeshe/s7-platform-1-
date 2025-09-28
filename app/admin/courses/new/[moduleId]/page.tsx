@@ -82,6 +82,14 @@ export default function Page() {
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+      <div className="mb-4">
+        <button
+          onClick={() => router.push('/admin/courses/new')}
+          className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
+        >
+          Назад
+        </button>
+      </div>
       <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
 
       <div className="max-w-4xl space-y-6">

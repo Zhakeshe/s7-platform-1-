@@ -176,6 +176,10 @@ export default function Page() {
               videoMediaId: l.videoMediaId || undefined,
               slideMediaIds: l.slideMediaIds || [],
               presentationMediaId: l.presentationMediaId || undefined,
+              // uploaded URLs used for publishing
+              videoUrl: l.videoUrl || undefined,
+              presentationUrl: l.presentationUrl || undefined,
+              slideUrls: l.slideUrls || [],
             })),
           }))
         }
@@ -203,17 +207,22 @@ export default function Page() {
           isFree: free,
           isPublished: true,
           modules: finalModules.map((m, mi) => ({
-            id: String(m.id),
-            title: m.title || `Модуль ${mi + 1}`,
+            // do NOT send id to let DB generate unique cuid
+            title: (m as any).title || `Модуль ${mi + 1}`,
             orderIndex: mi,
             lessons: (m as any).lessons?.map((l: any, li: number) => ({
-              id: String(l.id ?? `${mi + 1}-${li + 1}`),
+              // do NOT send id to avoid PK collisions
               title: l.title || `Урок ${li + 1}`,
               duration: l.time || l.duration || undefined,
               orderIndex: li,
               isFreePreview: false,
               content: l.content || undefined,
               contentType: "text",
+              videoUrl: l.videoUrl || undefined,
+              presentationUrl: l.presentationUrl || undefined,
+              slides: Array.isArray(l.slideUrls) && l.slideUrls.length
+                ? l.slideUrls.map((u: string) => ({ url: u }))
+                : undefined,
             })) || [],
           })),
         }

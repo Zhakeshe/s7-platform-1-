@@ -403,13 +403,13 @@ router.post("/courses", async (req: AuthenticatedRequest, res: Response) => {
       totalModules: data.modules.length,
       modules: {
         create: data.modules.map((module, moduleIndex) => ({
-          id: module.id,
+          ...(module.id ? { id: module.id } : {}),
           title: module.title,
           description: module.description,
           orderIndex: module.orderIndex ?? moduleIndex,
           lessons: {
             create: module.lessons.map((lesson, lessonIndex) => ({
-              id: lesson.id,
+              ...(lesson.id ? { id: lesson.id } : {}),
               title: lesson.title,
               content: lesson.content,
               duration: lesson.duration,
@@ -462,13 +462,13 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
       totalModules: data.modules.length,
       modules: {
         create: data.modules.map((module, moduleIndex) => ({
-          id: module.id,
+          ...(module.id ? { id: module.id } : {}),
           title: module.title,
           description: module.description,
           orderIndex: module.orderIndex ?? moduleIndex,
           lessons: {
             create: module.lessons.map((lesson, lessonIndex) => ({
-              id: lesson.id,
+              ...(lesson.id ? { id: lesson.id } : {}),
               title: lesson.title,
               content: lesson.content,
               duration: lesson.duration,

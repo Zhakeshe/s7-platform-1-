@@ -74,7 +74,15 @@ export default function AdminCourses() {
   useEffect(() => {
     apiFetch<AdminCourse[]>("/api/admin/courses")
       .then((list) => setCourses(list || []))
-      .catch(() => setCourses([]))
+      .catch(() => {
+        try {
+          const raw = localStorage.getItem('s7_admin_courses')
+          const list = raw ? JSON.parse(raw) : []
+          setCourses(list || [])
+        } catch {
+          setCourses([])
+        }
+      })
       .finally(() => setLoading(false))
   }, [])
 
