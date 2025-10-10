@@ -33,6 +33,8 @@ app.use(rateLimit({ windowMs: 60_000, max: 200 }))
 
 ensureDir(env.MEDIA_DIR).catch((err) => console.error("Failed to ensure media dir", err))
 app.use("/media", express.static(path.resolve(env.MEDIA_DIR)))
+// Also expose under /api to avoid proxy misconfiguration issues
+app.use("/api/media", express.static(path.resolve(env.MEDIA_DIR)))
 
 app.get("/health", async (_req, res) => {
   try {
@@ -52,6 +54,7 @@ app.use("/achievements", achievementsRouter)
 app.use("/bytesize", bytesizeRouter)
 app.use("/teams", teamsRouter)
 app.use("/uploads", uploadRouter)
+app.use("/api/uploads", uploadRouter)
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err)

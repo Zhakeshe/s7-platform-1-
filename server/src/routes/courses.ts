@@ -75,8 +75,11 @@ router.get("/:courseId/questions", optionalAuth, async (req: AuthenticatedReques
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true, isFree: true, price: true } })
   if (!course) return res.status(404).json({ error: "Course not found" })
 
-  const hasAccess = await userHasCourseAccess(req.user?.id, course)
-  if (!hasAccess) return res.status(403).json({ error: "No access" })
+  // Admins can always view questions; others must have access
+  if (req.user?.role !== "ADMIN") {
+    const hasAccess = await userHasCourseAccess(req.user?.id, course)
+    if (!hasAccess) return res.status(403).json({ error: "No access" })
+  }
 
   const { moduleId, lessonId } = req.query as any
   const where: any = { courseId }

@@ -4,6 +4,12 @@ import { useParams, useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { apiFetch } from "@/lib/api"
 
+interface AdminCourse {
+  id: string
+  title: string
+  modules: Array<{ id: string; title: string; lessons: Array<{ id: string; title: string; duration?: string }> }>
+}
+
 interface Question {
   id: string
   text: string
@@ -17,26 +23,50 @@ export default function CourseQuizAdminPage() {
   const router = useRouter()
   const courseId = useMemo(() => String(params.id), [params.id])
 
+  const [course, setCourse] = useState<AdminCourse | null>(null)
+  const [moduleId, setModuleId] = useState<string>("")
+  const [lessonId, setLessonId] = useState<string>("")
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
 
   const [text, setText] = useState("")
-  const [options, setOptions] = useState<string[]>(["", ""]) // at least two
+  const [options, setOptions] = useState<string[]>(["", "", "", ""]) // 4 варианта по умолчанию
   const [correctIndex, setCorrectIndex] = useState<number>(0)
-  const [moduleId, setModuleId] = useState<string>("")
-  const [lessonId, setLessonId] = useState<string>("")
+  const [xp, setXp] = useState<number>(100)
 
-  const load = () => {
-    setLoading(true)
-    apiFetch<Question[]>(`/courses/${courseId}/questions`)
-      .then((list) => setQuestions(list || []))
-      .catch(() => setQuestions([]))
+  useEffect(() => {
+    apiFetch<AdminCourse[]>("/api/admin/courses")
+      .then((list) => {
+        const c = (list || []).find((x) => x.id === courseId)
+        if (c) {
+          setCourse(c)
+          const mid = c.modules?.[0]?.id || ""
+          const lid = c.modules?.[0]?.lessons?.[0]?.id || ""
+          setModuleId(mid)
+          setLessonId(lid)
+        }
+      })
+      .catch(() => setCourse(null))
       .finally(() => setLoading(false))
+  }, [courseId])
+
+  const lessons = useMemo(() => course?.modules?.find((m) => m.id === moduleId)?.lessons || [], [course, moduleId])
+
+  const reload = async (cid: string, mid: string, lid: string) => {
+    try {
+      const params = new URLSearchParams()
+      if (mid) params.set("moduleId", mid)
+      if (lid) params.set("lessonId", lid)
+      const list = await apiFetch<Question[]>(`/courses/${cid}/questions?${params.toString()}`)
+      setQuestions(list || [])
+    } catch {
+      setQuestions([])
+    }
   }
 
-  useEffect(() => { load() }, [courseId])
+  useEffect(() => { if (courseId && (moduleId || lessonId)) reload(courseId, moduleId, lessonId) }, [courseId, moduleId, lessonId])
 
-  const addOption = () => setOptions((prev) => [...prev, ""]) 
+  const addOption = () => setOptions((prev) => (prev.length < 8 ? [...prev, ""] : prev))
   const updateOption = (i: number, v: string) => setOptions((prev) => prev.map((o, idx) => (idx === i ? v : o)))
   const removeOption = (i: number) => {
     if (options.length <= 2) return
@@ -49,19 +79,18 @@ export default function CourseQuizAdminPage() {
     try {
       if (!text.trim()) { toast({ title: "Введите вопрос" }); return }
       const clean = options.map((o) => o.trim()).filter(Boolean)
-      if (clean.length < 2) { toast({ title: "Минимум 2 варианта" }); return }
+      if (clean.length < 4) { toast({ title: "Нужно минимум 4 варианта" }); return }
       if (correctIndex < 0 || correctIndex >= clean.length) { toast({ title: "Укажите правильный ответ" }); return }
       await apiFetch(`/courses/${courseId}/questions`, {
         method: "POST",
-        body: JSON.stringify({ text: text.trim(), options: clean, correctIndex, moduleId: moduleId || undefined, lessonId: lessonId || undefined }),
+        body: JSON.stringify({ text: text.trim(), options: clean, correctIndex, xpReward: xp, moduleId: moduleId || undefined, lessonId: lessonId || undefined }),
       })
       toast({ title: "Вопрос создан" })
       setText("")
-      setOptions(["", ""]) 
+      setOptions(["", "", "", ""]) 
       setCorrectIndex(0)
-      setModuleId("")
-      setLessonId("")
-      load()
+      setXp(100)
+      reload(courseId, moduleId, lessonId)
     } catch (e: any) {
       toast({ title: "Ошибка", description: e?.message || "Не удалось создать", variant: "destructive" as any })
     }
@@ -74,13 +103,22 @@ export default function CourseQuizAdminPage() {
         <button onClick={() => router.push("/admin/courses")} className="text-white/70 hover:text-white">Назад</button>
       </div>
 
+      {/* selectors */}
+      {course && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <select value={moduleId} onChange={(e)=>{ setModuleId(e.target.value); const first = course.modules.find(m=>m.id===e.target.value)?.lessons?.[0]?.id || ""; setLessonId(first); }} className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 text-white">
+            {course.modules.map((m)=>(<option key={m.id} value={m.id}>{m.title}</option>))}
+          </select>
+          <select value={lessonId} onChange={(e)=>setLessonId(e.target.value)} className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 text-white">
+            {lessons.map((l)=>(<option key={l.id} value={l.id}>{l.title}</option>))}
+          </select>
+          <button onClick={()=>reload(courseId, moduleId, lessonId)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-3 py-2 text-white/80">Обновить</button>
+        </div>
+      )}
+
       {/* Create form */}
       <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-5 text-white space-y-4">
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Текст вопроса" className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <input value={moduleId} onChange={(e) => setModuleId(e.target.value)} placeholder="moduleId (необязательно)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
-          <input value={lessonId} onChange={(e) => setLessonId(e.target.value)} placeholder="lessonId (необязательно)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
-        </div>
         <div className="space-y-2">
           <div className="text-white/80 text-sm">Варианты</div>
           {options.map((opt, i) => (
@@ -94,7 +132,13 @@ export default function CourseQuizAdminPage() {
               )}
             </div>
           ))}
-          <button onClick={addOption} className="text-xs bg-[#2a2a35] hover:bg-[#333344] rounded-full px-3 py-1">Добавить вариант</button>
+          <div className="flex items-center gap-2">
+            <button onClick={addOption} className="text-xs bg-[#2a2a35] hover:bg-[#333344] rounded-full px-3 py-1">Добавить вариант</button>
+            <div className="ml-auto inline-flex items-center gap-2">
+              <span className="text-white/70 text-sm">XP</span>
+              <input type="number" min={0} max={10000} value={xp} onChange={(e)=>setXp(Number(e.target.value||0))} className="w-24 bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-2 outline-none text-right" />
+            </div>
+          </div>
         </div>
         <div className="flex justify-end">
           <button onClick={create} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium px-4 py-2">Создать</button>

@@ -41,25 +41,33 @@ export default function Page() {
     const tokens = getTokens()
     const fd = new FormData()
     fd.append("file", file)
-    const res = await fetch("/uploads/media", {
-      method: "POST",
-      headers: tokens?.accessToken ? { authorization: `Bearer ${tokens.accessToken}` } : undefined,
-      body: fd,
-    })
-    if (!res.ok) {
-      const ct = res.headers.get("content-type") || ""
-      if (ct.includes("application/json")) {
-        const j = await res.json().catch(() => null)
-        throw new Error(j?.error || `Upload failed (${res.status})`)
+    const tryEndpoints = ["/uploads/media", "/api/uploads/media"]
+    let lastErr: any = null
+    for (const ep of tryEndpoints) {
+      try {
+        const res = await fetch(ep, {
+          method: "POST",
+          headers: tokens?.accessToken ? { authorization: `Bearer ${tokens.accessToken}` } : undefined,
+          body: fd,
+        })
+        if (!res.ok) {
+          const ct = res.headers.get("content-type") || ""
+          if (ct.includes("application/json")) {
+            const j = await res.json().catch(() => null)
+            throw new Error(j?.error || `Upload failed (${res.status})`)
+          }
+          const t = await res.text().catch(() => "Upload failed")
+          throw new Error(t || `Upload failed (${res.status})`)
+        }
+        const data = await res.json()
+        const u = String(data.url || "")
+        const abs = u.startsWith("http://") || u.startsWith("https://") ? u : new URL(u, window.location.origin).href
+        return abs
+      } catch (e) {
+        lastErr = e
       }
-      const t = await res.text().catch(() => "Upload failed")
-      throw new Error(t || `Upload failed (${res.status})`)
     }
-    const data = await res.json()
-    const u = String(data.url || "")
-    // ensure absolute URL for backend zod url()
-    const abs = u.startsWith("http://") || u.startsWith("https://") ? u : new URL(u, window.location.origin).href
-    return abs
+    throw lastErr || new Error("Upload failed")
   }
 
   return (

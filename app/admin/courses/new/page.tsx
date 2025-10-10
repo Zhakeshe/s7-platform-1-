@@ -32,6 +32,7 @@ export default function Page() {
   const [dragId, setDragId] = useState<number | null>(null)
   const [difficulty, setDifficulty] = useState<string>("Легкий")
   const [showFilters, setShowFilters] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     if (!editId) return
@@ -43,9 +44,9 @@ export default function Page() {
         setTitle(found.title || "")
         setAuthor(found.author || "")
         if (found.difficulty) setDifficulty(found.difficulty)
-        setModules(
-          (found.modules || []).map((m: any) => ({ id: m.id, title: m.title })) || [{ id: 1, title: "Модуль 1" }]
-        )
+        // Build local numeric ids for routing, keep remote ids in draft
+        const mapped = (found.modules || []).map((m: any, idx: number) => ({ localId: idx + 1, remoteId: m.id, title: m.title, lessons: (m.lessons||[]).map((l:any, li:number)=>({ localId: li+1, remoteId: l.id, title: l.title, time: l.duration })) }))
+        setModules(mapped.map((m:any)=>({ id: m.localId, title: m.title })))
         if (typeof found.price === "number" && found.price > 0) {
           setFree(false)
           setPrice(found.price)
@@ -53,10 +54,10 @@ export default function Page() {
           setFree(true)
           setPrice(0)
         }
-        // seed draft from editing course for downstream lesson pages
+        // seed draft with local+remote ids for module/lesson pages
         localStorage.setItem(
           "s7_admin_course_draft",
-          JSON.stringify({ title: found.title, author: found.author, modules: found.modules || [] })
+          JSON.stringify({ courseId: found.id, title: found.title, author: found.author, difficulty: found.difficulty, price: found.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) })
         )
       } else {
         // Fallback to backend fetch if not in local storage
@@ -67,13 +68,15 @@ export default function Page() {
             setTitle(foundSrv.title || "")
             setAuthor(foundSrv.author || "")
             if (foundSrv.difficulty) setDifficulty(foundSrv.difficulty)
-            setModules(((foundSrv.modules || []).map((m: any) => ({ id: m.id, title: m.title }))) || [{ id: 1, title: "Модуль 1" }])
+            const mapped = (foundSrv.modules || []).map((m: any, idx: number) => ({ localId: idx + 1, remoteId: m.id, title: m.title, lessons: (m.lessons||[]).map((l:any, li:number)=>({ localId: li+1, remoteId: l.id, title: l.title, time: l.duration })) }))
+            setModules(mapped.map((m:any)=>({ id: m.localId, title: m.title })))
             if (typeof foundSrv.price === "number" && foundSrv.price > 0) { setFree(false); setPrice(foundSrv.price) } else { setFree(true); setPrice(0) }
-            try { localStorage.setItem("s7_admin_course_draft", JSON.stringify({ title: foundSrv.title, author: foundSrv.author, modules: foundSrv.modules || [] })) } catch {}
+            try { localStorage.setItem("s7_admin_course_draft", JSON.stringify({ courseId: foundSrv.id, title: foundSrv.title, author: foundSrv.author, difficulty: foundSrv.difficulty, price: foundSrv.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) })) } catch {}
           })
           .catch(() => {})
       }
     } catch {}
+    finally { setHydrated(true) }
   }, [editId])
 
   // Hydrate from draft when creating
@@ -91,6 +94,7 @@ export default function Page() {
         }
       }
     } catch {}
+    finally { setHydrated(true) }
   }, [editId, isFresh])
 
   // If explicitly opened in fresh mode, clear draft and reset state once
@@ -103,21 +107,30 @@ export default function Page() {
     setModules([{ id: 1, title: "Модуль 1" }])
     setFree(true)
     setPrice(0)
+    setHydrated(true)
   }, [isFresh])
 
   // Persist draft on changes
   useEffect(() => {
+    if (!hydrated) return
     try {
+      const existingRaw = localStorage.getItem("s7_admin_course_draft")
+      const existing = existingRaw ? JSON.parse(existingRaw) : { modules: [] }
+      const mergedModules = modules.map((m) => {
+        const prev = (existing.modules || []).find((pm: any) => pm.id === m.id)
+        return { id: m.id, title: m.title, lessons: prev?.lessons || [] }
+      })
       const draft = {
+        ...existing,
         title,
         author,
         difficulty,
-        modules: modules.map((m) => ({ id: m.id, title: m.title, lessons: [] })),
+        modules: mergedModules,
         price: free ? 0 : price,
       }
       localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
     } catch {}
-  }, [title, author, difficulty, modules, free, price])
+  }, [title, author, difficulty, modules, free, price, hydrated])
 
   const addModule = () => {
     const nextId = modules.length ? Math.max(...modules.map((m) => m.id)) + 1 : 1
