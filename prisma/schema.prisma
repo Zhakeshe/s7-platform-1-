@@ -84,6 +84,10 @@ model User {
   eventsCreated Event[]
   byteSizeItems ByteSizeItem[]
   byteSizeLikes ByteSizeLike[]
+  // Opposite sides
+  eventRegistrations EventRegistration[]
+  authoredQuestions  CourseQuestion[]
+  courseAnswers      CourseAnswer[]
 }
 
 model Session {
@@ -128,6 +132,8 @@ model Course {
   modules       CourseModule[]
   enrollments   Enrollment[]
   purchases     Purchase[]
+  // Opposite side of CourseQuestion.course
+  questions     CourseQuestion[]
 }
 
 model CourseModule {
@@ -295,6 +301,8 @@ model Event {
   createdAt   DateTime @default(now())
   createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdById String?
+  // Opposite side of EventRegistration.event
+  registrations EventRegistration[]
 }
 
 // User registrations to events/masterclasses
@@ -371,6 +379,11 @@ model ByteSizeLike {
   id        String   @id @default(cuid())
   item      ByteSizeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId    String
+  // link like to user
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  @@unique([itemId, userId])
 }
 
 // Quiz: questions per course/module/lesson and user answers
