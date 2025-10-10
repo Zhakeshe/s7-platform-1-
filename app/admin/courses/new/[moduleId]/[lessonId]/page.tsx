@@ -23,6 +23,11 @@ interface DraftLesson {
   videoUrl?: string
   presentationUrl?: string
   slideUrls?: string[]
+  // quiz (saved to backend on publish)
+  quizQuestion?: string
+  quizOptions?: string[]
+  quizCorrectIndex?: number
+  quizXp?: number
 }
 
 interface DraftModule {
@@ -463,6 +468,66 @@ export default function Page() {
           </div>
         </section>
       </div>
+      {/* Quiz Editor */}
+      <div className="mt-6 bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-3 animate-slide-up">
+        <div className="text-white/90 font-medium">Вопрос по уроку (опционально)</div>
+        <input
+          value={lesson?.quizQuestion || ""}
+          onChange={(e) => updateLesson({ quizQuestion: e.target.value })}
+          placeholder="Текст вопроса"
+          className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-2 outline-none"
+        />
+        <div className="space-y-2">
+          {(() => {
+            const opts = (lesson?.quizOptions && lesson.quizOptions.length > 0) ? lesson.quizOptions : ["", "", "", ""]
+            return opts.map((opt, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="quiz-correct"
+                  checked={(lesson?.quizCorrectIndex ?? -1) === idx}
+                  onChange={() => updateLesson({ quizCorrectIndex: idx })}
+                />
+                <input
+                  value={opt}
+                  onChange={(e) => {
+                    const arr = [...opts]
+                    arr[idx] = e.target.value
+                    updateLesson({ quizOptions: arr })
+                  }}
+                  placeholder={`Вариант ${idx + 1}`}
+                  className="flex-1 bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-2 outline-none"
+                />
+              </div>
+            ))
+          })()}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const opts = (lesson?.quizOptions && lesson.quizOptions.length > 0) ? lesson.quizOptions : ["", "", "", ""]
+              if (opts.length >= 8) return
+              updateLesson({ quizOptions: [...opts, ""] })
+            }}
+            className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm"
+          >
+            Добавить вариант
+          </button>
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-white/70 text-sm">XP за верный ответ</span>
+            <input
+              type="number"
+              min={0}
+              max={10000}
+              value={typeof lesson?.quizXp === 'number' ? lesson.quizXp : 100}
+              onChange={(e) => updateLesson({ quizXp: Number(e.target.value || 0) })}
+              className="w-24 bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-2 outline-none text-right"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Actions */}
       <div className="flex justify-end gap-3 pt-2">
         <button onClick={() => saveLessonDraft(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-4 py-2 text-white/90">Сохранить</button>

@@ -56,6 +56,7 @@ router.post("/register", async (req: Request, res: Response) => {
       email: true,
       role: true,
       fullName: true,
+      experiencePoints: true,
     },
   })
 
@@ -78,6 +79,7 @@ router.post("/register", async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
       fullName: user.fullName,
+      xp: Number((user as any).experiencePoints || 0),
     },
   })
 })
@@ -95,6 +97,7 @@ router.post("/login", async (req: Request, res: Response) => {
       role: true,
       fullName: true,
       passwordHash: true,
+      experiencePoints: true,
     },
   })
   if (!user) return res.status(401).json({ error: "Invalid credentials" })
@@ -120,6 +123,7 @@ router.post("/login", async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
       fullName: user.fullName,
+      xp: Number((user as any).experiencePoints || 0),
     },
   })
 })
@@ -173,6 +177,7 @@ router.get("/me", requireAuth, async (req: AuthenticatedRequest, res: Response) 
     email: user.email,
     role: user.role,
     fullName: user.fullName,
+    xp: Number((user as any).experiencePoints || 0),
     profile: user.profile,
   })
 })

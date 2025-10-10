@@ -50,7 +50,7 @@ export default function CourseLessonTab({
   const mod = course.modules.find((m) => m.id === moduleId) || course.modules[0]
   const lesson = mod.lessons.find((l) => l.id === lessonId) || mod.lessons[0]
 
-  // Resolve media URLs from IndexedDB IDs
+  // Resolve media URLs: prefer server URLs (published), fallback to local IndexedDB IDs
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [slideUrls, setSlideUrls] = useState<(string | null)[]>([])
   const [presUrl, setPresUrl] = useState<string | null>(null)
@@ -61,19 +61,32 @@ export default function CourseLessonTab({
   useEffect(() => {
     let alive = true
     ;(async () => {
-      if (lesson?.videoMediaId) {
+      // Video
+      if ((lesson as any)?.videoUrl) {
+        setVideoUrl((lesson as any).videoUrl)
+      } else if (lesson?.videoMediaId) {
         const url = await getObjectUrl(lesson.videoMediaId)
         if (alive) setVideoUrl(url)
       } else {
         setVideoUrl(null)
       }
-      if (Array.isArray(lesson?.slideMediaIds) && lesson!.slideMediaIds!.length) {
+
+      // Slides (server -> local fallback)
+      const serverSlides = (lesson as any)?.serverSlides || (lesson as any)?.slides
+      if (Array.isArray(serverSlides) && serverSlides.length) {
+        const urls = serverSlides.map((s: any) => (typeof s === 'string' ? s : s?.url)).filter(Boolean)
+        setSlideUrls(urls)
+      } else if (Array.isArray(lesson?.slideMediaIds) && lesson!.slideMediaIds!.length) {
         const urls = await Promise.all(lesson!.slideMediaIds!.map((id) => getObjectUrl(id)))
         if (alive) setSlideUrls(urls)
       } else {
         setSlideUrls([])
       }
-      if (lesson?.presentationMediaId) {
+
+      // Presentation
+      if ((lesson as any)?.presentationUrl) {
+        setPresUrl((lesson as any).presentationUrl)
+      } else if (lesson?.presentationMediaId) {
         const url = await getObjectUrl(lesson.presentationMediaId)
         if (alive) setPresUrl(url)
       } else {
@@ -81,7 +94,26 @@ export default function CourseLessonTab({
       }
     })()
     return () => { alive = false }
-  }, [lesson?.videoMediaId, lesson?.slideMediaIds, lesson?.presentationMediaId])
+  }, [lesson?.videoMediaId, lesson?.slideMediaIds, lesson?.presentationMediaId, (lesson as any)?.videoUrl, (lesson as any)?.presentationUrl, (lesson as any)?.serverSlides, (lesson as any)?.slides])
+
+  // Also ask backend for the specific lesson to ensure media URLs (works even if course prop lacks full media fields)
+  useEffect(() => {
+    let ignore = false
+    if (!course?.id || !lesson?.id) return
+    const lid = String((lesson as any).id)
+    apiFetch<any>(`/courses/${course.id}/lessons/${encodeURIComponent(lid)}`)
+      .then((data) => {
+        if (ignore || !data) return
+        if (data.videoUrl) setVideoUrl(data.videoUrl)
+        if (data.presentationUrl) setPresUrl(data.presentationUrl)
+        if (Array.isArray(data.slides)) {
+          const urls = data.slides.map((s: any) => (typeof s === 'string' ? s : s?.url)).filter(Boolean)
+          setSlideUrls(urls)
+        }
+      })
+      .catch(() => {})
+    return () => { ignore = true }
+  }, [course?.id, (lesson as any)?.id])
 
   // Load lesson-level quiz from backend
   useEffect(() => {

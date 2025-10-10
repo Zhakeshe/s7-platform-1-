@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
 
 type Role = "USER" | "ADMIN"
-interface User { id: string; email: string; fullName?: string; role: Role }
+interface User { id: string; email: string; fullName?: string; role: Role; xp?: number }
 
 export default function Page() {
   const [users, setUsers] = useState<User[]>([])
@@ -36,6 +36,7 @@ export default function Page() {
                   {u.id.slice(-2)}
                 </span>
                 <span className="text-white font-medium">{u.fullName || u.email}</span>
+                <span className="text-xs rounded-full bg-[#00a3ff] text-black px-2 py-0.5">XP: {u.xp ?? 0}</span>
               </div>
               <ArrowUpRight className="w-5 h-5 text-[#a0a0b0]" />
             </div>

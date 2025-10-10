@@ -39,6 +39,7 @@ const questionSchema = z.object({
   text: z.string().min(1),
   options: z.array(z.string().min(1)).min(2).max(8),
   correctIndex: z.number().int().min(0),
+  xpReward: z.number().int().min(0).max(10000).optional().default(100),
   moduleId: z.string().optional(),
   lessonId: z.string().optional(),
 })
@@ -61,6 +62,7 @@ router.post("/:courseId/questions", requireAuth, async (req: AuthenticatedReques
       text: data.text,
       options: data.options as any,
       correctIndex: data.correctIndex,
+      xpReward: data.xpReward ?? 100,
       authorId: req.user!.id,
     },
   })
@@ -94,7 +96,12 @@ router.post("/questions/:questionId/answer", requireAuth, async (req: Authentica
   const ans = await (prisma as any).courseAnswer.create({
     data: { questionId, userId: req.user!.id, selectedIndex, isCorrect },
   })
-  res.status(201).json({ isCorrect, answerId: ans.id, correctIndex: q.correctIndex })
+  let awarded = 0
+  if (isCorrect) {
+    awarded = Number(q.xpReward ?? 100)
+    await prisma.user.update({ where: { id: req.user!.id }, data: { experiencePoints: { increment: awarded } } })
+  }
+  res.status(201).json({ isCorrect, answerId: ans.id, correctIndex: q.correctIndex, xpAwarded: awarded })
 })
 
 // Analytics for a course (admin)

@@ -226,7 +226,45 @@ export default function Page() {
             })) || [],
           })),
         }
-        await apiFetch("/api/admin/courses", { method: "POST", body: JSON.stringify(payload) })
+        const created = await apiFetch<any>("/api/admin/courses", { method: "POST", body: JSON.stringify(payload) })
+        // After creation, post lesson-level questions from draft (if any)
+        try {
+          const draftRaw = localStorage.getItem("s7_admin_course_draft")
+          const draft = draftRaw ? JSON.parse(draftRaw) : null
+          if (created?.id && draft && Array.isArray(draft.modules)) {
+            // Build order-indexed maps from created object
+            const createdModules = (created.modules || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+            for (let mi = 0; mi < draft.modules.length; mi++) {
+              const dMod = draft.modules[mi]
+              const cMod = createdModules[mi]
+              if (!dMod || !cMod) continue
+              const createdLessons = (cMod.lessons || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+              const dLessons: any[] = Array.isArray(dMod.lessons) ? dMod.lessons : []
+              for (let li = 0; li < dLessons.length; li++) {
+                const dLesson = dLessons[li]
+                const cLesson = createdLessons[li]
+                if (!dLesson || !cLesson) continue
+                const text = (dLesson.quizQuestion || "").trim()
+                const opts: string[] = Array.isArray(dLesson.quizOptions) ? dLesson.quizOptions.filter((s: any) => typeof s === 'string' && s.trim()).map((s: string) => s.trim()) : []
+                const correctIndex = typeof dLesson.quizCorrectIndex === 'number' ? dLesson.quizCorrectIndex : -1
+                const xpReward = typeof dLesson.quizXp === 'number' ? dLesson.quizXp : 100
+                if (text && opts.length >= 2 && correctIndex >= 0 && correctIndex < opts.length) {
+                  await apiFetch(`/courses/${created.id}/questions`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                      text,
+                      options: opts,
+                      correctIndex,
+                      xpReward,
+                      moduleId: cMod.id,
+                      lessonId: cLesson.id,
+                    }),
+                  }).catch(() => null)
+                }
+              }
+            }
+          }
+        } catch {}
       } catch (e: any) {
         // If backend save fails, continue with legacy local storage as fallback
         console.warn("Backend create course failed:", e?.message)

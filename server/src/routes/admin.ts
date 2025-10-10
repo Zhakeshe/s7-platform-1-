@@ -244,9 +244,9 @@ const roleUpdateSchema = z.object({ role: z.enum(["ADMIN", "USER"]) })
 router.get("/users", async (_req: AuthenticatedRequest, res: Response) => {
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
-    select: { id: true, email: true, role: true, fullName: true, createdAt: true },
+    select: { id: true, email: true, role: true, fullName: true, createdAt: true, experiencePoints: true },
   })
-  res.json(users)
+  res.json(users.map((u) => ({ ...u, xp: Number((u as any).experiencePoints || 0) })))
 })
 
 router.post("/users/:userId/role", async (req: AuthenticatedRequest, res: Response) => {

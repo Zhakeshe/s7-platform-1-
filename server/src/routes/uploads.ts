@@ -24,9 +24,15 @@ const storage = multer.diskStorage({
 })
 
 // Whitelisted content types
-const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
+const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]) // add more if needed
 const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]) // mp4, webm, mov
-const ALLOWED_TYPES = new Set<string>([...IMAGE_TYPES, ...VIDEO_TYPES])
+const DOC_TYPES = new Set([
+  "application/pdf",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+])
+const ALLOWED_TYPES = new Set<string>([...IMAGE_TYPES, ...VIDEO_TYPES, ...DOC_TYPES])
 
 const upload = multer({
   storage,
@@ -46,7 +52,7 @@ router.post("/media", (req: AuthenticatedRequest, res) => {
   upload.single("file")(req as any, res as any, (err: any) => {
     if (err) {
       if (String(err?.message).includes("UNSUPPORTED_MEDIA_TYPE")) {
-        return res.status(415).json({ error: "Unsupported file type. Allowed: jpg, png, webp, mp4, webm, mov" })
+        return res.status(415).json({ error: "Unsupported file type. Allowed: jpg, png, webp, mp4, webm, mov, pdf, ppt, pptx" })
       }
       if (String((err as any)?.code) === "LIMIT_FILE_SIZE") {
         return res.status(413).json({ error: "File too large. Max 200MB" })

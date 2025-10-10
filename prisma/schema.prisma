@@ -383,6 +383,7 @@ model CourseQuestion {
   text         String
   options      Json     // array of strings
   correctIndex Int
+  xpReward     Int      @default(100)
   author       User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
   authorId     String?
   createdAt    DateTime @default(now())

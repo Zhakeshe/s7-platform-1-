@@ -36,14 +36,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Restore session from tokens and fetch current user
     const tokens = getTokens()
     if (!tokens) { setLoading(false); return }
-    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string }>("/auth/me")
+    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number }>("/auth/me")
       .then((u) => setUser({
         id: u.id,
         email: u.email,
         fullName: u.fullName,
         role: u.role === "ADMIN" ? "admin" : "user",
         level: 1,
-        xp: 0,
+        xp: typeof u.xp === 'number' ? u.xp : 0,
       }))
       .catch(() => setUser(null))
       .finally(() => setLoading(false))
@@ -52,22 +52,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const registerFn = async (email: string, password: string, remember = true) => {
     // Backend handles hashing and role; use email as fallback fullName
     const body = { email, password, fullName: email }
-    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string } }>(
+    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number } }>(
       "/auth/register",
       { method: "POST", body: JSON.stringify(body) }
     )
     setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
-    setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: 0 })
+    setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: typeof data.user.xp === 'number' ? data.user.xp : 0 })
   }
 
   const loginFn = async (email: string, password: string, remember = true) => {
     const body = { email, password }
-    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string } }>(
+    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number } }>(
       "/auth/login",
       { method: "POST", body: JSON.stringify(body) }
     )
     setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
-    setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: 0 })
+    setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: typeof data.user.xp === 'number' ? data.user.xp : 0 })
   }
 
   const logoutFn = async () => {

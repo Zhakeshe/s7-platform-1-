@@ -19,6 +19,12 @@ export interface CourseLesson {
   presentationFileName?: string
   presentationMediaId?: string
   content?: string
+  // Server media (published)
+  videoUrl?: string
+  presentationUrl?: string
+  // In DB this can be Json of objects: [{ url: string, title?: string }]
+  // We keep it as any to avoid strict coupling
+  serverSlides?: any
 }
 
 export interface CourseModule {
@@ -54,6 +60,7 @@ export default function CourseDetailsTab({
   const [quizCourse, setQuizCourse] = useState<Array<any>>([])
   const [quizModule, setQuizModule] = useState<Array<any>>([])
   const [loadingQuiz, setLoadingQuiz] = useState(false)
+  const [fullCourse, setFullCourse] = useState<CourseDetails | null>(course)
 
   const isFree = !course?.price || course.price === 0
 
@@ -61,15 +68,34 @@ export default function CourseDetailsTab({
   useEffect(() => {
     let ignore = false
     if (!course?.id) return
-    apiFetch<{ hasAccess: boolean; modules?: any }>(`/courses/${course.id}`)
+    apiFetch<any>(`/courses/${course.id}`)
       .then((data) => {
         if (ignore) return
         setCanAccess(isFree ? true : Boolean(data.hasAccess))
+        // Replace local prop with authoritative data (contains lesson media URLs when есть доступ)
+        if (data && data.modules) setFullCourse({
+          id: data.id,
+          title: data.title,
+          difficulty: data.difficulty,
+          author: (data.author?.fullName ?? data.author) as any,
+          price: Number(data.price || 0),
+          modules: (data.modules || []).map((m: any) => ({
+            id: Number(m.id) || m.id,
+            title: m.title,
+            lessons: (m.lessons || []).map((l: any) => ({
+              id: Number(l.id) || l.id,
+              title: l.title,
+              time: l.duration,
+              content: l.content,
+              videoUrl: l.videoUrl,
+              presentationUrl: l.presentationUrl,
+              serverSlides: l.slides,
+            })),
+          })),
+        } as any)
       })
       .catch(() => setCanAccess(isFree))
-    return () => {
-      ignore = true
-    }
+    return () => { ignore = true }
   }, [course?.id, isFree])
 
   // Load course-level quiz (only if есть доступ)
@@ -155,7 +181,8 @@ export default function CourseDetailsTab({
     )
   }
 
-  const activeModule = course.modules.find((m) => m.id === activeModuleId) || course.modules[0]
+  const viewCourse = fullCourse || course
+  const activeModule = viewCourse.modules.find((m) => m.id === activeModuleId) || viewCourse.modules[0]
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
