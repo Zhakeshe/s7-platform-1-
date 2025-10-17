@@ -101,13 +101,19 @@ export default function Page() {
   // If explicitly opened in fresh mode, clear draft and reset state once
   useEffect(() => {
     if (!isFresh) return
-    try { localStorage.removeItem("s7_admin_course_draft") } catch {}
-    setTitle("")
-    setAuthor("")
-    setDifficulty("Легкий")
-    setModules([{ id: 1, title: "Модуль 1" }])
-    setFree(true)
-    setPrice(0)
+    try {
+      const raw = localStorage.getItem("s7_admin_course_draft")
+      const hasDraft = !!raw && raw !== "{}" && raw !== "null" && raw.length > 2
+      if (!hasDraft) {
+        localStorage.removeItem("s7_admin_course_draft")
+        setTitle("")
+        setAuthor("")
+        setDifficulty("Легкий")
+        setModules([{ id: 1, title: "Модуль 1" }])
+        setFree(true)
+        setPrice(0)
+      }
+    } catch {}
     setHydrated(true)
   }, [isFresh])
 

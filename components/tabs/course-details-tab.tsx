@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { ArrowLeft, BadgeInfo, LogIn, ShoppingCart, CheckCircle, ShieldAlert, Copy } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
 import { useConfirm } from "@/components/ui/confirm"
@@ -258,7 +259,7 @@ export default function CourseDetailsTab({
       </div>
 
       {/* Payment Modal */}
-      {showPayment && (
+      {showPayment && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
           <div className="w-full max-w-md bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up">
             <div className="text-lg font-medium mb-2">Оплата через Kaspi</div>
@@ -293,7 +294,8 @@ export default function CourseDetailsTab({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </main>
   )

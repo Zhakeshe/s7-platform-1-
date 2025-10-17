@@ -36,7 +36,7 @@ const ALLOWED_TYPES = new Set<string>([...IMAGE_TYPES, ...VIDEO_TYPES, ...DOC_TY
 
 const upload = multer({
   storage,
-  limits: { fileSize: 200 * 1024 * 1024 }, // 200 MB
+  limits: { fileSize: 500 * 1024 * 1024 }, // 200 MB
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype) return cb(new Error("UNSUPPORTED_MEDIA_TYPE"))
     if (ALLOWED_TYPES.has(file.mimetype)) return cb(null, true)
