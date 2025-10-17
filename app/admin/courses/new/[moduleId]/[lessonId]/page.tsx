@@ -82,6 +82,17 @@ export default function Page() {
     setCourse(readDraftBy(draftKey))
   }, [draftKey])
 
+  // Ensure draft id in URL to prevent losing edits when accessed directly
+  useEffect(() => {
+    const d = search.get("draft")
+    if (!d && typeof window !== 'undefined') {
+      const stored = localStorage.getItem("s7_admin_course_default_id")
+      const generated = stored || `s7-${(typeof crypto !== 'undefined' && crypto.getRandomValues ? Array.from(crypto.getRandomValues(new Uint32Array(2))).map(n=>n.toString().padStart(10,'0')).join('').slice(0,10) : `${Math.floor(1000000000 + Math.random()*9000000000)}`)}`
+      if (!stored) localStorage.setItem("s7_admin_course_default_id", generated)
+      router.replace(`/admin/courses/new/${moduleId}/${lessonId}?draft=${encodeURIComponent(generated)}`)
+    }
+  }, [search, moduleId, lessonId, router])
+
   // Ensure draft skeleton exists for this module/lesson so inputs are editable
   useEffect(() => {
     if (!moduleId || !lessonId) return

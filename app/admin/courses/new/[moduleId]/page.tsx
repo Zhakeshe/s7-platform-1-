@@ -50,6 +50,17 @@ export default function Page() {
   const [course, setCourse] = useState<DraftCourse | null>(null)
   const [dragLessonId, setDragLessonId] = useState<number | null>(null)
 
+  // Ensure we always carry a draft id to avoid losing edits when navigating directly
+  useEffect(() => {
+    const d = search.get("draft")
+    if (!d && typeof window !== 'undefined') {
+      const stored = localStorage.getItem("s7_admin_course_default_id")
+      const generated = stored || `s7-${(typeof crypto !== 'undefined' && crypto.getRandomValues ? Array.from(crypto.getRandomValues(new Uint32Array(2))).map(n=>n.toString().padStart(10,'0')).join('').slice(0,10) : `${Math.floor(1000000000 + Math.random()*9000000000)}`)}`
+      if (!stored) localStorage.setItem("s7_admin_course_default_id", generated)
+      router.replace(`/admin/courses/new/${moduleId}?draft=${encodeURIComponent(generated)}`)
+    }
+  }, [search, moduleId, router])
+
   useEffect(() => {
     setCourse(readDraftBy(draftKey))
   }, [draftKey])

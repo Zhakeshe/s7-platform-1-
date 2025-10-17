@@ -1,4 +1,6 @@
 import { Router, type Response, type Request } from "express"
+import path from "path"
+import { env } from "../env"
 import { z } from "zod"
 import { prisma } from "../db"
 import { requireAdmin, requireAuth } from "../middleware/auth"
@@ -6,6 +8,8 @@ import type { AuthenticatedRequest } from "../types"
 
 // Declare router early so it can be used by routes defined above/below
 export const router = Router()
+
+router.use(requireAuth, requireAdmin)
 
 const slideSchema = z.object({
   title: z.string().optional(),
@@ -63,8 +67,25 @@ router.post("/bytesize", async (req: AuthenticatedRequest, res: Response) => {
 
 router.delete("/bytesize/:id", async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params
-  await (prisma as any).byteSizeItem.delete({ where: { id } }).catch(() => null)
-  res.json({ success: true })
+  try {
+    // try to remove likes first (FK safety)
+    await (prisma as any).byteSizeLike.deleteMany({ where: { itemId: id } }).catch(() => null)
+    // delete media files if stored locally
+    try {
+      const item = await (prisma as any).byteSizeItem.findUnique({ where: { id } })
+      const files: string[] = []
+      if (item?.videoUrl && item.videoUrl.startsWith("/media/")) files.push(path.resolve(env.MEDIA_DIR, item.videoUrl.replace("/media/", "")))
+      if (item?.coverImageUrl && item.coverImageUrl.startsWith("/media/")) files.push(path.resolve(env.MEDIA_DIR, item.coverImageUrl.replace("/media/", "")))
+      if (files.length) {
+        const fs = await import("fs/promises")
+        await Promise.all(files.map((p) => fs.unlink(p).catch(() => null)))
+      }
+    } catch {}
+    await (prisma as any).byteSizeItem.delete({ where: { id } }).catch(() => null)
+    res.json({ success: true })
+  } catch {
+    res.json({ success: true })
+  }
 })
 
 router.post("/competitions", async (req: AuthenticatedRequest, res: Response) => {
@@ -165,7 +186,6 @@ const teamSchema = z.object({
 
 // router already declared above
 
-router.use(requireAuth, requireAdmin)
 
 // Platform statistics for Admin Dashboard
 router.get("/stats", async (_req: AuthenticatedRequest, res: Response) => {
@@ -502,6 +522,14 @@ router.post("/courses/:courseId/publish", async (req: AuthenticatedRequest, res:
 
 router.delete("/courses/:courseId", async (req: AuthenticatedRequest, res: Response) => {
   const { courseId } = req.params
+  try {
+    await prisma.$transaction([
+      prisma.lesson.deleteMany({ where: { module: { courseId } } }),
+      prisma.courseModule.deleteMany({ where: { courseId } }),
+      prisma.enrollment.deleteMany({ where: { courseId } }).catch(() => null) as any,
+      prisma.purchase.deleteMany({ where: { courseId } }).catch(() => null) as any,
+    ] as any)
+  } catch {}
   await prisma.course.delete({ where: { id: courseId } }).catch(() => null)
   res.json({ success: true })
 })
@@ -556,6 +584,7 @@ router.put("/teams/:teamId", async (req: AuthenticatedRequest, res: Response) =>
 
 router.delete("/teams/:teamId", async (req: AuthenticatedRequest, res: Response) => {
   const { teamId } = req.params
+  await prisma.teamMembership.deleteMany({ where: { teamId } }).catch(() => null)
   await prisma.team.delete({ where: { id: teamId } }).catch(() => null)
   res.json({ success: true })
 })
@@ -688,6 +717,7 @@ router.post("/events/:eventId/reject", async (req: AuthenticatedRequest, res: Re
 // Delete event (admin)
 router.delete("/events/:eventId", async (req: AuthenticatedRequest, res: Response) => {
   const { eventId } = req.params
+  await (prisma as any).eventRegistration.deleteMany({ where: { eventId } }).catch(() => null)
   await (prisma as any).event.delete({ where: { id: eventId } }).catch(() => null)
   res.json({ success: true })
 })

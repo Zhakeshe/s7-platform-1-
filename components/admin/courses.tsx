@@ -82,17 +82,9 @@ export default function AdminCourses() {
   useEffect(() => {
     apiFetch<AdminCourse[]>("/api/admin/courses")
       .then((list) => {
-        if (Array.isArray(list) && list.length > 0) {
-          setCourses(list)
-        } else {
-          try {
-            const raw = localStorage.getItem('s7_admin_courses')
-            const fallback = raw ? JSON.parse(raw) : []
-            setCourses(fallback || [])
-          } catch {
-            setCourses([])
-          }
-        }
+        // Always trust backend. Even if it's empty, show empty.
+        if (Array.isArray(list)) setCourses(list)
+        else setCourses([])
       })
       .catch(() => {
         try {
