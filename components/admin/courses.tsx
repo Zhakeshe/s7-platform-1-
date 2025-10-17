@@ -15,6 +15,13 @@ interface AdminCourse {
   modules: Array<{ id: string; title: string; lessons: Array<{ id: string; title: string }> }>
 }
 
+const generateDraftId = () => {
+  const random = typeof crypto !== "undefined" && crypto.getRandomValues
+    ? Array.from(crypto.getRandomValues(new Uint32Array(2))).map((n) => n.toString().padStart(10, "0")).join("").slice(0, 10)
+    : `${Math.floor(1000000000 + Math.random() * 9000000000)}`
+  return `s7-${random}`
+}
+
 function CourseCard({ id, title, level, price, lessonsCount, onDeleted }: { id: string; title: string; level: string; price: number; lessonsCount: number; onDeleted: (id: string) => void }) {
   const confirm = useConfirm()
   return (
@@ -70,7 +77,7 @@ export default function AdminCourses() {
   const [difficulty, setDifficulty] = useState<string>("Все")
   const [price, setPrice] = useState<"all" | "free" | "paid">("all")
   const [q, setQ] = useState("")
-  const draftId = useMemo(() => String(Date.now()), [])
+  const draftId = useMemo(() => generateDraftId(), [])
 
   useEffect(() => {
     apiFetch<AdminCourse[]>("/api/admin/courses")

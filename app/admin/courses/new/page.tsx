@@ -17,6 +17,7 @@ export default function Page() {
   const router = useRouter()
   const search = useSearchParams()
   const editId = search.get("edit")
+  const draftParam = search.get("draft")
   const isFresh = useMemo(() => {
     const v = search.get("fresh")
     return v === "1" || v === "true"
@@ -35,17 +36,45 @@ export default function Page() {
   const [showFilters, setShowFilters] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
+  const draftId = useMemo(() => {
+    if (draftParam) return draftParam
+    if (typeof window === "undefined") return ""
+    const stored = localStorage.getItem("s7_admin_course_default_id")
+    if (stored) return stored
+    const generated = (typeof crypto !== "undefined" && crypto.getRandomValues
+      ? Array.from(crypto.getRandomValues(new Uint32Array(2))).map((n) => n.toString().padStart(10, "0")).join("").slice(0, 10)
+      : `${Math.floor(1000000000 + Math.random() * 9000000000)}`)
+    const id = `s7-${generated}`
+    localStorage.setItem("s7_admin_course_default_id", id)
+    return id
+  }, [draftParam])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (!draftParam && draftId) {
+      localStorage.setItem("s7_admin_course_default_id", draftId)
+      const qs = new URLSearchParams(search.toString())
+      qs.set("draft", draftId)
+      router.replace(`/admin/courses/new?${qs.toString()}`)
+    }
+  }, [draftParam, draftId, router, search])
+
   const draftKey = useMemo(() => {
-    const d = search.get("draft")
-    return d ? `s7_admin_course_draft_${d}` : "s7_admin_course_draft"
-  }, [search])
+    const id = draftId || ""
+    return id ? `s7_admin_course_draft_${id}` : "s7_admin_course_draft"
+  }, [draftId])
 
   const qs = useMemo(() => {
-    const d = search.get("draft")
-    if (d) return `?draft=${encodeURIComponent(d)}`
+    const d = draftId
+    if (d) {
+      const params = new URLSearchParams()
+      params.set("draft", d)
+      if (editId) params.set("edit", editId)
+      return `?${params.toString()}`
+    }
     if (editId) return `?edit=${encodeURIComponent(editId)}`
     return ""
-  }, [search, editId])
+  }, [draftId, editId])
 
   useEffect(() => {
     if (!editId) return
@@ -69,7 +98,9 @@ export default function Page() {
         }
         // seed draft with local+remote ids for module/lesson pages
         const seeded = { courseId: found.id, title: found.title, author: found.author, difficulty: found.difficulty, price: found.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) }
-        localStorage.setItem(draftKey, JSON.stringify(seeded))
+        if (draftKey) {
+          localStorage.setItem(draftKey, JSON.stringify(seeded))
+        }
         localStorage.setItem("s7_admin_course_draft", JSON.stringify(seeded))
       } else {
         // Fallback to backend fetch if not in local storage
@@ -85,7 +116,7 @@ export default function Page() {
             if (typeof foundSrv.price === "number" && foundSrv.price > 0) { setFree(false); setPrice(foundSrv.price) } else { setFree(true); setPrice(0) }
             try {
               const seeded = { courseId: foundSrv.id, title: foundSrv.title, author: foundSrv.author, difficulty: foundSrv.difficulty, price: foundSrv.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) }
-              localStorage.setItem(draftKey, JSON.stringify(seeded))
+              if (draftKey) localStorage.setItem(draftKey, JSON.stringify(seeded))
               localStorage.setItem("s7_admin_course_draft", JSON.stringify(seeded))
             } catch {}
           })
@@ -99,6 +130,7 @@ export default function Page() {
   useEffect(() => {
     if (editId || isFresh) return
     try {
+      if (!draftKey) return
       const raw = localStorage.getItem(draftKey)
       if (raw) {
         const d = JSON.parse(raw)
@@ -120,8 +152,18 @@ export default function Page() {
       const raw = localStorage.getItem(draftKey)
       const hasDraft = !!raw && raw !== "{}" && raw !== "null" && raw.length > 2
       if (!hasDraft) {
-        localStorage.removeItem(draftKey)
-      localStorage.removeItem("s7_admin_course_draft")
+        if (!draftKey) {
+          const generated = (typeof crypto !== "undefined" && crypto.getRandomValues
+            ? Array.from(crypto.getRandomValues(new Uint32Array(2))).map((n) => n.toString().padStart(10, "0")).join("").slice(0, 10)
+            : `${Math.floor(1000000000 + Math.random() * 9000000000)}`)
+          const id = `s7-${generated}`
+          localStorage.setItem("s7_admin_course_default_id", id)
+          const qs = new URLSearchParams(search.toString())
+          qs.set("draft", id)
+          router.replace(`/admin/courses/new?${qs.toString()}`)
+        }
+        if (draftKey) localStorage.removeItem(draftKey)
+        localStorage.removeItem("s7_admin_course_draft")
         setTitle("")
         setAuthor("")
         setDifficulty("Легкий")
@@ -137,6 +179,7 @@ export default function Page() {
   useEffect(() => {
     if (!hydrated) return
     try {
+      if (!draftKey) return
       const existingRaw = localStorage.getItem(draftKey)
       const existing = existingRaw ? JSON.parse(existingRaw) : { modules: [] }
       const mergedModules = modules.map((m) => {
@@ -151,7 +194,7 @@ export default function Page() {
         modules: mergedModules,
         price: free ? 0 : price,
       }
-      localStorage.setItem(draftKey, JSON.stringify(draft))
+      if (draftKey) localStorage.setItem(draftKey, JSON.stringify(draft))
       localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
     } catch {}
   }, [title, author, difficulty, modules, free, price, hydrated, draftKey])
@@ -525,7 +568,7 @@ export default function Page() {
                   modules: modules.map((m) => ({ id: m.id, title: m.title })),
                   price: free ? 0 : price,
                 }
-                localStorage.setItem(draftKey, JSON.stringify(draft))
+                if (draftKey) localStorage.setItem(draftKey, JSON.stringify(draft))
                 localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
                 toast({ title: 'Черновик сохранён' } as any)
               } catch {}
