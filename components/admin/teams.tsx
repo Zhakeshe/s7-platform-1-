@@ -4,12 +4,15 @@ import Link from "next/link"
 import { ArrowUpRight, Trash2 } from "lucide-react"
 import { apiFetch } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
+import { useConfirm } from "@/components/ui/confirm"
 
 interface TeamItem { id: string; name: string; description?: string; membersCount?: number }
 
 function TeamRow({ id, name, membersCount, onDeleted }: { id: string; name: string; membersCount?: number; onDeleted: (id: string) => void }) {
+  const confirm = useConfirm()
   const remove = async () => {
-    if (!confirm("Удалить команду?")) return
+    const ok = await confirm({ title: 'Удалить команду?', confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
+    if (!ok) return
     try {
       await apiFetch(`/api/admin/teams/${id}`, { method: "DELETE" })
       toast({ title: "Удалено" })
@@ -19,7 +22,7 @@ function TeamRow({ id, name, membersCount, onDeleted }: { id: string; name: stri
     }
   }
   return (
-    <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 text-white relative">
+    <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 text-white relative animate-slide-up">
       <div className="absolute top-4 right-4 text-white/70 flex items-center gap-2">
         <button onClick={remove} className="p-1 rounded hover:bg-[#2a2a35]" title="Удалить">
           <Trash2 className="w-5 h-5 text-red-400" />

@@ -19,8 +19,8 @@ export default function Dashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<CourseDetails | null>(null)
-  const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null)
-  const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null)
+  const [selectedModuleId, setSelectedModuleId] = useState<string | number | null>(null)
+  const [selectedLessonId, setSelectedLessonId] = useState<string | number | null>(null)
 
   useEffect(() => {
     const updateDate = () => {
@@ -66,7 +66,7 @@ export default function Dashboard() {
     setActiveTab("course-details")
   }
 
-  const handleOpenLesson = (course: CourseDetails, moduleId: number, lessonId: number) => {
+  const handleOpenLesson = (course: CourseDetails, moduleId: string | number, lessonId: string | number) => {
     setSelectedCourse(course)
     setSelectedModuleId(moduleId)
     setSelectedLessonId(lessonId)

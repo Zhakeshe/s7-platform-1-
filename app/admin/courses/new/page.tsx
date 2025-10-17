@@ -3,9 +3,10 @@ import { useMemo, useState, useEffect } from "react"
 import { ArrowUpRight, LogIn, Trash } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { listCourses, saveCourses } from "@/lib/s7db"
-import { apiFetch } from "@/lib/api"
+import { apiFetch, getTokens } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
 import { useConfirm } from "@/components/ui/confirm"
+import { getFile } from "@/lib/s7media"
 
 interface ModuleItem {
   id: number
@@ -195,6 +196,52 @@ export default function Page() {
               slideUrls: l.slideUrls || [],
             })),
           }))
+        }
+      }
+    } catch {}
+
+    // Ensure media uploaded if only local media IDs exist
+    const uploadById = async (mediaId: string): Promise<string> => {
+      const rec = await getFile(mediaId)
+      if (!rec) throw new Error("Файл не найден")
+      const fd = new FormData()
+      const file = new File([rec.blob], rec.name, { type: rec.type })
+      fd.append("file", file)
+      const tokens = getTokens()
+      const tryEndpoints = ["/uploads/media", "/api/uploads/media"]
+      let lastErr: any = null
+      for (const ep of tryEndpoints) {
+        try {
+          const res = await fetch(ep, { method: "POST", headers: tokens?.accessToken ? { authorization: `Bearer ${tokens.accessToken}` } : undefined, body: fd })
+          if (!res.ok) {
+            const t = await res.text().catch(() => "Upload failed")
+            throw new Error(t || `Upload failed (${res.status})`)
+          }
+          const data = await res.json()
+          const u = String(data.url || "")
+          const abs = u.startsWith("http://") || u.startsWith("https://") ? u : new URL(u, window.location.origin).href
+          return abs
+        } catch (e) { lastErr = e }
+      }
+      throw lastErr || new Error("Upload failed")
+    }
+
+    try {
+      for (const m of finalModules as any[]) {
+        for (const l of (m.lessons || []) as any[]) {
+          if (!l.videoUrl && l.videoMediaId) {
+            try { l.videoUrl = await uploadById(l.videoMediaId) } catch (e:any) { console.warn("Video upload failed", e?.message) }
+          }
+          if ((!Array.isArray(l.slideUrls) || l.slideUrls.length === 0) && Array.isArray(l.slideMediaIds) && l.slideMediaIds.length > 0) {
+            const urls: string[] = []
+            for (const id of l.slideMediaIds) {
+              try { const u = await uploadById(id); if (u) urls.push(u) } catch {}
+            }
+            l.slideUrls = urls
+          }
+          if (!l.presentationUrl && l.presentationMediaId) {
+            try { l.presentationUrl = await uploadById(l.presentationMediaId) } catch {}
+          }
         }
       }
     } catch {}

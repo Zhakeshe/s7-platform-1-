@@ -12,7 +12,8 @@ export default function ProfileTab() {
   const [achievements, setAchievements] = useState<{ id: string; text: string; createdAt: number }[]>([])
   const [subs, setSubs] = useState<Array<{ id: string; title: string; description?: string; placement?: string; venue?: string; eventDate?: string; status: "pending" | "approved" | "rejected"; imageUrl?: string }>>([])
   const [openAdd, setOpenAdd] = useState(false)
-  const [form, setForm] = useState({ title: "", description: "", projectSummary: "", venue: "", placement: "", eventDate: "", imageUrl: "" })
+  const [form, setForm] = useState({ title: "", description: "", projectSummary: "", venue: "", placement: "", eventDate: "" })
+  const [myTeams, setMyTeams] = useState<Array<{ id: string; role: string; status: string; joinedAt: string; team: { id: string; name: string; description?: string } }>>([])
 
   useEffect(() => {
     if (user) {
@@ -47,6 +48,13 @@ export default function ProfileTab() {
     apiFetch<Array<{ id: string; title: string; description?: string; placement?: string; venue?: string; eventDate?: string; status: "pending" | "approved" | "rejected"; imageUrl?: string }>>("/submissions/competitions/mine")
       .then(setSubs)
       .catch(() => setSubs([]))
+  }, [])
+
+  // Load my teams
+  useEffect(() => {
+    apiFetch<Array<{ id: string; role: string; status: string; joinedAt: string; team: { id: string; name: string; description?: string } }>>('/teams/mine')
+      .then(setMyTeams)
+      .catch(() => setMyTeams([]))
   }, [])
 
   if (loading) {
@@ -190,6 +198,32 @@ export default function ProfileTab() {
           )}
         </div>
 
+        {/* My Teams */}
+        <div className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up" style={{ animationDelay: "350ms" }}>
+          <h3 className="text-white text-lg font-medium mb-4">Мои команды</h3>
+          {myTeams.length === 0 ? (
+            <div className="text-white/60">Вы пока не в командах</div>
+          ) : (
+            <div className="space-y-3">
+              {myTeams.map((m) => (
+                <div key={m.id} className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10 flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-medium">{m.team.name}</div>
+                    {m.team.description && <div className="text-white/70 text-sm">{m.team.description}</div>}
+                    <div className="text-white/60 text-xs mt-1">{new Date(m.joinedAt).toLocaleDateString('ru-RU')}</div>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <span className="inline-block text-xs px-2 py-1 rounded-full bg-[#2a2a35] text-white/80">{m.role}</span>
+                    <div>
+                      <span className={`inline-block text-xs px-2 py-1 rounded-full ${m.status === 'approved' || m.status === 'active' ? 'bg-[#22c55e]/20 text-[#22c55e]' : m.status === 'rejected' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#f59e0b]/20 text-[#f59e0b]'}`}>{m.status === 'pending' ? 'На проверке' : m.status === 'active' ? 'Активен' : m.status}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Completed Courses */}
         <div
           className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
@@ -248,8 +282,7 @@ export default function ProfileTab() {
                 <textarea value={form.description} onChange={(e)=>setForm({...form,description:e.target.value})} placeholder="Описание проекта" rows={4} className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
                 <input value={form.placement} onChange={(e)=>setForm({...form,placement:e.target.value})} placeholder="Занятое место (например, 1 место)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
                 <input value={form.venue} onChange={(e)=>setForm({...form,venue:e.target.value})} placeholder="Где проходило" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
-                <input value={form.eventDate} onChange={(e)=>setForm({...form,eventDate:e.target.value})} placeholder="Дата (напр. 2025-09-20)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
-                <input value={form.imageUrl} onChange={(e)=>setForm({...form,imageUrl:e.target.value})} placeholder="Ссылка на фото (по желанию)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
+                <input type="date" value={form.eventDate} onChange={(e)=>setForm({...form,eventDate:e.target.value})} className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button onClick={()=>setOpenAdd(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
@@ -259,7 +292,7 @@ export default function ProfileTab() {
                     await apiFetch('/submissions/competitions',{ method:'POST', body: JSON.stringify(form) })
                     toast({ title: 'Отправлено на модерацию' })
                     setOpenAdd(false)
-                    setForm({ title: "", description: "", projectSummary: "", venue: "", placement: "", eventDate: "", imageUrl: "" })
+                    setForm({ title: "", description: "", projectSummary: "", venue: "", placement: "", eventDate: "" })
                     const list = await apiFetch<Array<any>>('/submissions/competitions/mine')
                     setSubs(list)
                   } catch(e:any) {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ArrowUpRight, Trash2 } from "lucide-react"
 import { apiFetch } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
+import { useConfirm } from "@/components/ui/confirm"
 
 function MCItem({
   title,
@@ -23,7 +24,7 @@ function MCItem({
   onView?: () => void
 }) {
   return (
-    <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative">
+    <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative animate-slide-up">
       <div className="absolute top-4 right-4 text-white/70">
         <div className="flex items-center gap-2">
           <button onClick={onDelete} className="p-1 rounded hover:bg-[#2a2a35]" title="Удалить">
@@ -55,6 +56,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true)
   const [openRegs, setOpenRegs] = useState<{ open: boolean; eventId?: string; title?: string }>({ open: false })
   const [regs, setRegs] = useState<Array<{ id: string; status: string; contactPhone?: string; user: { id: string; email: string; fullName?: string } }>>([])
+  const confirm = useConfirm()
 
   useEffect(() => {
     apiFetch<AdminEvent[]>("/api/admin/events")
@@ -64,7 +66,8 @@ export default function Page() {
   }, [])
 
   const deleteEvent = async (id: string) => {
-    if (!confirm("Удалить событие?")) return
+    const ok = await confirm({ title: 'Удалить событие?', confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
+    if (!ok) return
     try {
       await apiFetch(`/api/admin/events/${id}`, { method: "DELETE" })
       setEvents((prev) => prev.filter((e) => e.id !== id))
@@ -82,7 +85,8 @@ export default function Page() {
     }
   }
   const bulkDelete = async () => {
-    if (!confirm('Удалить все мастер-классы?')) return
+    const ok = await confirm({ title: 'Удалить все мастер-классы?', confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
+    if (!ok) return
     try {
       await apiFetch(`/api/admin/events`, { method: 'DELETE' })
       setEvents([])

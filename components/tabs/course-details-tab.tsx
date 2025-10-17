@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowLeft, BadgeInfo, LogIn, ShoppingCart, CheckCircle, ShieldAlert, Copy } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
 import { useConfirm } from "@/components/ui/confirm"
@@ -49,17 +49,14 @@ export default function CourseDetailsTab({
 }: {
   course: CourseDetails | null
   onBack: () => void
-  onOpenLesson?: (moduleId: number, lessonId: number) => void
+  onOpenLesson?: (moduleId: number | string, lessonId: number | string) => void
 }) {
   const { user } = useAuth()
   const confirm = useConfirm()
-  const [activeModuleId, setActiveModuleId] = useState<number>(course?.modules?.[0]?.id ?? 0)
+  const [activeModuleId, setActiveModuleId] = useState<string | number>(course?.modules?.[0]?.id ?? 0)
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [canAccess, setCanAccess] = useState<boolean>(false)
-  const [quizCourse, setQuizCourse] = useState<Array<any>>([])
-  const [quizModule, setQuizModule] = useState<Array<any>>([])
-  const [loadingQuiz, setLoadingQuiz] = useState(false)
   const [fullCourse, setFullCourse] = useState<CourseDetails | null>(course)
 
   const isFree = !course?.price || course.price === 0
@@ -97,48 +94,6 @@ export default function CourseDetailsTab({
       .catch(() => setCanAccess(isFree))
     return () => { ignore = true }
   }, [course?.id, isFree])
-
-  // Load course-level quiz (only if есть доступ)
-  useEffect(() => {
-    if (!course?.id || !canAccess) { setQuizCourse([]); return }
-    setLoadingQuiz(true)
-    apiFetch<Array<any>>(`/courses/${course.id}/questions`)
-      .then((list) => setQuizCourse(list || []))
-      .catch(() => setQuizCourse([]))
-      .finally(() => setLoadingQuiz(false))
-  }, [course?.id, canAccess])
-
-  // Load module-level quiz when module changes (only if есть доступ)
-  useEffect(() => {
-    if (!course?.id || !activeModuleId || !canAccess) { setQuizModule([]); return }
-    setLoadingQuiz(true)
-    const params = new URLSearchParams({ moduleId: String(activeModuleId) })
-    apiFetch<Array<any>>(`/courses/${course.id}/questions?${params.toString()}`)
-      .then((list) => setQuizModule(list || []))
-      .catch(() => setQuizModule([]))
-      .finally(() => setLoadingQuiz(false))
-  }, [course?.id, activeModuleId, canAccess])
-
-  const markAnswer = (setter: (v: any) => void, list: any[], questionId: string, selectedIndex: number, isCorrect: boolean, correctIndex: number) => {
-    setter(list.map((q) => (q.id === questionId ? { ...q, selectedIndex, isCorrect, correctIndex } : q)))
-  }
-
-  const answerQuestion = async (questionId: string, selectedIndex: number, scope: 'course' | 'module') => {
-    try {
-      const res = await apiFetch<{ isCorrect: boolean; correctIndex: number }>(`/courses/questions/${questionId}/answer`, {
-        method: "POST",
-        body: JSON.stringify({ selectedIndex })
-      })
-      if (scope === 'course') {
-        markAnswer(setQuizCourse, quizCourse, questionId, selectedIndex, res.isCorrect, res.correctIndex)
-      } else {
-        markAnswer(setQuizModule, quizModule, questionId, selectedIndex, res.isCorrect, res.correctIndex)
-      }
-      toast({ title: res.isCorrect ? 'Верно' : 'Неверно', description: res.isCorrect ? 'Отличная работа!' : 'Правильный вариант подсвечен' })
-    } catch (e: any) {
-      toast({ title: 'Ошибка', description: e?.message || 'Не удалось отправить ответ', variant: 'destructive' as any })
-    }
-  }
 
   const handlePurchase = () => {
     if (!user || !course) { toast({ title: "Войдите", description: "Войдите чтобы купить курс" }); return }
@@ -182,7 +137,7 @@ export default function CourseDetailsTab({
   }
 
   const viewCourse = fullCourse || course
-  const activeModule = viewCourse.modules.find((m) => m.id === activeModuleId) || viewCourse.modules[0]
+  const activeModule = viewCourse.modules.find((m) => String(m.id) === String(activeModuleId)) || viewCourse.modules[0]
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
@@ -245,7 +200,7 @@ export default function CourseDetailsTab({
 
           {/* Modules list */}
           <div className="space-y-3">
-            {course.modules.map((mod) => (
+            {course.modules.map((mod, modIdx) => (
               <button
                 key={mod.id}
                 onClick={() => canAccess ? setActiveModuleId(mod.id) : setShowPayment(true)}
@@ -258,7 +213,7 @@ export default function CourseDetailsTab({
               >
                 <div className="flex items-center gap-3">
                   <div className="w-7 h-7 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
-                    {mod.id}
+                    {modIdx + 1}
                   </div>
                   <div className="text-left">
                     <div className="font-medium">{mod.title}</div>
@@ -279,7 +234,7 @@ export default function CourseDetailsTab({
           </div>
 
           <div className="space-y-3">
-            {activeModule?.lessons.map((lesson) => (
+            {activeModule?.lessons.map((lesson, lesIdx) => (
               <button
                 key={lesson.id}
                 onClick={() => canAccess ? onOpenLesson?.(activeModule.id, lesson.id) : setShowPayment(true)}
@@ -288,7 +243,7 @@ export default function CourseDetailsTab({
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
-                    {lesson.id}
+                    {lesIdx + 1}
                   </div>
                   <div>
                     <div className="font-medium">{lesson.title}</div>
@@ -298,98 +253,7 @@ export default function CourseDetailsTab({
               </button>
             ))}
           </div>
-
-          {/* Quiz Section (гейт по доступу) */}
-          <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 text-white">
-            <div className="text-white font-medium mb-2">Проверка знаний</div>
-            {!canAccess && (
-              <div className="text-white/70 text-sm">
-                Вопросы будут доступны после покупки курса.
-              </div>
-            )}
-            {canAccess && loadingQuiz && <div className="text-white/60 text-sm">Загрузка вопросов...</div>}
-            {canAccess && !loadingQuiz && (quizCourse.length + quizModule.length === 0) && (
-              <div className="text-white/60 text-sm">Вопросов пока нет</div>
-            )}
-
-            {/* Course-level questions */}
-            {canAccess && quizCourse.length > 0 && (
-              <div className="space-y-3">
-                <div className="text-xs text-white/60">Вопросы по курсу</div>
-                {quizCourse.map((q) => (
-                  <div key={q.id} className="rounded-lg border border-[#2a2a35] p-3">
-                    <div className="text-sm mb-2">{q.text}</div>
-                    <div className="space-y-2">
-                      {(q.options || []).map((opt: string, idx: number) => {
-                        const isSelected = q.selectedIndex === idx
-                        const isCorrect = q.correctIndex === idx
-                        const showCorrect = typeof q.correctIndex === 'number'
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => answerQuestion(q.id, idx, 'course')}
-                            disabled={showCorrect}
-                            className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${
-                              showCorrect
-                                ? isCorrect
-                                  ? 'bg-[#22c55e]/15 border-[#22c55e]/40 text-white'
-                                  : isSelected
-                                    ? 'bg-[#ef4444]/15 border-[#ef4444]/40 text-white'
-                                    : 'bg-transparent border-[#2a2a35] text-white/80'
-                                : isSelected
-                                  ? 'bg-[#1b1b22] border-[#2a2a35] text-white'
-                                  : 'bg-transparent border-[#2a2a35] text-white/80 hover:bg-[#1b1b22]'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Module-level questions */}
-            {canAccess && quizModule.length > 0 && (
-              <div className="space-y-3 mt-4">
-                <div className="text-xs text-white/60">Вопросы по модулю</div>
-                {quizModule.map((q) => (
-                  <div key={q.id} className="rounded-lg border border-[#2a2a35] p-3">
-                    <div className="text-sm mb-2">{q.text}</div>
-                    <div className="space-y-2">
-                      {(q.options || []).map((opt: string, idx: number) => {
-                        const isSelected = q.selectedIndex === idx
-                        const isCorrect = q.correctIndex === idx
-                        const showCorrect = typeof q.correctIndex === 'number'
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => answerQuestion(q.id, idx, 'module')}
-                            disabled={showCorrect}
-                            className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${
-                              showCorrect
-                                ? isCorrect
-                                  ? 'bg-[#22c55e]/15 border-[#22c55e]/40 text-white'
-                                  : isSelected
-                                    ? 'bg-[#ef4444]/15 border-[#ef4444]/40 text-white'
-                                    : 'bg-transparent border-[#2a2a35] text-white/80'
-                                : isSelected
-                                  ? 'bg-[#1b1b22] border-[#2a2a35] text-white'
-                                  : 'bg-transparent border-[#2a2a35] text-white/80 hover:bg-[#1b1b22]'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          
         </aside>
       </div>
 

@@ -205,6 +205,9 @@ export default function TeamsTab() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [teams, setTeams] = useState<Array<{ id: string; name: string; description?: string; membersCount: number; metadata?: any }>>([])
+  const [joinModal, setJoinModal] = useState<{ open: boolean; teamId?: string; teamName?: string }>({ open: false })
+  const [tg, setTg] = useState("")
+  const [wa, setWa] = useState("")
 
   const handleTeamCreated = () => setRefreshKey(prev => prev + 1)
 
@@ -214,14 +217,11 @@ export default function TeamsTab() {
       .catch(() => setTeams([]))
   }, [refreshKey])
 
-  const join = async (teamId: string) => {
+  const join = async (teamId: string, teamName: string) => {
     if (!user) { toast({ title: 'Войдите', description: 'Требуется авторизация' }); return }
-    try {
-      const res = await apiFetch<{ status: string }>(`/teams/${teamId}/join`, { method: 'POST' })
-      toast({ title: res.status === 'pending' ? 'Заявка отправлена' : 'Готово' })
-    } catch (e: any) {
-      toast({ title: 'Ошибка', description: e?.message || 'Не удалось отправить заявку', variant: 'destructive' as any })
-    }
+    setJoinModal({ open: true, teamId, teamName })
+    setTg("")
+    setWa("")
   }
   return (
     <main className="flex-1 p-8 overflow-y-auto animate-slide-up">
@@ -263,7 +263,7 @@ export default function TeamsTab() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => join(t.id)} className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium">Записаться</button>
+                  <button onClick={() => join(t.id, t.name)} className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium">Записаться</button>
                 </div>
               </div>
             ))}
@@ -292,6 +292,34 @@ export default function TeamsTab() {
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleTeamCreated}
       />
+
+      {/* Join Team Modal */}
+      {joinModal.open && createPortal(
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] animate-fade-in">
+          <div className="w-[min(92vw,520px)] bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white shadow-xl animate-slide-up">
+            <div className="text-lg font-medium mb-2">Запись в команду</div>
+            {joinModal.teamName && <div className="text-white/70 text-sm mb-4">Команда: {joinModal.teamName}</div>}
+            <div className="grid grid-cols-1 gap-3">
+              <input value={tg} onChange={(e)=>setTg(e.target.value)} placeholder="Telegram @username" className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none" />
+              <input value={wa} onChange={(e)=>setWa(e.target.value)} placeholder="WhatsApp номер" className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none" />
+            </div>
+            <div className="mt-4 flex gap-3">
+              <button onClick={()=>setJoinModal({ open:false })} className="flex-1 bg-[#636370]/20 text-white py-3 rounded-lg hover:bg-[#636370]/30 transition-colors">Отмена</button>
+              <button onClick={async()=>{
+                if (!joinModal.teamId) return
+                try {
+                  const res = await apiFetch<{ status: string }>(`/teams/${joinModal.teamId}/join`, { method: 'POST', body: JSON.stringify({ telegram: tg.trim() || undefined, whatsapp: wa.trim() || undefined }) })
+                  toast({ title: res.status === 'pending' ? 'Заявка отправлена' : 'Готово' })
+                  setJoinModal({ open:false })
+                } catch(e:any) {
+                  toast({ title: 'Ошибка', description: e?.message || 'Не удалось отправить заявку', variant: 'destructive' as any })
+                }
+              }} className="flex-1 bg-[#00a3ff] text-black py-3 rounded-lg hover:bg-[#0088cc] transition-colors">Отправить</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </main>
   )
 }

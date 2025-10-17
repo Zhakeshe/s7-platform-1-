@@ -17,8 +17,8 @@ export default function CourseLessonTab({
   onBack,
 }: {
   course: CourseDetails | null
-  moduleId: number | null
-  lessonId: number | null
+  moduleId: number | string | null
+  lessonId: number | string | null
   onBack: () => void
 }) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
@@ -47,8 +47,10 @@ export default function CourseLessonTab({
     )
   }
 
-  const mod = course.modules.find((m) => m.id === moduleId) || course.modules[0]
-  const lesson = mod.lessons.find((l) => l.id === lessonId) || mod.lessons[0]
+  const mod = course.modules.find((m) => String(m.id) === String(moduleId)) || course.modules[0]
+  const lesson = mod.lessons.find((l) => String(l.id) === String(lessonId)) || mod.lessons[0]
+  const modIndex = course.modules.findIndex((m) => String(m.id) === String((mod as any)?.id))
+  const lessonIndex = mod.lessons.findIndex((l) => String(l.id) === String((lesson as any)?.id))
 
   // Resolve media URLs: prefer server URLs (published), fallback to local IndexedDB IDs
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
@@ -157,7 +159,7 @@ export default function CourseLessonTab({
         {/* Module pill */}
         <div className="rounded-full bg-[#1b1b22] px-4 py-2 text-white/80 inline-flex items-center gap-3">
           <span className="w-6 h-6 rounded-full bg-[#2a2a35] text-white/80 flex items-center justify-center text-xs">
-            {mod.id}
+            {(modIndex >= 0 ? modIndex : 0) + 1}
           </span>
           <span>{mod.title}</span>
         </div>
@@ -165,7 +167,7 @@ export default function CourseLessonTab({
         {/* Lesson pill */}
         <div className="rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-2 text-white inline-flex items-center gap-3">
           <span className="w-7 h-7 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
-            {lesson.id}
+            {(lessonIndex >= 0 ? lessonIndex : 0) + 1}
           </span>
           <span className="font-medium">{lesson.title}</span>
         </div>

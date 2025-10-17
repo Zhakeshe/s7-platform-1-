@@ -4,10 +4,11 @@ import { useEffect, useState } from "react"
 import { ArrowUpRight, Eye, Trash2 } from "lucide-react"
 import { apiFetch } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
+import { useConfirm } from "@/components/ui/confirm"
 
 function BSCard({ id, title, tag, views, onDelete }: { id?: string; title: string; tag: string; views: number; onDelete?: (id: string) => void }) {
   return (
-    <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white min-h-[170px] relative">
+    <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white min-h-[170px] relative animate-slide-up">
       <div className="flex items-center justify-between text-white/70 mb-6">
         <div className="inline-flex items-center gap-2 text-xs">
           <Eye className="w-4 h-4" /> {views}
@@ -34,6 +35,7 @@ interface AdminBS { id: string; title: string; description?: string; videoUrl: s
 export default function Page() {
   const [items, setItems] = useState<AdminBS[]>([])
   const [loading, setLoading] = useState(true)
+  const confirm = useConfirm()
 
   useEffect(() => {
     apiFetch<AdminBS[]>("/api/admin/bytesize")
@@ -43,7 +45,8 @@ export default function Page() {
   }, [])
 
   const remove = async (id: string) => {
-    if (!confirm("Удалить видео?")) return
+    const ok = await confirm({ title: 'Удалить видео?', confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
+    if (!ok) return
     try {
       await apiFetch(`/api/admin/bytesize/${id}`, { method: "DELETE" })
       setItems((prev) => prev.filter((x) => x.id !== id))

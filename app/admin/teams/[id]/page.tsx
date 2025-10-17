@@ -9,7 +9,7 @@ interface MemberRow {
   role: string
   status: string
   joinedAt: string
-  user: { id: string; email: string; fullName?: string }
+  user: { id: string; email: string; fullName?: string; profile?: { phone?: string | null; socialLinks?: any } | null }
 }
 
 export default function TeamMembersAdminPage() {
@@ -53,7 +53,7 @@ export default function TeamMembersAdminPage() {
         ) : (
           <div className="divide-y divide-[#2a2a35]">
             {members.map((m) => (
-              <div key={m.id} className="py-3 flex items-center justify-between">
+              <div key={m.id} className="py-3 flex items-center justify-between animate-slide-up">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
                     {(m.user.fullName || m.user.email || "?").charAt(0)}
@@ -61,6 +61,19 @@ export default function TeamMembersAdminPage() {
                   <div>
                     <div className="text-white font-medium">{m.user.fullName || m.user.email}</div>
                     <div className="text-white/60 text-xs">{new Date(m.joinedAt).toLocaleString("ru-RU")}</div>
+                    {(m.user.profile?.phone || m.user.profile?.socialLinks) && (
+                      <div className="text-white/70 text-xs mt-1 space-x-2">
+                        {m.user.profile?.socialLinks?.telegram && (
+                          <span>Telegram: {(m.user.profile?.socialLinks?.telegram as string)}</span>
+                        )}
+                        {m.user.profile?.socialLinks?.whatsapp && (
+                          <span>WhatsApp: {(m.user.profile?.socialLinks?.whatsapp as string)}</span>
+                        )}
+                        {m.user.profile?.phone && (
+                          <span>Тел: {(m.user.profile?.phone as string)}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

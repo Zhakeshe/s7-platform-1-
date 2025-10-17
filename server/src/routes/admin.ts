@@ -569,7 +569,7 @@ router.get("/teams/:teamId/members", async (req: AuthenticatedRequest, res: Resp
   const members = await prisma.teamMembership.findMany({
     where,
     orderBy: { joinedAt: "desc" },
-    include: { user: { select: { id: true, email: true, fullName: true } } },
+    include: { user: { select: { id: true, email: true, fullName: true, profile: true } } },
   })
   res.json(members)
 })

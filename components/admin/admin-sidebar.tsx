@@ -17,6 +17,7 @@ export default function AdminSidebar() {
     { href: "/admin/achievements", label: "Достижения", icon: Award },
     { href: "/admin/masterclass", label: "Мастер классы", icon: GraduationCap },
     { href: "/admin/bytesize", label: "ByteSize", icon: FileText },
+    { href: "/admin/submissions", label: "Заявки", icon: FileText },
     { href: "/admin/tools", label: "S7 Tool", icon: Wrench },
   ]
 
