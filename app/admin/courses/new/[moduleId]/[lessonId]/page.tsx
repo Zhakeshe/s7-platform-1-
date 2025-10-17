@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Image, Upload, Trash, Bold, Italic, Heading2, List } from "lucide-react"
 import dynamic from "next/dynamic"
 import { saveFile, deleteFile, getObjectUrl, getFile } from "@/lib/s7media"
@@ -42,23 +42,20 @@ interface DraftCourse {
   modules: DraftModule[]
 }
 
-function readDraft(): DraftCourse | null {
+function readDraftBy(key: string): DraftCourse | null {
   try {
-    const raw = localStorage.getItem("s7_admin_course_draft")
+    const raw = localStorage.getItem(key)
     return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
+  } catch { return null }
 }
 
-function writeDraft(d: DraftCourse) {
-  try {
-    localStorage.setItem("s7_admin_course_draft", JSON.stringify(d))
-  } catch {}
+function writeDraftBy(key: string, d: DraftCourse) {
+  try { localStorage.setItem(key, JSON.stringify(d)) } catch {}
 }
 
 export default function Page() {
   const params = useParams<{ moduleId: string; lessonId: string }>()
+  const search = useSearchParams()
   const moduleId = useMemo(() => Number(params.moduleId), [params.moduleId])
   const lessonId = useMemo(() => Number(params.lessonId), [params.lessonId])
   const router = useRouter()
@@ -71,9 +68,19 @@ export default function Page() {
   const [slidePreviews, setSlidePreviews] = useState<string[]>([])
   const [presPreview, setPresPreview] = useState<string | null>(null)
 
+  const draftKey = useMemo(() => {
+    const d = search.get("draft")
+    return d ? `s7_admin_course_draft_${d}` : "s7_admin_course_draft"
+  }, [search])
+
+  const qs = useMemo(() => {
+    const d = search.get("draft")
+    return d ? `?draft=${encodeURIComponent(d)}` : ""
+  }, [search])
+
   useEffect(() => {
-    setCourse(readDraft())
-  }, [])
+    setCourse(readDraftBy(draftKey))
+  }, [draftKey])
 
   // Ensure draft skeleton exists for this module/lesson so inputs are editable
   useEffect(() => {
@@ -88,7 +95,7 @@ export default function Page() {
         ],
       }
       setCourse(draft)
-      writeDraft(draft)
+      writeDraftBy(draftKey, draft)
       return
     }
     // add missing module/lesson if needed
@@ -99,16 +106,16 @@ export default function Page() {
         modules: [...course.modules, { id: moduleId, title: `Модуль ${moduleId}`, lessons: [{ id: lessonId, title: "Название урока", time: "" }] }],
       }
       setCourse(next)
-      writeDraft(next)
+      writeDraftBy(draftKey, next)
       return
     }
     if (!mod.lessons.find((l) => l.id === lessonId)) {
       const newModules = course.modules.map((m) => (m.id === moduleId ? { ...m, lessons: [...m.lessons, { id: lessonId, title: "Название урока", time: "" }] } : m))
       const next: DraftCourse = { ...course, modules: newModules }
       setCourse(next)
-      writeDraft(next)
+      writeDraftBy(draftKey, next)
     }
-  }, [course, moduleId, lessonId])
+  }, [course, moduleId, lessonId, draftKey])
 
   const module = course?.modules?.find((m) => m.id === moduleId)
   const lessonIndex = module?.lessons?.findIndex((l) => l.id === lessonId) ?? -1
@@ -126,7 +133,7 @@ export default function Page() {
     )
     const next = { ...course, modules: newModules }
     setCourse(next)
-    writeDraft(next)
+    writeDraftBy(draftKey, next)
   }
 
   // Build local previews from IndexedDB media ids
@@ -179,9 +186,9 @@ export default function Page() {
   const saveLessonDraft = (goBack?: boolean) => {
     if (!course) return
     try {
-      writeDraft(course)
+      writeDraftBy(draftKey, course)
       toast({ title: "Сохранено", description: "Урок сохранён в черновик" } as any)
-      if (goBack) router.push(`/admin/courses/new/${moduleId}`)
+      if (goBack) router.push(`/admin/courses/new/${moduleId}${qs}`)
     } catch {}
   }
 
@@ -267,7 +274,7 @@ export default function Page() {
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="mb-4">
         <button
-          onClick={() => router.push(`/admin/courses/new/${moduleId}`)}
+          onClick={() => router.push(`/admin/courses/new/${moduleId}${qs}`)}
           className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
         >
           Назад

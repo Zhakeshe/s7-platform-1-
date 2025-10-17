@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
 import { apiFetch } from "@/lib/api"
@@ -70,6 +70,7 @@ export default function AdminCourses() {
   const [difficulty, setDifficulty] = useState<string>("Все")
   const [price, setPrice] = useState<"all" | "free" | "paid">("all")
   const [q, setQ] = useState("")
+  const draftId = useMemo(() => String(Date.now()), [])
 
   useEffect(() => {
     apiFetch<AdminCourse[]>("/api/admin/courses")
@@ -136,7 +137,7 @@ export default function AdminCourses() {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Link href="/admin/courses/new?fresh=1" className="block">
+        <Link href={`/admin/courses/new?fresh=1&draft=${encodeURIComponent(draftId)}`} className="block">
           <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative hover:bg-[#1b1b22] transition-colors">
             <div className="absolute top-4 right-4 text-white/70">
               <ArrowUpRight className="w-6 h-6" />

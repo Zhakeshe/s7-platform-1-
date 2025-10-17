@@ -35,6 +35,18 @@ export default function Page() {
   const [showFilters, setShowFilters] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
+  const draftKey = useMemo(() => {
+    const d = search.get("draft")
+    return d ? `s7_admin_course_draft_${d}` : "s7_admin_course_draft"
+  }, [search])
+
+  const qs = useMemo(() => {
+    const d = search.get("draft")
+    if (d) return `?draft=${encodeURIComponent(d)}`
+    if (editId) return `?edit=${encodeURIComponent(editId)}`
+    return ""
+  }, [search, editId])
+
   useEffect(() => {
     if (!editId) return
     try {
@@ -56,10 +68,9 @@ export default function Page() {
           setPrice(0)
         }
         // seed draft with local+remote ids for module/lesson pages
-        localStorage.setItem(
-          "s7_admin_course_draft",
-          JSON.stringify({ courseId: found.id, title: found.title, author: found.author, difficulty: found.difficulty, price: found.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) })
-        )
+        const seeded = { courseId: found.id, title: found.title, author: found.author, difficulty: found.difficulty, price: found.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) }
+        localStorage.setItem(draftKey, JSON.stringify(seeded))
+        localStorage.setItem("s7_admin_course_draft", JSON.stringify(seeded))
       } else {
         // Fallback to backend fetch if not in local storage
         apiFetch<any[]>("/api/admin/courses")
@@ -72,19 +83,23 @@ export default function Page() {
             const mapped = (foundSrv.modules || []).map((m: any, idx: number) => ({ localId: idx + 1, remoteId: m.id, title: m.title, lessons: (m.lessons||[]).map((l:any, li:number)=>({ localId: li+1, remoteId: l.id, title: l.title, time: l.duration })) }))
             setModules(mapped.map((m:any)=>({ id: m.localId, title: m.title })))
             if (typeof foundSrv.price === "number" && foundSrv.price > 0) { setFree(false); setPrice(foundSrv.price) } else { setFree(true); setPrice(0) }
-            try { localStorage.setItem("s7_admin_course_draft", JSON.stringify({ courseId: foundSrv.id, title: foundSrv.title, author: foundSrv.author, difficulty: foundSrv.difficulty, price: foundSrv.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) })) } catch {}
+            try {
+              const seeded = { courseId: foundSrv.id, title: foundSrv.title, author: foundSrv.author, difficulty: foundSrv.difficulty, price: foundSrv.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) }
+              localStorage.setItem(draftKey, JSON.stringify(seeded))
+              localStorage.setItem("s7_admin_course_draft", JSON.stringify(seeded))
+            } catch {}
           })
           .catch(() => {})
       }
     } catch {}
     finally { setHydrated(true) }
-  }, [editId])
+  }, [editId, draftKey])
 
   // Hydrate from draft when creating
   useEffect(() => {
     if (editId || isFresh) return
     try {
-      const raw = localStorage.getItem("s7_admin_course_draft")
+      const raw = localStorage.getItem(draftKey)
       if (raw) {
         const d = JSON.parse(raw)
         if (d.title) setTitle(d.title)
@@ -96,16 +111,17 @@ export default function Page() {
       }
     } catch {}
     finally { setHydrated(true) }
-  }, [editId, isFresh])
+  }, [editId, isFresh, draftKey])
 
   // If explicitly opened in fresh mode, clear draft and reset state once
   useEffect(() => {
     if (!isFresh) return
     try {
-      const raw = localStorage.getItem("s7_admin_course_draft")
+      const raw = localStorage.getItem(draftKey)
       const hasDraft = !!raw && raw !== "{}" && raw !== "null" && raw.length > 2
       if (!hasDraft) {
-        localStorage.removeItem("s7_admin_course_draft")
+        localStorage.removeItem(draftKey)
+      localStorage.removeItem("s7_admin_course_draft")
         setTitle("")
         setAuthor("")
         setDifficulty("Легкий")
@@ -115,13 +131,13 @@ export default function Page() {
       }
     } catch {}
     setHydrated(true)
-  }, [isFresh])
+  }, [isFresh, draftKey])
 
   // Persist draft on changes
   useEffect(() => {
     if (!hydrated) return
     try {
-      const existingRaw = localStorage.getItem("s7_admin_course_draft")
+      const existingRaw = localStorage.getItem(draftKey)
       const existing = existingRaw ? JSON.parse(existingRaw) : { modules: [] }
       const mergedModules = modules.map((m) => {
         const prev = (existing.modules || []).find((pm: any) => pm.id === m.id)
@@ -135,9 +151,10 @@ export default function Page() {
         modules: mergedModules,
         price: free ? 0 : price,
       }
+      localStorage.setItem(draftKey, JSON.stringify(draft))
       localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
     } catch {}
-  }, [title, author, difficulty, modules, free, price, hydrated])
+  }, [title, author, difficulty, modules, free, price, hydrated, draftKey])
 
   const addModule = () => {
     const nextId = modules.length ? Math.max(...modules.map((m) => m.id)) + 1 : 1
@@ -295,7 +312,7 @@ export default function Page() {
         const created = await apiFetch<any>("/api/admin/courses", { method: "POST", body: JSON.stringify(payload) })
         // After creation, post lesson-level questions from draft (if any)
         try {
-          const draftRaw = localStorage.getItem("s7_admin_course_draft")
+          const draftRaw = localStorage.getItem(draftKey)
           const draft = draftRaw ? JSON.parse(draftRaw) : null
           if (created?.id && draft && Array.isArray(draft.modules)) {
             // Build order-indexed maps from created object
@@ -361,7 +378,7 @@ export default function Page() {
         saveCourses(db as any)
       } catch {}
 
-      localStorage.removeItem("s7_admin_course_draft")
+      localStorage.removeItem(draftKey)
     } catch {}
 
     toast({ title: "Курс сохранён" } as any)
@@ -474,7 +491,7 @@ export default function Page() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <a href={`/admin/courses/new/${m.id}`} aria-label="Открыть уроки" className="text-[#a0a0b0] hover:text-white">
+              <a href={`/admin/courses/new/${m.id}${qs}`} aria-label="Открыть уроки" className="text-[#a0a0b0] hover:text-white">
                 <LogIn className="w-5 h-5" />
               </a>
               <button onClick={() => removeModule(m.id)} aria-label="Удалить модуль" className="text-[#a0a0b0] hover:text-[#ef4444] transition-colors">
@@ -508,6 +525,7 @@ export default function Page() {
                   modules: modules.map((m) => ({ id: m.id, title: m.title })),
                   price: free ? 0 : price,
                 }
+                localStorage.setItem(draftKey, JSON.stringify(draft))
                 localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
                 toast({ title: 'Черновик сохранён' } as any)
               } catch {}

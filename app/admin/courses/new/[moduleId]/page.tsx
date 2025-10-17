@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { LogIn, Plus } from "lucide-react"
 
 interface DraftLesson {
@@ -23,31 +23,36 @@ interface DraftCourse {
   modules: DraftModule[]
 }
 
-function readDraft(): DraftCourse | null {
+function readDraftBy(key: string): DraftCourse | null {
   try {
-    const raw = localStorage.getItem("s7_admin_course_draft")
+    const raw = localStorage.getItem(key)
     return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
+  } catch { return null }
 }
 
-function writeDraft(d: DraftCourse) {
-  try {
-    localStorage.setItem("s7_admin_course_draft", JSON.stringify(d))
-  } catch {}
+function writeDraftBy(key: string, d: DraftCourse) {
+  try { localStorage.setItem(key, JSON.stringify(d)) } catch {}
 }
 
 export default function Page() {
   const params = useParams<{ moduleId: string }>()
+  const search = useSearchParams()
   const router = useRouter()
   const moduleId = useMemo(() => Number(params.moduleId), [params.moduleId])
+  const draftKey = useMemo(() => {
+    const d = search.get("draft")
+    return d ? `s7_admin_course_draft_${d}` : "s7_admin_course_draft"
+  }, [search])
+  const qs = useMemo(() => {
+    const d = search.get("draft")
+    return d ? `?draft=${encodeURIComponent(d)}` : ""
+  }, [search])
   const [course, setCourse] = useState<DraftCourse | null>(null)
   const [dragLessonId, setDragLessonId] = useState<number | null>(null)
 
   useEffect(() => {
-    setCourse(readDraft())
-  }, [])
+    setCourse(readDraftBy(draftKey))
+  }, [draftKey])
 
   const module = course?.modules?.find((m) => m.id === moduleId)
 
@@ -58,12 +63,12 @@ export default function Page() {
     const newModules = course.modules.map((m) => (m.id === module.id ? { ...m, lessons: [...(m.lessons || []), newLesson] } : m))
     const next = { ...course, modules: newModules }
     setCourse(next)
-    writeDraft(next)
-    router.push(`/admin/courses/new/${moduleId}/${nextId}`)
+    writeDraftBy(draftKey, next)
+    router.push(`/admin/courses/new/${moduleId}/${nextId}${qs}`)
   }
 
   const openLesson = (lessonId: number) => {
-    router.push(`/admin/courses/new/${moduleId}/${lessonId}`)
+    router.push(`/admin/courses/new/${moduleId}/${lessonId}${qs}`)
   }
 
   const reorderLessons = (fromId: number, toId: number) => {
@@ -77,14 +82,14 @@ export default function Page() {
     const newModules = course.modules.map((m) => (m.id === module.id ? { ...m, lessons: list } : m))
     const next = { ...course, modules: newModules }
     setCourse(next)
-    writeDraft(next)
+    writeDraftBy(draftKey, next)
   }
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="mb-4">
         <button
-          onClick={() => router.push('/admin/courses/new')}
+          onClick={() => router.push(`/admin/courses/new${qs}`)}
           className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
         >
           Назад
