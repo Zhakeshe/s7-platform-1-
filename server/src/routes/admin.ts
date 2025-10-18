@@ -44,7 +44,10 @@ const byteSizeSchema = z.object({
 })
 
 router.get("/bytesize", async (_req: AuthenticatedRequest, res: Response) => {
-  const list = await (prisma as any).byteSizeItem.findMany({ orderBy: { createdAt: "desc" } })
+  const list = await (prisma as any).byteSizeItem.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { likes: true } } },
+  })
   res.json(list)
 })
 

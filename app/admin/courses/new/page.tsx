@@ -76,6 +76,28 @@ export default function Page() {
     return ""
   }, [draftId, editId])
 
+  const saveDraftImmediate = () => {
+    try {
+      if (!draftKey) return
+      const existingRaw = localStorage.getItem(draftKey)
+      const existing = existingRaw ? JSON.parse(existingRaw) : { modules: [] }
+      const mergedModules = modules.map((m) => {
+        const prev = (existing.modules || []).find((pm: any) => pm.id === m.id)
+        return { id: m.id, title: m.title, lessons: prev?.lessons || [] }
+      })
+      const draft = {
+        ...existing,
+        title,
+        author,
+        difficulty,
+        modules: mergedModules,
+        price: free ? 0 : price,
+      }
+      localStorage.setItem(draftKey, JSON.stringify(draft))
+      localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
+    } catch {}
+  }
+
   useEffect(() => {
     if (!editId) return
     try {
@@ -534,9 +556,13 @@ export default function Page() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <a href={`/admin/courses/new/${m.id}${qs}`} aria-label="Открыть уроки" className="text-[#a0a0b0] hover:text-white">
+              <button
+                onClick={() => { saveDraftImmediate(); router.push(`/admin/courses/new/${m.id}${qs}`) }}
+                aria-label="Открыть уроки"
+                className="text-[#a0a0b0] hover:text-white"
+              >
                 <LogIn className="w-5 h-5" />
-              </a>
+              </button>
               <button onClick={() => removeModule(m.id)} aria-label="Удалить модуль" className="text-[#a0a0b0] hover:text-[#ef4444] transition-colors">
                 <Trash className="w-5 h-5" />
               </button>

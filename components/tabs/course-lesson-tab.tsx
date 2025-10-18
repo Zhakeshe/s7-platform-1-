@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Info, Play, Image, Lock, FileText } from "lucide-react"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import { useAuth } from "@/components/auth/auth-context"
-import { hasCourseAccess, autoActivateEligiblePurchases } from "@/lib/s7db"
 import dynamic from "next/dynamic"
 import { getObjectUrl } from "@/lib/s7media"
 import { apiFetch } from "@/lib/api"
@@ -23,13 +22,21 @@ export default function CourseLessonTab({
 }) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const { user } = useAuth()
-  useEffect(() => { autoActivateEligiblePurchases() }, [])
-  const canAccess = useMemo(() => {
-    if (!course) return false
-    if (!course.price || course.price === 0) return true
-    if (!user) return false
-    return hasCourseAccess(user.id, course.id)
-  }, [course, user])
+  const [canAccess, setCanAccess] = useState<boolean>(false)
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      if (!course?.id) { setCanAccess(false); return }
+      try {
+        // Ask server for authoritative access flag
+        const data = await apiFetch<any>(`/courses/${course.id}`)
+        if (alive) setCanAccess(Boolean(data?.isFree || data?.hasAccess))
+      } catch {
+        if (alive) setCanAccess(Boolean(!course?.price || course?.price === 0))
+      }
+    })()
+    return () => { alive = false }
+  }, [course?.id, course?.price, user?.id])
   if (!course || moduleId == null || lessonId == null) {
     return (
       <div className="flex-1 p-8">
@@ -106,6 +113,8 @@ export default function CourseLessonTab({
     apiFetch<any>(`/courses/${course.id}/lessons/${encodeURIComponent(lid)}`)
       .then((data) => {
         if (ignore || !data) return
+        // Successful fetch implies access for this lesson (or it is free preview)
+        setCanAccess((prev) => prev || true)
         if (data.videoUrl) setVideoUrl(data.videoUrl)
         if (data.presentationUrl) setPresUrl(data.presentationUrl)
         if (Array.isArray(data.slides)) {
@@ -113,7 +122,7 @@ export default function CourseLessonTab({
           setSlideUrls(urls)
         }
       })
-      .catch(() => {})
+      .catch(() => { /* keep canAccess as is; 403 handled by overlay */ })
     return () => { ignore = true }
   }, [course?.id, (lesson as any)?.id])
 

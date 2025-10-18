@@ -21,6 +21,19 @@ export default function ByteSizeTab() {
   const [loading, setLoading] = useState(true)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
+  const viewedRef = useRef<Set<string>>(new Set())
+
+  const share = async (it: ReelItem) => {
+    try {
+      const url = it.videoUrl?.startsWith('http') ? it.videoUrl : new URL(it.videoUrl, window.location.origin).href
+      if (navigator.share) {
+        await navigator.share({ title: it.title, text: it.description || it.title, url })
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        toast({ title: 'Ссылка скопирована' })
+      }
+    } catch {}
+  }
 
   useEffect(() => {
     apiFetch<ReelItem[]>("/bytesize")
@@ -41,6 +54,10 @@ export default function ByteSizeTab() {
           if (!video) return
           if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
             video.play().catch(() => {})
+            if (!viewedRef.current.has(id)) {
+              viewedRef.current.add(id)
+              fetch(`/bytesize/${id}/view`, { method: 'POST' }).catch(() => {})
+            }
           } else {
             video.pause()
           }

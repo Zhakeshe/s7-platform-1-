@@ -5,10 +5,14 @@ import type { AuthenticatedRequest } from "../types"
 
 export const router = Router()
 
+// In-memory view counters as fallback when DB column is missing
+const viewCounters = new Map<string, number>()
+const lastViewByIp: Map<string, number> = new Map()
+
 // Feed: latest first, include like count and likedByMe
 router.get("/", optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   const includeLiked = Boolean(req.user)
-  const items = await prisma.byteSizeItem.findMany({
+  const items = await (prisma as any).byteSizeItem.findMany({
     orderBy: { createdAt: "desc" },
     include: {
       _count: { select: { likes: true } },
@@ -28,6 +32,7 @@ router.get("/", optionalAuth, async (req: AuthenticatedRequest, res: Response) =
       coverImageUrl: it.coverImageUrl,
       tags: Array.isArray(it.tags) ? it.tags : [],
       createdAt: it.createdAt,
+      views: (it as any).views ?? viewCounters.get(it.id) ?? 0,
       likesCount: it._count?.likes ?? 0,
       likedByMe: Array.isArray(it.likes) ? it.likes.length > 0 : false,
     }))
@@ -37,15 +42,31 @@ router.get("/", optionalAuth, async (req: AuthenticatedRequest, res: Response) =
 // Toggle like
 router.post("/:id/like", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const id = req.params.id
-  const existing = await prisma.byteSizeLike.findUnique({ where: { itemId_userId: { itemId: id, userId: req.user!.id } } }).catch(
+  const existing = await (prisma as any).byteSizeLike.findUnique({ where: { itemId_userId: { itemId: id, userId: req.user!.id } } }).catch(
     () => null
   )
   if (existing) {
-    await prisma.byteSizeLike.delete({ where: { id: existing.id } })
+    await (prisma as any).byteSizeLike.delete({ where: { id: existing.id } })
   } else {
-    await prisma.byteSizeLike.create({ data: { itemId: id, userId: req.user!.id } })
+    await (prisma as any).byteSizeLike.create({ data: { itemId: id, userId: req.user!.id } })
   }
-  const count = await prisma.byteSizeLike.count({ where: { itemId: id } })
+  const count = await (prisma as any).byteSizeLike.count({ where: { itemId: id } })
   const liked = !existing
   res.json({ liked, likesCount: count })
+})
+
+// Track a view (public). Debounce per IP+item (~60s). If DB column 'views' exists, increment it; otherwise use memory fallback
+router.post("/:id/view", async (req: Request, res: Response) => {
+  const id = req.params.id
+  const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || (req.socket?.remoteAddress || "")
+  const key = `${ip}|${id}`
+  const now = Date.now()
+  const last = lastViewByIp.get(key) || 0
+  if (now - last < 60_000) return res.json({ ok: true, skipped: true })
+  lastViewByIp.set(key, now)
+  const updated = await (prisma as any).byteSizeItem.update({ where: { id }, data: { views: { increment: 1 } } }).catch(() => null)
+  if (!updated) {
+    viewCounters.set(id, (viewCounters.get(id) || 0) + 1)
+  }
+  res.json({ ok: true })
 })

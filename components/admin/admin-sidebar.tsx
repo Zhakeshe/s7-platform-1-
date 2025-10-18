@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { Home, BookOpen, Users, GraduationCap, FileText, Wrench, CreditCard, Award, LogOut } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
   
@@ -23,8 +23,11 @@ export default function AdminSidebar() {
 
   const handleLogout = () => logout()
 
+  const panelClasses = `${open ? "translate-x-0 md:translate-x-0" : "-translate-x-full md:-translate-x-full"}`
   return (
-    <aside className="hidden md:block fixed left-0 top-0 h-screen w-64 bg-[#0b0b10] border-r border-[#636370]/20 p-4 flex flex-col">
+    <>
+      {open && <div onClick={onClose} className="fixed inset-0 bg-black/50 md:hidden z-30" />}
+      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 bg-[#0b0b10] border-r border-[#636370]/20 p-4 flex flex-col transform transition-transform ${panelClasses}`}>
       {/* Header */}
       <div className="mb-8">
         <div className="text-white font-bold text-xl mb-2">S7 Admin</div>
@@ -57,7 +60,6 @@ export default function AdminSidebar() {
         </div>
       </div>
       
-      {/* Back to main site */}
       <div className="mt-auto pt-4 border-t border-[#636370]/20 space-y-2">
         <Link
           href="/dashboard"
@@ -75,6 +77,7 @@ export default function AdminSidebar() {
           <span>Выйти</span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

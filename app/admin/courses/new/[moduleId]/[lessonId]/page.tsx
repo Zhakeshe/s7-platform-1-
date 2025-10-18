@@ -61,6 +61,7 @@ export default function Page() {
   const router = useRouter()
 
   const [course, setCourse] = useState<DraftCourse | null>(null)
+  const [hydrated, setHydrated] = useState(false)
   const fileInput = useRef<HTMLInputElement | null>(null)
   const slideInput = useRef<HTMLInputElement | null>(null)
   const presentationInput = useRef<HTMLInputElement | null>(null)
@@ -79,7 +80,16 @@ export default function Page() {
   }, [search])
 
   useEffect(() => {
-    setCourse(readDraftBy(draftKey))
+    const d = readDraftBy(draftKey)
+    if (d) setCourse(d)
+    else {
+      try {
+        const raw = localStorage.getItem("s7_admin_course_draft")
+        const fallback = raw ? JSON.parse(raw) : null
+        if (fallback) setCourse(fallback)
+      } catch {}
+    }
+    setHydrated(true)
   }, [draftKey])
 
   // Ensure draft id in URL to prevent losing edits when accessed directly
@@ -95,8 +105,8 @@ export default function Page() {
 
   // Ensure draft skeleton exists for this module/lesson so inputs are editable
   useEffect(() => {
-    if (!moduleId || !lessonId) return
-    // if course not loaded yet, wait for next effect
+    if (!hydrated || !moduleId || !lessonId) return
+    // if course not loaded yet, create minimal skeleton once hydrated
     if (course == null) {
       const draft: DraftCourse = {
         title: "",
@@ -126,7 +136,7 @@ export default function Page() {
       setCourse(next)
       writeDraftBy(draftKey, next)
     }
-  }, [course, moduleId, lessonId, draftKey])
+  }, [hydrated, course, moduleId, lessonId, draftKey])
 
   const module = course?.modules?.find((m) => m.id === moduleId)
   const lessonIndex = module?.lessons?.findIndex((l) => l.id === lessonId) ?? -1
@@ -285,7 +295,7 @@ export default function Page() {
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="mb-4">
         <button
-          onClick={() => router.push(`/admin/courses/new/${moduleId}${qs}`)}
+          onClick={() => { if (course) { try { writeDraftBy(draftKey, course) } catch {} } router.push(`/admin/courses/new/${moduleId}${qs}`) }}
           className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
         >
           Назад

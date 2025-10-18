@@ -6,20 +6,31 @@ import { apiFetch } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
 import { useConfirm } from "@/components/ui/confirm"
 
-function BSCard({ id, title, tag, views, onDelete }: { id?: string; title: string; tag: string; views: number; onDelete?: (id: string) => void }) {
+function BSCard({ id, title, tag, views, openHref, onDelete }: { id?: string; title: string; tag: string; views: number; openHref?: string; onDelete?: (id: string) => void }) {
   return (
-    <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white min-h-[170px] relative animate-slide-up">
+    <div
+      className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white min-h-[170px] relative animate-slide-up cursor-pointer"
+      onClick={() => { if (openHref) window.open(openHref, '_blank') }}
+      role={openHref ? 'button' : undefined}
+      tabIndex={openHref ? 0 : -1}
+    >
       <div className="flex items-center justify-between text-white/70 mb-6">
         <div className="inline-flex items-center gap-2 text-xs">
           <Eye className="w-4 h-4" /> {views}
         </div>
         <div className="flex items-center gap-2">
           {id && (
-            <button onClick={() => onDelete?.(id)} className="p-1 rounded hover:bg-[#2a2a35]" title="Удалить">
+            <button onClick={(e) => { e.stopPropagation(); onDelete?.(id) }} className="p-1 rounded hover:bg-[#2a2a35]" title="Удалить">
               <Trash2 className="w-4 h-4 text-red-400" />
             </button>
           )}
-          <ArrowUpRight className="w-5 h-5" />
+          {openHref ? (
+            <a href={openHref} target="_blank" rel="noreferrer" title="Открыть видео" className="p-1 rounded hover:bg-[#2a2a35]">
+              <ArrowUpRight className="w-5 h-5" />
+            </a>
+          ) : (
+            <ArrowUpRight className="w-5 h-5" />
+          )}
         </div>
       </div>
       <div className="text-xl font-semibold mb-6">{title}</div>
@@ -30,7 +41,7 @@ function BSCard({ id, title, tag, views, onDelete }: { id?: string; title: strin
   )
 }
 
-interface AdminBS { id: string; title: string; description?: string; videoUrl: string; coverImageUrl?: string; createdAt: string }
+interface AdminBS { id: string; title: string; description?: string; videoUrl: string; coverImageUrl?: string; createdAt: string; _count?: { likes: number }; _views?: number }
 
 export default function Page() {
   const [items, setItems] = useState<AdminBS[]>([])
@@ -38,8 +49,15 @@ export default function Page() {
   const confirm = useConfirm()
 
   useEffect(() => {
-    apiFetch<AdminBS[]>("/api/admin/bytesize")
-      .then((list) => setItems(list || []))
+    Promise.all([
+      apiFetch<AdminBS[]>("/api/admin/bytesize").catch(() => [] as AdminBS[]),
+      apiFetch<Array<{ id: string; views?: number }>>("/bytesize").catch(() => [] as Array<{ id: string; views?: number }>),
+    ])
+      .then(([adminList, feed]) => {
+        const vMap = new Map(feed.map((f) => [f.id, f.views ?? 0]))
+        const merged = (adminList || []).map((a) => ({ ...a, _views: vMap.get(a.id) ?? 0 }))
+        setItems(merged)
+      })
       .catch(() => setItems([]))
       .finally(() => setLoading(false))
   }, [])
@@ -69,7 +87,7 @@ export default function Page() {
           <div className="text-white/60">Нет видео</div>
         ) : (
           items.map((v) => (
-            <BSCard key={v.id} id={v.id} title={v.title} tag={"Robotics"} views={0} onDelete={remove} />
+            <BSCard key={v.id} id={v.id} title={v.title} tag={"Robotics"} views={v._views ?? 0} openHref={v.videoUrl} onDelete={remove} />
           ))
         )}
       </div>

@@ -105,9 +105,7 @@ export default function Page() {
         </div>
         {loading ? (
           <div className="text-white/60">Загрузка...</div>
-        ) : events.length === 0 ? (
-          <div className="text-white/60">Нет событий</div>
-        ) : (
+        ) : events.length > 0 ? (
           events.map((it) => (
             <MCItem
               key={it.id}
@@ -120,22 +118,16 @@ export default function Page() {
               onView={() => viewRegs(it.id, it.title)}
             />
           ))
-        )}
+        ) : null}
 
-        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative">
-          <div className="absolute top-4 right-4 text-white/70">
-            <ArrowUpRight className="w-6 h-6" />
+        <Link href="/admin/masterclass/new" className="block md:col-span-2">
+          <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative hover:bg-[#1a1a22] transition-colors cursor-pointer">
+            <div className="absolute top-4 right-4 text-white/70">
+              <ArrowUpRight className="w-6 h-6" />
+            </div>
+            <div className="text-white text-lg font-medium">Добавить мастер класс</div>
           </div>
-          <div className="text-white text-lg font-medium mb-8">Добавить мастер класс</div>
-          <div className="absolute bottom-4 right-4">
-            <Link
-              href="/admin/masterclass/new"
-              className="text-xs bg-[#2a2a35] text-white/80 rounded-full px-3 py-1 hover:bg-[#333344]"
-            >
-              Редакт.
-            </Link>
-          </div>
-        </div>
+        </Link>
       </div>
       {/* Registrations modal */}
       {openRegs.open && (

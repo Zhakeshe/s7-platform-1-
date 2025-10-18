@@ -62,7 +62,15 @@ export default function Page() {
   }, [search, moduleId, router])
 
   useEffect(() => {
-    setCourse(readDraftBy(draftKey))
+    const d = readDraftBy(draftKey)
+    if (d) setCourse(d)
+    else {
+      try {
+        const raw = localStorage.getItem("s7_admin_course_draft")
+        const fallback = raw ? JSON.parse(raw) : null
+        if (fallback) setCourse(fallback)
+      } catch {}
+    }
   }, [draftKey])
 
   const module = course?.modules?.find((m) => m.id === moduleId)
@@ -100,7 +108,7 @@ export default function Page() {
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="mb-4">
         <button
-          onClick={() => router.push(`/admin/courses/new${qs}`)}
+          onClick={() => { if (course) { try { writeDraftBy(draftKey, course) } catch {} } router.push(`/admin/courses/new${qs}`) }}
           className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
         >
           Назад
@@ -122,7 +130,7 @@ export default function Page() {
 
         {/* Lessons list */}
         <div className="space-y-3">
-          {(module?.lessons || [{ id: 1, title: "Название урока", time: "" }]).map((l) => (
+          {(Array.isArray(module?.lessons) ? module!.lessons : []).map((l) => (
             <div
               key={l.id}
               draggable

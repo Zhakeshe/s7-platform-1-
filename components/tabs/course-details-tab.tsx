@@ -201,7 +201,7 @@ export default function CourseDetailsTab({
 
           {/* Modules list */}
           <div className="space-y-3">
-            {course.modules.map((mod, modIdx) => (
+            {viewCourse.modules.map((mod, modIdx) => (
               <button
                 key={mod.id}
                 onClick={() => canAccess ? setActiveModuleId(mod.id) : setShowPayment(true)}
