@@ -6,7 +6,7 @@ import AdminAuthGate from "@/components/admin/auth-gate"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [currentDate, setCurrentDate] = useState("")
-  const [navOpen, setNavOpen] = useState(false)
+  const [navOpen, setNavOpen] = useState(true)
 
   useEffect(() => {
     const now = new Date()
@@ -30,6 +30,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setCurrentDate(`${day} ${month} ${year}`)
   }, [])
 
+  // Persist sidebar state; default open
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("s7_admin_nav_open")
+      if (raw != null) setNavOpen(raw === "1")
+    } catch {}
+  }, [])
+  useEffect(() => {
+    try { localStorage.setItem("s7_admin_nav_open", navOpen ? "1" : "0") } catch {}
+  }, [navOpen])
+
   return (
     <AdminAuthGate>
       <div className="flex min-h-screen bg-[#0b0b10]">
@@ -39,11 +50,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex justify-between items-center p-6">
               <button
                 onClick={() => setNavOpen((v) => !v)}
-                className="md:hidden inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
+                className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
                 aria-label="Меню"
+                aria-expanded={navOpen}
               >
                 <Menu className="w-5 h-5" />
-                Меню
+                {navOpen ? 'Скрыть' : 'Меню'}
               </button>
               <div className="text-right">
                 <div className="text-white text-xl font-semibold">{currentDate.split(" ").slice(0, 2).join(" ")}</div>
