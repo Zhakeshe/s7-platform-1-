@@ -103,3 +103,51 @@ router.get("/mine", requireAuth, async (req: AuthenticatedRequest, res: Response
   })
   res.json(list.map((m) => ({ id: m.id, role: m.role, status: m.status, joinedAt: m.joinedAt, team: { id: m.teamId, name: (m as any).team?.name, description: (m as any).team?.description } })))
 })
+
+// Captain-only: list members of my team with contacts
+router.get("/:teamId/members", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { teamId } = req.params
+  const team = await prisma.team.findUnique({ where: { id: teamId }, select: { captainId: true } })
+  if (!team) return res.status(404).json({ error: "Team not found" })
+  if (team.captainId !== req.user!.id) return res.status(403).json({ error: "Forbidden" })
+
+  const members = await prisma.teamMembership.findMany({
+    where: { teamId },
+    orderBy: { joinedAt: "desc" },
+    include: { user: { select: { id: true, email: true, fullName: true, profile: true } } },
+  })
+  res.json(
+    members.map((m) => ({
+      id: m.id,
+      role: m.role,
+      status: m.status,
+      joinedAt: m.joinedAt,
+      user: {
+        id: (m as any).user?.id,
+        email: (m as any).user?.email,
+        fullName: (m as any).user?.fullName,
+        phone: (m as any).user?.profile?.phone,
+        telegram: (() => { try { return (m as any).user?.profile?.socialLinks?.telegram } catch { return undefined } })(),
+        whatsapp: (() => { try { return (m as any).user?.profile?.socialLinks?.whatsapp } catch { return undefined } })(),
+      },
+    }))
+  )
+})
+
+// Captain-only: update member role/status
+router.put("/:teamId/members/:membershipId", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { teamId, membershipId } = req.params
+  const team = await prisma.team.findUnique({ where: { id: teamId }, select: { captainId: true } })
+  if (!team) return res.status(404).json({ error: "Team not found" })
+  if (team.captainId !== req.user!.id) return res.status(403).json({ error: "Forbidden" })
+
+  const { role, status } = (req.body || {}) as { role?: string; status?: string }
+  const data: any = {}
+  if (typeof role === "string" && role.trim()) data.role = role.trim()
+  if (typeof status === "string" && ["pending", "active", "rejected"].includes(status)) data.status = status
+  if (Object.keys(data).length === 0) return res.status(400).json({ error: "Nothing to update" })
+
+  const updated = await prisma.teamMembership.update({ where: { id: membershipId }, data }).catch(() => null)
+  if (!updated) return res.status(404).json({ error: "Membership not found" })
+  res.json(updated)
+})

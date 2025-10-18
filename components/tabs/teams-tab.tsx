@@ -1,4 +1,4 @@
-import { ArrowUpRight, Plus, MessageCircle, Phone, Mail } from "lucide-react"
+import { ArrowUpRight, Plus, MessageCircle, Phone, Mail, Users, Shield } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
@@ -204,24 +204,62 @@ export default function TeamsTab() {
   const { user } = useAuth()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [teams, setTeams] = useState<Array<{ id: string; name: string; description?: string; membersCount: number; metadata?: any }>>([])
+  const [teams, setTeams] = useState<Array<{ id: string; name: string; description?: string; membersCount: number; metadata?: any; captain?: { id: string; fullName?: string } }>>([])
   const [joinModal, setJoinModal] = useState<{ open: boolean; teamId?: string; teamName?: string }>({ open: false })
   const [tg, setTg] = useState("")
   const [wa, setWa] = useState("")
+  const [manageModal, setManageModal] = useState<{ open: boolean; teamId?: string; teamName?: string }>({ open: false })
+  const [manageMembers, setManageMembers] = useState<Array<{ id: string; role: string; status: string; joinedAt: string; user: { id: string; email?: string; fullName?: string; phone?: string; telegram?: string; whatsapp?: string } }>>([])
+  const [manageLoading, setManageLoading] = useState(false)
+  const [myMemberships, setMyMemberships] = useState<Record<string, { role: string; status: string }>>({})
 
   const handleTeamCreated = () => setRefreshKey(prev => prev + 1)
 
   useEffect(() => {
-    apiFetch<Array<{ id: string; name: string; description?: string; membersCount: number; metadata?: any }>>('/teams')
+    apiFetch<Array<{ id: string; name: string; description?: string; membersCount: number; metadata?: any; captain?: { id: string; fullName?: string } }>>('/teams')
       .then(setTeams)
       .catch(() => setTeams([]))
   }, [refreshKey])
+
+  // Load my memberships to hide join and show status
+  useEffect(() => {
+    if (!user) { setMyMemberships({}); return }
+    apiFetch<Array<{ id: string; role: string; status: string; team: { id: string } }>>('/teams/mine')
+      .then((list) => {
+        const map: Record<string, { role: string; status: string }> = {}
+        for (const m of (list || [])) map[m.team.id] = { role: m.role, status: m.status }
+        setMyMemberships(map)
+      })
+      .catch(() => setMyMemberships({}))
+  }, [user, refreshKey])
 
   const join = async (teamId: string, teamName: string) => {
     if (!user) { toast({ title: 'Войдите', description: 'Требуется авторизация' }); return }
     setJoinModal({ open: true, teamId, teamName })
     setTg("")
     setWa("")
+  }
+
+  const openManage = async (teamId: string, teamName: string) => {
+    if (!user) { toast({ title: 'Войдите', description: 'Требуется авторизация' }); return }
+    setManageModal({ open: true, teamId, teamName })
+    setManageLoading(true)
+    try {
+      const list = await apiFetch<Array<{ id: string; role: string; status: string; joinedAt: string; user: { id: string; email?: string; fullName?: string; phone?: string; telegram?: string; whatsapp?: string } }>>(`/teams/${teamId}/members`)
+      setManageMembers(list || [])
+    } catch { setManageMembers([]) }
+    finally { setManageLoading(false) }
+  }
+
+  const updateMember = async (membershipId: string, patch: Partial<{ role: string; status: string }>) => {
+    if (!manageModal.teamId) return
+    try {
+      await apiFetch(`/teams/${manageModal.teamId}/members/${membershipId}`, { method: 'PUT', body: JSON.stringify(patch) })
+      setManageMembers((prev) => prev.map((m) => (m.id === membershipId ? { ...m, ...patch } as any : m)))
+      toast({ title: 'Сохранено' })
+    } catch (e: any) {
+      toast({ title: 'Ошибка', description: e?.message || 'Не удалось сохранить', variant: 'destructive' as any })
+    }
   }
   return (
     <main className="flex-1 p-8 overflow-y-auto animate-slide-up">
@@ -258,12 +296,77 @@ export default function TeamsTab() {
                   {Array.isArray(t.metadata?.positionsWanted) && t.metadata.positionsWanted.length > 0 && (
                     <div>Нужные позиции: {t.metadata.positionsWanted.join(', ')}</div>
                   )}
+
+      {/* Manage Members Modal (captain) */}
+      {manageModal.open && createPortal(
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] animate-fade-in">
+          <div className="w-[min(92vw,760px)] bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white shadow-xl animate-slide-up">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-lg font-medium inline-flex items-center gap-2"><Users className="w-5 h-5"/> Участники — {manageModal.teamName}</div>
+              <button onClick={()=>setManageModal({ open:false })} className="text-white/70 hover:text-white">Закрыть</button>
+            </div>
+            {manageLoading ? (
+              <div className="text-white/70">Загрузка...</div>
+            ) : manageMembers.length === 0 ? (
+              <div className="text-white/60">Пока нет участников</div>
+            ) : (
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                {manageMembers.map((m)=> (
+                  <div key={m.id} className="bg-[#0e0e12] border border-[#2a2a35] rounded-xl p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="text-white font-medium">{m.user.fullName || m.user.email}</div>
+                        <div className="text-xs text-white/60">{new Date(m.joinedAt).toLocaleString('ru-RU')}</div>
+                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-white/80">
+                          {m.user.phone && (<span className="inline-flex items-center gap-1"><Phone className="w-4 h-4"/>{m.user.phone}</span>)}
+                          {m.user.whatsapp && (<span className="inline-flex items-center gap-1"><MessageCircle className="w-4 h-4"/>WA: {m.user.whatsapp}</span>)}
+                          {m.user.telegram && (<span className="inline-flex items-center gap-1"><MessageCircle className="w-4 h-4"/>TG: {m.user.telegram}</span>)}
+                          {!m.user.phone && !m.user.whatsapp && !m.user.telegram && (<span className="text-white/50">контакты не указаны</span>)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={m.role}
+                          onChange={(e)=>updateMember(m.id,{ role: e.target.value })}
+                          className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-2 py-1 text-sm text-white/90"
+                        >
+                          {['captain','member','mentor'].map((r)=> (<option key={r} value={r}>{r}</option>))}
+                        </select>
+                        <select
+                          value={m.status}
+                          onChange={(e)=>updateMember(m.id,{ status: e.target.value })}
+                          className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-2 py-1 text-sm text-white/90"
+                        >
+                          <option value="pending">Ожидание</option>
+                          <option value="active">Активен</option>
+                          <option value="rejected">Отклонён</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
                   {Array.isArray(t.metadata?.competitions) && t.metadata.competitions.length > 0 && (
                     <div>Соревнования: {t.metadata.competitions.join(', ')}</div>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => join(t.id, t.name)} className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium">Записаться</button>
+                  {user && t.captain && t.captain.id === user.id ? (
+                    <button onClick={() => openManage(t.id, t.name)} className="px-4 py-2 rounded-lg bg-[#2a2a35] hover:bg-[#333344] text-white/90 font-medium inline-flex items-center gap-2">
+                      <Shield className="w-4 h-4" /> Управлять
+                    </button>
+                  ) : myMemberships[t.id] ? (
+                    <span className={`inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full ${myMemberships[t.id].status === 'active' ? 'bg-[#22c55e]/20 text-[#22c55e]' : myMemberships[t.id].status === 'rejected' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#f59e0b]/20 text-[#f59e0b]'}`}>
+                      {myMemberships[t.id].status === 'pending' ? 'На проверке' : myMemberships[t.id].status === 'active' ? 'Вы в команде' : 'Отклонено'}
+                    </span>
+                  ) : (
+                    <button onClick={() => join(t.id, t.name)} className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium">Записаться</button>
+                  )}
                 </div>
               </div>
             ))}
