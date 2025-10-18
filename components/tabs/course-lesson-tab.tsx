@@ -63,6 +63,7 @@ export default function CourseLessonTab({
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [slideUrls, setSlideUrls] = useState<(string | null)[]>([])
   const [presUrl, setPresUrl] = useState<string | null>(null)
+  const [lessonContent, setLessonContent] = useState<string>(lesson?.content || "")
   // Lesson quiz state
   const [lessonQuiz, setLessonQuiz] = useState<Array<any>>([])
   const [loadingQuiz, setLoadingQuiz] = useState(false)
@@ -115,6 +116,7 @@ export default function CourseLessonTab({
         if (ignore || !data) return
         // Successful fetch implies access for this lesson (or it is free preview)
         setCanAccess((prev) => prev || true)
+        if (typeof data.content === 'string') setLessonContent(data.content)
         if (data.videoUrl) setVideoUrl(data.videoUrl)
         if (data.presentationUrl) setPresUrl(data.presentationUrl)
         if (Array.isArray(data.slides)) {
@@ -200,14 +202,14 @@ export default function CourseLessonTab({
             )}
 
             {/* Text content */}
-            {lesson.content && (
+            {(lessonContent && lessonContent.trim().length > 0) && (
               <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-2 animate-slide-up">
                 <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 bg-[#1b1b22] border border-[#2a2a35] text-white/70 text-xs">
                   <FileText className="w-4 h-4" />
                   Конспект урока
                 </div>
                 <div className="prose prose-invert max-w-none">
-                  <ReactMarkdown>{lesson.content}</ReactMarkdown>
+                  <ReactMarkdown>{lessonContent}</ReactMarkdown>
                 </div>
               </div>
             )}

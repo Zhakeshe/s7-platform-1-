@@ -335,7 +335,7 @@ export default function Page() {
     } catch {}
 
     const newCourse = {
-      id: title.toLowerCase().replace(/\s+/g, "-"),
+      id: editId || title.toLowerCase().replace(/\s+/g, "-"),
       title,
       difficulty,
       author,
@@ -374,7 +374,10 @@ export default function Page() {
             })) || [],
           })),
         }
-        const created = await apiFetch<any>("/api/admin/courses", { method: "POST", body: JSON.stringify(payload) })
+        const created = await apiFetch<any>(
+          editId ? `/api/admin/courses/${encodeURIComponent(editId)}` : "/api/admin/courses",
+          { method: editId ? "PUT" : "POST", body: JSON.stringify(payload) }
+        )
         // After creation, post lesson-level questions from draft (if any)
         try {
           const draftRaw = localStorage.getItem(draftKey)
