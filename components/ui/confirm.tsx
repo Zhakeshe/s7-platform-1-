@@ -1,8 +1,17 @@
-'use client'
+"use client"
 
 import * as React from 'react'
-import * as AlertDialog from '@radix-ui/react-alert-dialog'
 import { cn } from '@/lib/utils'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerFooter,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerClose,
+} from '@/components/ui/drawer'
+import { Button } from '@/components/ui/button'
 
 export type ConfirmOptions = {
   title?: React.ReactNode
@@ -42,40 +51,34 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      <AlertDialog.Root open={state.open} onOpenChange={(open) => !open && onCancel()}>
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-[120] -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-md rounded-2xl border p-6 shadow-2xl bg-[#16161c] border-[#2a2a35] text-white">
-            <AlertDialog.Title className="text-lg font-medium mb-2">{title}</AlertDialog.Title>
+      <Drawer open={state.open} onOpenChange={(open) => { if (!open) onCancel() }}>
+        <DrawerContent className="max-w-md mx-auto rounded-2xl border border-[#2a2a35] bg-[#16161c] text-white">
+          <DrawerHeader>
+            <DrawerTitle className="text-lg font-medium">{title}</DrawerTitle>
             {description && (
-              <AlertDialog.Description className="text-white/70 text-sm mb-4">{description}</AlertDialog.Description>
+              <DrawerDescription className="text-white/70 text-sm">{description}</DrawerDescription>
             )}
-            <div className="flex items-center justify-end gap-2">
-              <AlertDialog.Cancel asChild>
-                <button
-                  onClick={onCancel}
-                  className="px-3 py-2 rounded-lg bg-[#1b1b22] border border-[#2a2a35] text-white/90 hover:bg-[#23232b]"
-                >
-                  {cancelText}
-                </button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <button
-                  onClick={onConfirm}
-                  className={cn(
-                    'px-3 py-2 rounded-lg font-medium',
-                    variant === 'danger'
-                      ? 'bg-[#ef4444] hover:bg-[#dc2626] text-white'
-                      : 'bg-[#00a3ff] hover:bg-[#0088cc] text-black',
-                  )}
-                >
-                  {confirmText}
-                </button>
-              </AlertDialog.Action>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+          </DrawerHeader>
+          <DrawerFooter className="flex-row justify-end gap-2">
+            <DrawerClose asChild>
+              <Button onClick={onCancel} variant="outline" className="px-3 py-2 rounded-lg bg-[#1b1b22] border border-[#2a2a35] text-white/90 hover:bg-[#23232b]">
+                {cancelText}
+              </Button>
+            </DrawerClose>
+            <Button
+              onClick={onConfirm}
+              className={cn(
+                'px-3 py-2 rounded-lg font-medium',
+                variant === 'danger'
+                  ? 'bg-[#ef4444] hover:bg-[#dc2626] text-white'
+                  : 'bg-[#00a3ff] hover:bg-[#0088cc] text-black',
+              )}
+            >
+              {confirmText}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </ConfirmContext.Provider>
   )
 }

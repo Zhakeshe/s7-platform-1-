@@ -1,6 +1,18 @@
 "use client"
 import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { toast } from "@/hooks/use-toast"
 
 interface UserRef { id: string; email: string; fullName?: string }
 interface Achievement { id: string; title: string; description: string; earnedAt?: string }
@@ -19,6 +31,10 @@ export default function AdminAchievementsPage() {
   const [rows, setRows] = useState<UserAchievementRow[]>([])
   const [winners, setWinners] = useState<SubmissionRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [userId, setUserId] = useState("")
+  const [text, setText] = useState("")
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -32,6 +48,47 @@ export default function AdminAchievementsPage() {
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <h1 className="text-white text-2xl font-bold mb-6">Достижения участников</h1>
+
+      <div className="mb-4">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-[#00a3ff] hover:bg-[#0088cc] text-black">Выдать достижение</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Выдать достижение</DialogTitle>
+              <DialogDescription>Укажите ID пользователя и текст достижения.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Input value={userId} onChange={(e)=>setUserId(e.target.value)} placeholder="ID пользователя" />
+              <Input value={text} onChange={(e)=>setText(e.target.value)} placeholder="Текст" />
+            </div>
+            <DialogFooter>
+              <Button
+                disabled={saving}
+                onClick={async ()=>{
+                  if (!userId.trim() || !text.trim()) { toast({ title: 'Заполните все поля' } as any); return }
+                  setSaving(true)
+                  try {
+                    const ua = await apiFetch<any>(`/api/admin/users/${encodeURIComponent(userId.trim())}/achievements`, { method: 'POST', body: JSON.stringify({ text: text.trim() }) })
+                    // Лучше перезагрузить: но добавим быстрый prepend-элемент
+                    setRows((prev)=>[
+                      { id: ua.id, earnedAt: new Date().toISOString(), user: { id: userId.trim(), email: userId.trim() }, achievement: { id: ua.achievementId || 'new', title: 'Достижение', description: text.trim() } } as any,
+                      ...prev
+                    ])
+                    setUserId(''); setText(''); setOpen(false)
+                    toast({ title: 'Выдано' } as any)
+                  } catch(e:any) {
+                    toast({ title: 'Ошибка', description: e?.message || 'Не удалось выдать', variant: 'destructive' as any })
+                  } finally { setSaving(false) }
+                }}
+              >
+                Сохранить
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* User Achievements */}
       <section className="mb-10">

@@ -5,6 +5,17 @@ import { ArrowUpRight, Trash2 } from "lucide-react"
 import { apiFetch } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
 import { useConfirm } from "@/components/ui/confirm"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 interface TeamItem { id: string; name: string; description?: string; membersCount?: number }
 
@@ -45,6 +56,10 @@ function TeamRow({ id, name, membersCount, onDeleted }: { id: string; name: stri
 export default function AdminTeams() {
   const [teams, setTeams] = useState<TeamItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     apiFetch<any[]>("/api/admin/teams")
@@ -56,6 +71,43 @@ export default function AdminTeams() {
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <h2 className="text-white text-xl font-medium mb-6">Команды</h2>
+      <div className="mb-4">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-[#00a3ff] hover:bg-[#0088cc] text-black">Создать команду</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Новая команда</DialogTitle>
+              <DialogDescription>Заполните поля и сохраните.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Название" />
+              <Input value={description} onChange={(e)=>setDescription(e.target.value)} placeholder="Описание (необязательно)" />
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={async ()=>{
+                  if (!name.trim()) { toast({ title: "Введите название" } as any); return }
+                  setSubmitting(true)
+                  try {
+                    const created = await apiFetch<any>("/api/admin/teams", { method: "POST", body: JSON.stringify({ name: name.trim(), description: description.trim() || undefined }) })
+                    setTeams((prev)=>[{ id: created.id, name: created.name, membersCount: 0 }, ...prev])
+                    setName(""); setDescription("")
+                    setOpen(false)
+                    toast({ title: "Команда создана" } as any)
+                  } catch(e:any) {
+                    toast({ title: "Ошибка", description: e?.message || "Не удалось создать", variant: "destructive" as any })
+                  } finally { setSubmitting(false) }
+                }}
+                disabled={submitting}
+              >
+                Сохранить
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
       <div className="space-y-4">
         {loading ? (
           <div className="text-white/60">Загрузка...</div>
@@ -66,14 +118,6 @@ export default function AdminTeams() {
             <TeamRow key={t.id} id={t.id} name={t.name} membersCount={t.membersCount} onDeleted={(id) => setTeams((prev) => prev.filter((x) => x.id !== id))} />
           ))
         )}
-        <Link href="/admin/teams/new" className="block">
-          <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative hover:bg-[#1b1b22] transition-colors">
-            <div className="absolute top-4 right-4 text-white/70">
-              <ArrowUpRight className="w-6 h-6" />
-            </div>
-            <div className="text-white text-lg font-medium">Добавить</div>
-          </div>
-        </Link>
       </div>
     </main>
   )

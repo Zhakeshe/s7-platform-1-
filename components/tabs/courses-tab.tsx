@@ -2,6 +2,16 @@ import { ArrowUpRight, Search } from "lucide-react"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import { useEffect, useRef, useState } from "react"
 import { apiFetch } from "@/lib/api"
+import { Slider } from "@/components/ui/slider"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
 
 export default function CoursesTab({
   onOpenCourse,
@@ -14,6 +24,9 @@ export default function CoursesTab({
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all")
   const [loadingContinue, setLoadingContinue] = useState(true)
   const [loadingRecommended, setLoadingRecommended] = useState(true)
+  const [priceRange, setPriceRange] = useState<number[]>([0, 1_000_000])
+  const [page, setPage] = useState(1)
+  const pageSize = 9
   const reqIdRef = useRef(0)
 
   // Load continue list
@@ -42,6 +55,10 @@ export default function CoursesTab({
     const params = new URLSearchParams()
     if (search.trim()) params.set("search", search.trim())
     if (filter !== "all") params.set("filter", filter)
+    if (Array.isArray(priceRange) && priceRange.length === 2) {
+      params.set("minPrice", String(priceRange[0] || 0))
+      params.set("maxPrice", String(priceRange[1] || 0))
+    }
     apiFetch<any[]>(`/courses${params.toString() ? `?${params.toString()}` : ""}`)
       .then((list) => {
         if (currentReq !== reqIdRef.current) return
@@ -53,7 +70,13 @@ export default function CoursesTab({
           price: Number(c.price || 0),
           modules: (c.modules || []).map((m: any) => ({ id: m.id, title: m.title, lessons: m.lessons || [] })),
         }))
-        setRecommended(mapped)
+        const [minP, maxP] = priceRange
+        const filteredByPrice = mapped.filter((c) => {
+          const p = Number(c.price || 0)
+          return p >= (minP ?? 0) && p <= (maxP ?? Number.MAX_SAFE_INTEGER)
+        })
+        setRecommended(filteredByPrice)
+        setPage(1)
       })
       .catch(() => { if (currentReq === reqIdRef.current) setRecommended([]) })
       .finally(() => { if (currentReq === reqIdRef.current) setLoadingRecommended(false) })
@@ -76,6 +99,12 @@ export default function CoursesTab({
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search])
+
+  useEffect(() => {
+    const t = setTimeout(() => loadRecommended(), 200)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceRange])
 
   return (
     <main className="flex-1 p-8 overflow-y-auto animate-slide-up">
@@ -147,13 +176,29 @@ export default function CoursesTab({
           ))}
         </div>
 
+        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 mb-6">
+          <div className="text-white text-sm font-medium mb-2">Price Range</div>
+          <div className="text-white/60 text-xs mb-3">Укажите бюджет ({priceRange[0].toLocaleString()}₸ – {priceRange[1].toLocaleString()}₸)</div>
+          <div className="px-1">
+            <Slider
+              min={0}
+              max={1_000_000}
+              defaultValue={priceRange}
+              value={priceRange}
+              onValueChange={(v) => setPriceRange(v as number[])}
+              className="w-full"
+            />
+          </div>
+        </div>
+
         {loadingRecommended ? (
           <div className="text-white/70">Загрузка...</div>
         ) : recommended.length === 0 ? (
           <div className="text-center text-white/70 bg-[#16161c] border border-[#636370]/20 rounded-2xl p-10">Курсы не найдены</div>
         ) : (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommended.map((c, i) => (
+            {recommended.slice((page-1)*pageSize, page*pageSize).map((c, i) => (
               <div
                 key={c.id}
                 onClick={() => onOpenCourse?.(c)}
@@ -176,6 +221,43 @@ export default function CoursesTab({
               </div>
             ))}
           </div>
+          {Math.ceil(recommended.length / pageSize) > 1 && (
+            <div className="mt-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious href="#" onClick={(e)=>{e.preventDefault(); setPage((p)=>Math.max(1,p-1))}} />
+                  </PaginationItem>
+                  {Array.from({ length: Math.ceil(recommended.length / pageSize) }).map((_, idx) => {
+                    const p = idx + 1
+                    const isEdge = p === 1 || p === Math.ceil(recommended.length / pageSize)
+                    const isNear = Math.abs(p - page) <= 1
+                    if (!isEdge && !isNear) {
+                      if (p === 2 || p === Math.ceil(recommended.length / pageSize) - 1) {
+                        return (
+                          <PaginationItem key={`el-${p}`}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )
+                      }
+                      return null
+                    }
+                    return (
+                      <PaginationItem key={p}>
+                        <PaginationLink href="#" isActive={p===page} onClick={(e)=>{e.preventDefault(); setPage(p)}}>
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  })}
+                  <PaginationItem>
+                    <PaginationNext href="#" onClick={(e)=>{e.preventDefault(); setPage((p)=>Math.min(Math.ceil(recommended.length/pageSize), p+1))}} />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+          </>
         )}
       </section>
     </main>

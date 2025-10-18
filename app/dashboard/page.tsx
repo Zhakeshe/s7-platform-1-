@@ -12,6 +12,9 @@ import FooterSocial from "@/components/footer-social"
 import CourseDetailsTab from "@/components/tabs/course-details-tab"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import CourseLessonTab from "@/components/tabs/course-lesson-tab"
+import ProfileDropdown from "@/components/kokonutui/profile-dropdown"
+import ActionSearchBar from "@/components/kokonutui/action-search-bar"
+import { useAuth } from "@/components/auth/auth-context"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("home")
@@ -21,6 +24,7 @@ export default function Dashboard() {
   const [selectedCourse, setSelectedCourse] = useState<CourseDetails | null>(null)
   const [selectedModuleId, setSelectedModuleId] = useState<string | number | null>(null)
   const [selectedLessonId, setSelectedLessonId] = useState<string | number | null>(null)
+  const { user } = useAuth()
 
   useEffect(() => {
     const updateDate = () => {
@@ -162,13 +166,21 @@ export default function Dashboard() {
         }`}
       >
         {/* Header */}
-        <header className="bg-[#16161c] border-b border-[#636370]/20 px-4 md:px-8 py-4 md:py-6 flex justify-between items-center animate-slide-up relative z-10">
+        <header className="bg-[#16161c] border-b border-[#636370]/20 px-4 md:px-8 py-4 md:py-6 flex items-center gap-4 animate-slide-up relative z-10">
           <div className="flex items-center">
             <h1 className="text-white text-xl md:text-2xl font-medium ml-12 md:ml-0">{getTabTitle(activeTab)}</h1>
           </div>
-          <div className="text-right">
-            <div className="text-white text-lg md:text-xl font-medium">{currentDate}</div>
-            <div className="text-[#a0a0b0] text-sm">2025</div>
+          {activeTab === "courses" && (
+            <div className="hidden md:block flex-1">
+              <ActionSearchBar />
+            </div>
+          )}
+          <div className="ml-auto flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-white text-lg md:text-xl font-medium">{currentDate}</div>
+              <div className="text-[#a0a0b0] text-sm">2025</div>
+            </div>
+            <ProfileDropdown data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png" }} />
           </div>
         </header>
 

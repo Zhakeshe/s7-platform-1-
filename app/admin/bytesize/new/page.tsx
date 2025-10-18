@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { apiFetch, getTokens } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
 import { useConfirm } from "@/components/ui/confirm"
+import FileUpload from "@/components/kokonutui/file-upload"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 export default function Page() {
   const router = useRouter()
@@ -77,45 +79,29 @@ export default function Page() {
       <div className="max-w-3xl space-y-6">
         {/* Upload area */}
         <div className="rounded-3xl border-2 border-[#2a2a35] p-3">
-          <div
-            className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[360px] flex items-center justify-center text-white relative overflow-hidden"
-            onDragOver={(e)=>{e.preventDefault();}}
-            onDrop={async (e)=>{
-              e.preventDefault();
-              const f = e.dataTransfer.files?.[0]; if(!f) return;
-              if (f.type && !ALLOWED_VIDEO_TYPES.includes(f.type)) {
-                toast({ title: "Неподдерживаемый формат видео", description: "Разрешены: MP4, WebM, MOV", variant: "destructive" as any });
-                return;
-              }
-              setUploading(true);
-              try { const url = await uploadMedia(f); setVideoUrl(url); toast({ title: "Видео загружено" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
-            }}
-          >
+          <div className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[360px] flex items-center justify-center text-white relative overflow-hidden p-4">
             {videoUrl ? (
-              <video src={videoUrl} controls className="w-full h-full object-contain" />
+              <AspectRatio ratio={16/9} className="w-full">
+                <video src={videoUrl} controls className="w-full h-full object-contain" />
+              </AspectRatio>
             ) : (
-              <div className="text-center select-none">
-                <div className="w-16 h-16 rounded-full bg-[#2a2a35] flex items-center justify-center mx-auto mb-3">
-                  <Upload className="w-7 h-7 text-[#a0a0b0]" />
-                </div>
-                <div className="text-lg font-medium">Перетащите видео сюда</div>
-                <div className="text-white/60 text-sm">или нажмите «Выбрать видео». До 1 минуты</div>
-              </div>
+              <FileUpload
+                className="w-full"
+                acceptedFileTypes={["video/mp4","video/webm","video/quicktime"]}
+                uploadDelay={800}
+                onUploadSuccess={async (f)=>{
+                  if (f.type && !ALLOWED_VIDEO_TYPES.includes(f.type)) {
+                    toast({ title: "Неподдерживаемый формат видео", description: "Разрешены: MP4, WebM, MOV", variant: "destructive" as any })
+                    return
+                  }
+                  setUploading(true)
+                  try { const url = await uploadMedia(f); setVideoUrl(url); toast({ title: "Видео загружено" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
+                }}
+                onUploadError={(err)=> toast({ title: "Ошибка", description: err.message, variant: "destructive" as any })}
+              />
             )}
           </div>
           <div className="flex gap-2 mt-3">
-            <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" hidden onChange={async (e)=>{
-              const f = e.target.files?.[0]; if(!f) return;
-              if (f.type && !ALLOWED_VIDEO_TYPES.includes(f.type)) {
-                toast({ title: "Неподдерживаемый формат видео", description: "Разрешены: MP4, WebM, MOV", variant: "destructive" as any });
-                return;
-              }
-              setUploading(true);
-              try { const url = await uploadMedia(f); setVideoUrl(url); toast({ title: "Видео загружено" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
-            }} />
-            <button type="button" onClick={()=>videoInputRef.current?.click()} className="inline-flex items-center gap-2 px-3 py-2 bg-[#00a3ff] hover:bg-[#0088cc] rounded-lg text-black font-medium">
-              Выбрать видео
-            </button>
             <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={async (e)=>{
               const f = e.target.files?.[0]; if(!f) return;
               if (f.type && !ALLOWED_COVER_TYPES.includes(f.type)) {

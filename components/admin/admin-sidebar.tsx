@@ -3,6 +3,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, BookOpen, Users, GraduationCap, FileText, Wrench, CreditCard, Award, LogOut } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
+import ProfileDropdown from "@/components/kokonutui/profile-dropdown"
 
 export default function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
@@ -61,6 +62,12 @@ export default function AdminSidebar({ open, onClose }: { open: boolean; onClose
       </div>
       
       <div className="mt-auto pt-4 border-t border-[#636370]/20 space-y-2">
+        {/* Profile Dropdown */}
+        <div className="px-1">
+          <ProfileDropdown
+            data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png" }}
+          />
+        </div>
         <Link
           href="/dashboard"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-[#16161c] transition-colors w-full"

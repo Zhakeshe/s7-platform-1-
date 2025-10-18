@@ -6,6 +6,8 @@ import dynamic from "next/dynamic"
 import { saveFile, deleteFile, getObjectUrl, getFile } from "@/lib/s7media"
 import { toast } from "@/hooks/use-toast"
 import { getTokens } from "@/lib/api"
+import FileUpload from "@/components/kokonutui/file-upload"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 const ReactMarkdown = dynamic(() => import("react-markdown").then((m) => m.default as any), { ssr: false }) as any
 
 interface DraftLesson {
@@ -326,44 +328,26 @@ export default function Page() {
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
           {/* Left: video drop area */}
           <section>
-            <div
-              className="rounded-3xl border-2 border-[#2a2a35] p-3"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault()
-                const f = e.dataTransfer.files?.[0]
-                if (f) onSelectVideo(f)
-              }}
-            >
-              <div
-                className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[320px] flex items-center justify-center text-white cursor-pointer overflow-hidden"
-                onClick={() => fileInput.current?.click()}
-              >
+            <div className="rounded-3xl border-2 border-[#2a2a35] p-3">
+              <div className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[320px] flex items-center justify-center text-white overflow-hidden p-4">
                 {!lesson?.videoMediaId ? (
-                  <div className="text-center">
-                    <div className="w-20 h-20 rounded-full bg-[#2a2a35] flex items-center justify-center mx-auto mb-3">
-                      <Upload className="w-8 h-8 text-[#a0a0b0]" />
-                    </div>
-                    <div className="text-xl font-medium">Перетащите видео</div>
-                    <div className="text-white/60 text-sm">Не более 1 часа</div>
-                  </div>
+                  <FileUpload
+                    className="w-full"
+                    acceptedFileTypes={["video/*"]}
+                    uploadDelay={600}
+                    onUploadSuccess={(f) => onSelectVideo(f)}
+                    onUploadError={(err) => toast({ title: "Ошибка", description: err.message, variant: "destructive" as any })}
+                  />
                 ) : (
-                  <video src={videoPreview || undefined} controls className="w-full h-full object-contain bg-black" />
+                  <AspectRatio ratio={16/9} className="w-full">
+                    <video src={videoPreview || undefined} controls className="w-full h-full object-contain bg-black" />
+                  </AspectRatio>
                 )}
-                <input
-                  ref={fileInput}
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) onSelectVideo(f)
-                  }}
-                  className="hidden"
-                />
               </div>
               {lesson?.videoMediaId && (
                 <div className="flex items-center justify-end gap-3 mt-3">
                   <button onClick={() => fileInput.current?.click()} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Заменить</button>
+                  <input ref={fileInput} type="file" accept="video/*" onChange={(e)=>{ const f=e.target.files?.[0]; if(f) onSelectVideo(f) }} className="hidden" />
                   <button onClick={uploadVideoToServer} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Загрузить на сервер</button>
                   {lesson.videoUrl && <a href={lesson.videoUrl} target="_blank" className="text-xs text-[#00a3ff] underline">Открыть URL</a>}
                   <button onClick={removeVideo} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm inline-flex items-center gap-1"><Trash className="w-4 h-4"/>Удалить</button>

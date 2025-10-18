@@ -3,10 +3,13 @@ import { useEffect, useState } from "react"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import { Menu } from "lucide-react"
 import AdminAuthGate from "@/components/admin/auth-gate"
+import ProfileDropdown from "@/components/kokonutui/profile-dropdown"
+import { useAuth } from "@/components/auth/auth-context"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [currentDate, setCurrentDate] = useState("")
   const [navOpen, setNavOpen] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     const now = new Date()
@@ -47,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <AdminSidebar open={navOpen} onClose={() => setNavOpen(false)} />
         <div className={`flex-1 transition-[margin-left] duration-200 ${navOpen ? 'md:ml-64' : 'md:ml-0'}`}>
           <header className="sticky top-0 z-10 bg-transparent">
-            <div className="flex justify-between items-center p-6">
+            <div className="flex items-center gap-4 p-6">
               <button
                 onClick={() => setNavOpen((v) => !v)}
                 className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
@@ -57,9 +60,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Menu className="w-5 h-5" />
                 {navOpen ? 'Скрыть' : 'Меню'}
               </button>
-              <div className="text-right">
-                <div className="text-white text-xl font-semibold">{currentDate.split(" ").slice(0, 2).join(" ")}</div>
-                <div className="text-white/60 text-xs">{currentDate.split(" ").slice(2).join(" ")}</div>
+              
+              <div className="ml-auto flex items-center gap-4">
+                <div className="text-right">
+                  <div className="text-white text-xl font-semibold">{currentDate.split(" ").slice(0, 2).join(" ")}</div>
+                  <div className="text-white/60 text-xs">{currentDate.split(" ").slice(2).join(" ")}</div>
+                </div>
+                <ProfileDropdown data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png" }} />
               </div>
             </div>
           </header>
