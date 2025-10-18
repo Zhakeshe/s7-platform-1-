@@ -114,7 +114,12 @@ export async function apiFetch<T = any>(path: string, init: RequestInit = {}): P
   }
   if (!res.ok) {
     const text = await res.text().catch(() => "")
-    throw new Error(text || `HTTP ${res.status}`)
+    let msg = text
+    try {
+      const j = JSON.parse(text)
+      msg = j.error || j.message || j.reason || text
+    } catch {}
+    throw new Error(msg || `HTTP ${res.status}`)
   }
   return (await res.json()) as T
 }

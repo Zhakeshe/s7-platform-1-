@@ -3,7 +3,7 @@ import SocialPanel from "@/components/social-panel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth/auth-context"
 import { toast } from "@/hooks/use-toast"
@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast"
 export default function LoginPage() {
   const router = useRouter()
   const { login, register, updateProfile } = useAuth()
+  const { user, loading } = useAuth() as any
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -18,6 +19,12 @@ export default function LoginPage() {
   const [institution, setInstitution] = useState("")
   const [age, setAge] = useState("")
   const [primaryRole, setPrimaryRole] = useState("")
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard")
+    }
+  }, [user, loading, router])
 
   const handleLogin = async () => {
     try {

@@ -276,11 +276,37 @@ router.post("/purchases/:id/reject", async (req: AuthenticatedRequest, res: Resp
 const roleUpdateSchema = z.object({ role: z.enum(["ADMIN", "USER"]) })
 
 router.get("/users", async (_req: AuthenticatedRequest, res: Response) => {
-  const users = await prisma.user.findMany({
+  const users = await (prisma as any).user.findMany({
     orderBy: { createdAt: "desc" },
-    select: { id: true, email: true, role: true, fullName: true, createdAt: true, experiencePoints: true },
+    select: { id: true, email: true, role: true, fullName: true, createdAt: true, experiencePoints: true, banned: true, bannedReason: true } as any,
   })
   res.json(users.map((u) => ({ ...u, xp: Number((u as any).experiencePoints || 0) })))
+})
+
+const banSchema = z.object({ reason: z.string().optional() })
+
+// Ban user
+router.post("/users/:userId/ban", async (req: AuthenticatedRequest, res: Response) => {
+  const { userId } = req.params
+  const parsed = banSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  try {
+    const updated = await (prisma as any).user.update({ where: { id: userId }, data: { banned: true, bannedReason: parsed.data.reason || null } as any })
+    return res.json({ id: updated.id, banned: updated.banned, bannedReason: updated.bannedReason })
+  } catch {
+    return res.status(404).json({ error: "User not found" })
+  }
+})
+
+// Unban user
+router.post("/users/:userId/unban", async (req: AuthenticatedRequest, res: Response) => {
+  const { userId } = req.params
+  try {
+    const updated = await (prisma as any).user.update({ where: { id: userId }, data: { banned: false, bannedReason: null } as any })
+    return res.json({ id: updated.id, banned: updated.banned })
+  } catch {
+    return res.status(404).json({ error: "User not found" })
+  }
 })
 
 router.post("/users/:userId/role", async (req: AuthenticatedRequest, res: Response) => {

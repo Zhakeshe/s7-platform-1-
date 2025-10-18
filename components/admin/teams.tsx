@@ -59,6 +59,16 @@ export default function AdminTeams() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
+  const [city, setCity] = useState("")
+  const [phone, setPhone] = useState("")
+  const [educationalInstitution, setEducationalInstitution] = useState("")
+  const [mentorName, setMentorName] = useState("")
+  const positionsList = ["Капитан", "Инженер", "Программист", "Дизайнер", "Маркетолог"]
+  const [positionsWanted, setPositionsWanted] = useState<Record<string, boolean>>({})
+  const [customPositions, setCustomPositions] = useState("")
+  const competitionOptions = ["WRO", "Robofest", "FIRST LEGO League", "FIRST Tech Challenge"]
+  const [competitions, setCompetitions] = useState<Record<string, boolean>>({})
+  const [customCompetitions, setCustomCompetitions] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -76,14 +86,54 @@ export default function AdminTeams() {
           <DialogTrigger asChild>
             <Button className="bg-[#00a3ff] hover:bg-[#0088cc] text-black">Создать команду</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-[#16161c] border border-[#2a2a35] text-white">
             <DialogHeader>
-              <DialogTitle>Новая команда</DialogTitle>
-              <DialogDescription>Заполните поля и сохраните.</DialogDescription>
+              <DialogTitle className="text-white">Новая команда</DialogTitle>
+              <DialogDescription className="text-white/70">Заполните данные команды. Эти поля совпадают с пользовательской формой.</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <Input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Название" />
-              <Input value={description} onChange={(e)=>setDescription(e.target.value)} placeholder="Описание (необязательно)" />
+              <Input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Название" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
+              <div className="grid grid-cols-1 gap-3">
+                <Input value={city} onChange={(e)=>setCity(e.target.value)} placeholder="Город" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
+                <Input value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="Телефон" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
+                <Input value={educationalInstitution} onChange={(e)=>setEducationalInstitution(e.target.value)} placeholder="Учебное заведение" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
+                <Input value={mentorName} onChange={(e)=>setMentorName(e.target.value)} placeholder="Имя ментора" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
+              </div>
+              <div>
+                <div className="text-white/80 mb-2">Какие позиции нужны</div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {positionsList.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPositionsWanted((s) => ({ ...s, [p]: !s[p] }))}
+                      className={`text-xs font-medium px-3 py-1 rounded-full border ${positionsWanted[p] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+                <Input value={customPositions} onChange={(e)=>setCustomPositions(e.target.value)} placeholder="Другая должность (через запятую)" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
+              </div>
+
+              <div>
+                <div className="text-white/80 mb-2">Соревнования команды</div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {competitionOptions.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCompetitions((s) => ({ ...s, [c]: !s[c] }))}
+                      className={`text-xs font-medium px-3 py-1 rounded-full border ${competitions[c] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                <Input value={customCompetitions} onChange={(e)=>setCustomCompetitions(e.target.value)} placeholder="Другие (через запятую)" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
+              </div>
+
+              <Input value={description} onChange={(e)=>setDescription(e.target.value)} placeholder="Описание (необязательно)" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
             </div>
             <DialogFooter>
               <Button
@@ -91,9 +141,29 @@ export default function AdminTeams() {
                   if (!name.trim()) { toast({ title: "Введите название" } as any); return }
                   setSubmitting(true)
                   try {
-                    const created = await apiFetch<any>("/api/admin/teams", { method: "POST", body: JSON.stringify({ name: name.trim(), description: description.trim() || undefined }) })
+                    const selectedPositions = Object.keys(positionsWanted).filter((k) => positionsWanted[k])
+                    const extraPositions = customPositions.split(',').map((s) => s.trim()).filter(Boolean)
+                    const selectedCompetitions = [
+                      ...Object.keys(competitions).filter((k) => competitions[k]),
+                      ...customCompetitions.split(',').map((s) => s.trim()).filter(Boolean),
+                    ]
+                    const created = await apiFetch<any>("/api/admin/teams", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        name: name.trim(),
+                        description: description.trim() || undefined,
+                        metadata: {
+                          city: city || undefined,
+                          phone: phone || undefined,
+                          educationalInstitution: educationalInstitution || undefined,
+                          mentorName: mentorName || undefined,
+                          positionsWanted: [...selectedPositions, ...extraPositions],
+                          competitions: selectedCompetitions,
+                        },
+                      })
+                    })
                     setTeams((prev)=>[{ id: created.id, name: created.name, membersCount: 0 }, ...prev])
-                    setName(""); setDescription("")
+                    setName(""); setDescription(""); setCity(""); setPhone(""); setEducationalInstitution(""); setMentorName(""); setPositionsWanted({}); setCustomPositions(""); setCompetitions({}); setCustomCompetitions("")
                     setOpen(false)
                     toast({ title: "Команда создана" } as any)
                   } catch(e:any) {

@@ -89,7 +89,7 @@ router.post("/login", async (req: Request, res: Response) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
   const { email, password } = parsed.data
 
-  const user = await prisma.user.findUnique({
+  const user = await (prisma as any).user.findUnique({
     where: { email },
     select: {
       id: true,
@@ -98,10 +98,16 @@ router.post("/login", async (req: Request, res: Response) => {
       fullName: true,
       passwordHash: true,
       experiencePoints: true,
-    },
+      banned: true,
+      bannedReason: true,
+    } as any,
   })
   if (!user) return res.status(401).json({ error: "Invalid credentials" })
-  const valid = await verifyPassword(password, user.passwordHash)
+  if ((user as any).banned) {
+    const reason = (user as any).bannedReason || "Напишите в службу поддержки."
+    return res.status(403).json({ error: `Ваш аккаунт заблокирован. ${reason}` })
+  }
+  const valid = await verifyPassword(password, (user as any).passwordHash)
   if (!valid) return res.status(401).json({ error: "Invalid credentials" })
 
   const accessToken = signAccessToken(user.id, user.role)
@@ -172,6 +178,10 @@ router.get("/me", requireAuth, async (req: AuthenticatedRequest, res: Response) 
     include: { profile: true },
   })
   if (!user) return res.status(404).json({ error: "User not found" })
+  if ((user as any).banned) {
+    const reason = (user as any).bannedReason || "Напишите в службу поддержки."
+    return res.status(403).json({ error: `Аккаунт заблокирован. ${reason}` })
+  }
   res.json({
     id: user.id,
     email: user.email,

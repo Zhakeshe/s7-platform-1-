@@ -188,7 +188,15 @@ export default function CourseLessonTab({
           <section className="space-y-6">
             {/* Video */}
             {videoUrl ? (
-              <video controls className="w-full rounded-2xl border border-[#2a2a35] bg-black animate-slide-up" src={videoUrl} />
+              <video
+                key={videoUrl}
+                controls
+                playsInline
+                preload="metadata"
+                crossOrigin="anonymous"
+                className="w-full rounded-2xl border border-[#2a2a35] bg-black animate-slide-up"
+                src={videoUrl.startsWith('http') ? videoUrl : (typeof window !== 'undefined' ? new URL(videoUrl, window.location.origin).href : videoUrl)}
+              />
             ) : (
               <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-2xl p-6 text-white min-h-[220px] flex items-center justify-center animate-slide-up">
                 <div className="text-center">

@@ -102,12 +102,13 @@ export default function ByteSizeTab() {
             <div className="relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-xl overflow-hidden border border-[#2a2a35]">
               <video
                 ref={(el) => { videoRefs.current[it.id] = el }}
-                src={it.videoUrl}
+                src={it.videoUrl?.startsWith('http') ? it.videoUrl : (typeof window !== 'undefined' ? new URL(it.videoUrl, window.location.origin).href : it.videoUrl)}
                 poster={it.coverImageUrl}
                 controls={false}
                 playsInline
                 className="w-full h-full object-cover"
                 preload="metadata"
+                crossOrigin="anonymous"
                 muted
               />
               <div className="absolute left-0 right-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
