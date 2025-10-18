@@ -66,7 +66,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <div className="text-white text-xl font-semibold">{currentDate.split(" ").slice(0, 2).join(" ")}</div>
                   <div className="text-white/60 text-xs">{currentDate.split(" ").slice(2).join(" ")}</div>
                 </div>
-                <ProfileDropdown data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png" }} />
               </div>
             </div>
           </header>

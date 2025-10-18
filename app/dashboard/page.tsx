@@ -13,7 +13,6 @@ import CourseDetailsTab from "@/components/tabs/course-details-tab"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import CourseLessonTab from "@/components/tabs/course-lesson-tab"
 import ProfileDropdown from "@/components/kokonutui/profile-dropdown"
-import ActionSearchBar from "@/components/kokonutui/action-search-bar"
 import { useAuth } from "@/components/auth/auth-context"
 
 export default function Dashboard() {
@@ -24,7 +23,7 @@ export default function Dashboard() {
   const [selectedCourse, setSelectedCourse] = useState<CourseDetails | null>(null)
   const [selectedModuleId, setSelectedModuleId] = useState<string | number | null>(null)
   const [selectedLessonId, setSelectedLessonId] = useState<string | number | null>(null)
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const updateDate = () => {
@@ -170,17 +169,13 @@ export default function Dashboard() {
           <div className="flex items-center">
             <h1 className="text-white text-xl md:text-2xl font-medium ml-12 md:ml-0">{getTabTitle(activeTab)}</h1>
           </div>
-          {activeTab === "courses" && (
-            <div className="hidden md:block flex-1">
-              <ActionSearchBar />
-            </div>
-          )}
+          
           <div className="ml-auto flex items-center gap-4">
             <div className="text-right">
               <div className="text-white text-lg md:text-xl font-medium">{currentDate}</div>
               <div className="text-[#a0a0b0] text-sm">2025</div>
             </div>
-            <ProfileDropdown data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png" }} />
+            <ProfileDropdown data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png", xp: user?.xp || 0 }} onLogout={logout} />
           </div>
         </header>
 

@@ -37,6 +37,9 @@ export default function AdminSidebar({ open, onClose }: { open: boolean; onClose
             {user.fullName || user.email}
           </div>
         )}
+        {typeof user?.xp === 'number' && (
+          <div className="mt-1 text-xs text-[#00a3ff]">XP: {user.xp}</div>
+        )}
       </div>
       
       {/* Navigation */}
@@ -65,7 +68,8 @@ export default function AdminSidebar({ open, onClose }: { open: boolean; onClose
         {/* Profile Dropdown */}
         <div className="px-1">
           <ProfileDropdown
-            data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png" }}
+            data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png", xp: user?.xp || 0 }}
+            onLogout={handleLogout}
           />
         </div>
         <Link

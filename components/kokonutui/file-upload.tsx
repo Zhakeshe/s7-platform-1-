@@ -522,13 +522,13 @@ export default function FileUpload({
             role="complementary"
             aria-label="File upload"
         >
-            <div className="group relative w-full rounded-xl bg-white dark:bg-black ring-1 ring-gray-200 dark:ring-white/10 p-0.5">
-                <div className="absolute inset-x-0 -top-px h-px w-full bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+            <div className="group relative w-full rounded-xl bg-[#16161c] ring-1 ring-[#2a2a35] p-0.5">
+                <div className="absolute inset-x-0 -top-px h-px w-full bg-gradient-to-r from-transparent via-[#2a2a35] to-transparent" />
 
-                <div className="relative w-full rounded-[10px] bg-gray-50/50 dark:bg-white/[0.02] p-1.5">
+                <div className="relative w-full rounded-[10px] bg-[#0f0f14] p-1.5">
                     <div
                         className={cn(
-                            "relative mx-auto w-full overflow-hidden rounded-lg border border-gray-100 dark:border-white/[0.08] bg-white dark:bg-black/50",
+                            "relative mx-auto w-full overflow-hidden rounded-lg border border-[#2a2a35] bg-[#0f0f14]",
                             error ? "border-red-500/50" : ""
                         )}
                     >
@@ -540,11 +540,11 @@ export default function FileUpload({
                                     : "opacity-0"
                             )}
                         >
-                            <div className="absolute inset-x-0 top-0 h-[20%] bg-gradient-to-b from-blue-500/10 to-transparent" />
-                            <div className="absolute inset-x-0 bottom-0 h-[20%] bg-gradient-to-t from-blue-500/10 to-transparent" />
-                            <div className="absolute inset-y-0 left-0 w-[20%] bg-gradient-to-r from-blue-500/10 to-transparent" />
-                            <div className="absolute inset-y-0 right-0 w-[20%] bg-gradient-to-l from-blue-500/10 to-transparent" />
-                            <div className="absolute inset-[20%] bg-blue-500/5 rounded-lg transition-all duration-300 animate-pulse" />
+                            <div className="absolute inset-x-0 top-0 h-[20%] bg-gradient-to-b from-[#00a3ff]/10 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 h-[20%] bg-gradient-to-t from-[#00a3ff]/10 to-transparent" />
+                            <div className="absolute inset-y-0 left-0 w-[20%] bg-gradient-to-r from-[#00a3ff]/10 to-transparent" />
+                            <div className="absolute inset-y-0 right-0 w-[20%] bg-gradient-to-l from-[#00a3ff]/10 to-transparent" />
+                            <div className="absolute inset-[20%] bg-[#00a3ff]/5 rounded-lg transition-all duration-300 animate-pulse" />
                         </div>
 
                         <div className="absolute -right-4 -top-4 h-8 w-8 bg-gradient-to-br from-blue-500/20 to-transparent blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -576,10 +576,10 @@ export default function FileUpload({
                                         </div>
 
                                         <div className="text-center space-y-1.5 mb-4">
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white tracking-tight">
-                                                Drag and drop or
+                                            <h3 className="text-lg font-semibold text-white tracking-tight">
+                                                Перетащите файл или
                                             </h3>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            <p className="text-xs text-white/60">
                                                 {acceptedFileTypes?.length
                                                     ? `${acceptedFileTypes
                                                           .map(
@@ -590,9 +590,9 @@ export default function FileUpload({
                                                           )
                                                           .join(", ")
                                                           .toUpperCase()}`
-                                                    : "SVG, PNG, JPG or GIF"}{" "}
+                                                    : "SVG, PNG, JPG или GIF"}{" "}
                                                 {maxFileSize &&
-                                                    `up to ${formatBytes(
+                                                    `до ${formatBytes(
                                                         maxFileSize
                                                     )}`}
                                             </p>
@@ -601,14 +601,14 @@ export default function FileUpload({
                                         <button
                                             type="button"
                                             onClick={triggerFileInput}
-                                            className="w-4/5 flex items-center justify-center gap-2 rounded-lg bg-gray-100 dark:bg-white/10 px-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white transition-all duration-200 hover:bg-gray-200 dark:hover:bg-white/20 group"
+                                            className="w-4/5 flex items-center justify-center gap-2 rounded-lg bg-[#16161c] border border-[#2a2a35] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#23232b] group"
                                         >
-                                            <span>Upload File</span>
+                                            <span>Выбрать файл</span>
                                             <UploadCloud className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                                         </button>
 
-                                        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                                            or drag and drop your file here
+                                        <p className="mt-3 text-xs text-white/60">
+                                            или перетащите файл сюда
                                         </p>
 
                                         <input
@@ -637,16 +637,16 @@ export default function FileUpload({
                                         </div>
 
                                         <div className="text-center space-y-1.5 mb-4">
-                                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                            <h3 className="text-sm font-semibold text-white truncate">
                                                 {file?.name}
                                             </h3>
                                             <div className="flex items-center justify-center gap-2 text-xs">
-                                                <span className="text-gray-500 dark:text-gray-400">
+                                                <span className="text-white/60">
                                                     {formatBytes(
                                                         file?.size || 0
                                                     )}
                                                 </span>
-                                                <span className="font-medium text-blue-500">
+                                                <span className="font-medium text-[#00a3ff]">
                                                     {Math.round(progress)}%
                                                 </span>
                                             </div>
@@ -655,9 +655,9 @@ export default function FileUpload({
                                         <button
                                             onClick={resetState}
                                             type="button"
-                                            className="w-4/5 flex items-center justify-center gap-2 rounded-lg bg-gray-100 dark:bg-white/10 px-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white transition-all duration-200 hover:bg-gray-200 dark:hover:bg-white/20"
+                                            className="w-4/5 flex items-center justify-center gap-2 rounded-lg bg-[#16161c] border border-[#2a2a35] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#23232b]"
                                         >
-                                            Cancel
+                                            Отмена
                                         </button>
                                     </motion.div>
                                 ) : null}

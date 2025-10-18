@@ -3,6 +3,7 @@ import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import { useEffect, useRef, useState } from "react"
 import { apiFetch } from "@/lib/api"
 import { Slider } from "@/components/ui/slider"
+import { Input } from "@/components/ui/input"
 import {
   Pagination,
   PaginationContent,
@@ -24,7 +25,9 @@ export default function CoursesTab({
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all")
   const [loadingContinue, setLoadingContinue] = useState(true)
   const [loadingRecommended, setLoadingRecommended] = useState(true)
-  const [priceRange, setPriceRange] = useState<number[]>([0, 1_000_000])
+  const MIN_PRICE = 0
+  const MAX_PRICE = 1_000_000
+  const [priceRange, setPriceRange] = useState<number[]>([MIN_PRICE, MAX_PRICE])
   const [page, setPage] = useState(1)
   const pageSize = 9
   const reqIdRef = useRef(0)
@@ -176,18 +179,45 @@ export default function CoursesTab({
           ))}
         </div>
 
-        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 mb-6">
+        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 mb-6 max-w-md">
           <div className="text-white text-sm font-medium mb-2">Price Range</div>
           <div className="text-white/60 text-xs mb-3">Укажите бюджет ({priceRange[0].toLocaleString()}₸ – {priceRange[1].toLocaleString()}₸)</div>
-          <div className="px-1">
+          <div className="px-1 space-y-3">
             <Slider
-              min={0}
-              max={1_000_000}
+              min={MIN_PRICE}
+              max={MAX_PRICE}
+              step={1000}
               defaultValue={priceRange}
               value={priceRange}
               onValueChange={(v) => setPriceRange(v as number[])}
               className="w-full"
             />
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number"
+                value={priceRange[0]}
+                min={MIN_PRICE}
+                max={priceRange[1]}
+                step={1000}
+                onChange={(e)=>{
+                  const n = Math.max(MIN_PRICE, Math.min(Number(e.target.value||0), priceRange[1]))
+                  setPriceRange([n, priceRange[1]])
+                }}
+                className="bg-[#0f0f14] border-[#2a2a35] text-white"
+              />
+              <Input
+                type="number"
+                value={priceRange[1]}
+                min={priceRange[0]}
+                max={MAX_PRICE}
+                step={1000}
+                onChange={(e)=>{
+                  const n = Math.min(MAX_PRICE, Math.max(Number(e.target.value||0), priceRange[0]))
+                  setPriceRange([priceRange[0], n])
+                }}
+                className="bg-[#0f0f14] border-[#2a2a35] text-white"
+              />
+            </div>
           </div>
         </div>
 
