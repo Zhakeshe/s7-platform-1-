@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { useConfirm } from "@/components/ui/confirm"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/hooks/use-toast"
 
@@ -28,6 +29,7 @@ interface SubmissionRow {
 }
 
 export default function AdminAchievementsPage() {
+  const confirm = useConfirm()
   const [rows, setRows] = useState<UserAchievementRow[]>([])
   const [winners, setWinners] = useState<SubmissionRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -142,7 +144,24 @@ export default function AdminAchievementsPage() {
                       <div className="text-white/60 text-sm">{r.achievement.title}</div>
                     </div>
                   </div>
-                  <div className="text-white/50 text-xs">{new Date(r.earnedAt).toLocaleString("ru-RU")}</div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-white/50 text-xs">{new Date(r.earnedAt).toLocaleString("ru-RU")}</div>
+                    <Button
+                      onClick={async ()=>{
+                        const ok = await confirm({ title: 'Отозвать награду?', description: 'Действие необратимо. Пользователь потеряет эту награду.', confirmText: 'Отозвать', cancelText: 'Отмена', variant: 'danger' })
+                        if (!ok) return
+                        try {
+                          await apiFetch(`/api/admin/user-achievements/${r.id}`, { method: 'DELETE' })
+                          setRows((prev)=>prev.filter(x=>x.id!==r.id))
+                        } catch(e:any) {
+                          // можно добавить тост при ошибке
+                        }
+                      }}
+                      className="bg-[#ef4444] hover:bg-[#dc2626] text-white h-8 px-3"
+                    >
+                      Отозвать
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

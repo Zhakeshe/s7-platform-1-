@@ -91,6 +91,17 @@ router.delete("/bytesize/:id", async (req: AuthenticatedRequest, res: Response) 
   }
 })
 
+// Revoke (delete) a specific user achievement (admin-only)
+router.delete("/user-achievements/:id", async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params
+  try {
+    await prisma.userAchievement.delete({ where: { id } })
+    return res.json({ success: true })
+  } catch {
+    return res.status(404).json({ error: "User achievement not found" })
+  }
+})
+
 router.post("/competitions", async (req: AuthenticatedRequest, res: Response) => {
   const parsed = competitionSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })

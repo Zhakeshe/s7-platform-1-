@@ -1,12 +1,15 @@
 "use client"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Home, BookOpen, Users, GraduationCap, FileText, Wrench, CreditCard, Award, LogOut } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
 import ProfileDropdown from "@/components/kokonutui/profile-dropdown"
+import { useConfirm } from "@/components/ui/confirm"
 
 export default function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const confirm = useConfirm()
   const { user, logout } = useAuth()
   
   const nav = [
@@ -22,7 +25,12 @@ export default function AdminSidebar({ open, onClose }: { open: boolean; onClose
     { href: "/admin/tools", label: "S7 Tool", icon: Wrench },
   ]
 
-  const handleLogout = () => logout()
+  const handleLogout = async () => {
+    const ok = await confirm({ title: 'Выйти из аккаунта?', description: 'Вы будете разлогинены. Подтвердите выход.', confirmText: 'Выйти', cancelText: 'Отмена', variant: 'danger' })
+    if (!ok) return
+    await logout()
+    router.replace('/')
+  }
 
   const panelClasses = `${open ? "translate-x-0 md:translate-x-0" : "-translate-x-full md:-translate-x-full"}`
   return (

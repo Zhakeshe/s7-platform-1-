@@ -53,7 +53,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
     <ConfirmContext.Provider value={confirm}>
       {children}
       <Drawer open={state.open} onOpenChange={(open) => { if (!open) onCancel() }}>
-        <DrawerContent className="max-w-lg mx-auto rounded-2xl border border-[#2a2a35] bg-[#16161c] text-white [&>div:first-child]:hidden">
+        <DrawerContent className="max-w-xl mx-auto rounded-2xl border border-[#2a2a35] bg-[#16161c] text-white [&>div:first-child]:hidden">
           <DrawerHeader>
             <DrawerTitle className="text-white text-xl font-semibold">{title}</DrawerTitle>
             {description && (

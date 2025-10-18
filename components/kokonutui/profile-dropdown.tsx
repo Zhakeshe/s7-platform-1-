@@ -3,8 +3,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { LogOut, User } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,13 +18,7 @@ interface Profile {
     xp?: number;
 }
 
-interface MenuItem {
-    label: string;
-    value?: string;
-    href: string;
-    icon: React.ReactNode;
-    external?: boolean;
-}
+interface MenuItem {}
 
 const SAMPLE_PROFILE_DATA: Profile = {
     name: "Пользователь",
@@ -47,13 +39,7 @@ export default function ProfileDropdown({
     ...props
 }: ProfileDropdownProps) {
     const [isOpen, setIsOpen] = React.useState(false);
-    const menuItems: MenuItem[] = [
-        {
-            label: "Профиль",
-            href: "/profile",
-            icon: <User className="w-4 h-4" />,
-        },
-    ];
+    const menuItems: MenuItem[] = []
 
     return (
         <div className={cn("relative", className)} {...props}>
@@ -74,11 +60,9 @@ export default function ProfileDropdown({
                                 )}
                             </div>
                             <div className="relative">
-                                <div className="w-10 h-10 rounded-full p-0.5 bg-[#2a2a35]">
-                                  <div className="w-full h-full rounded-full overflow-hidden bg-[#0f0f14]">
-                                    <Image src={data.avatar} alt={data.name} width={36} height={36} className="w-full h-full object-cover rounded-full" />
-                                  </div>
-                                </div>
+                              <div className="w-10 h-10 rounded-full ring-2 ring-[#00a3ff]/40 ring-offset-2 ring-offset-[#16161c] bg-[#0f0f14] flex items-center justify-center">
+                                <User className="w-5 h-5 text-white/70" />
+                              </div>
                             </div>
                         </button>
                     </DropdownMenuTrigger>
@@ -94,23 +78,11 @@ export default function ProfileDropdown({
                             <div className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#0f0f14] border border-[#2a2a35] px-2 py-0.5 text-[11px] text-[#00a3ff]">XP: {data.xp}</div>
                           )}
                         </div>
-                        <div className="space-y-1">
-                            {menuItems.map((item) => (
-                                <DropdownMenuItem key={item.label} asChild>
-                                    <Link
-                                        href={item.href}
-                                        className="flex items-center p-3 hover:bg-[#1b1b22] rounded-xl transition-all cursor-pointer border border-transparent"
-                                    >
-                                        <div className="flex items-center gap-2 flex-1">
-                                            {item.icon}
-                                            <span className="text-sm font-medium whitespace-nowrap">
-                                                {item.label}
-                                            </span>
-                                        </div>
-                                    </Link>
-                                </DropdownMenuItem>
-                            ))}
-                        </div>
+                        {menuItems.length > 0 && (
+                          <div className="space-y-1">
+                            {/* reserved for future items */}
+                          </div>
+                        )}
 
                         <DropdownMenuSeparator className="my-3 bg-[#2a2a35]" />
 

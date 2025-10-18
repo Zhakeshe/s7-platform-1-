@@ -41,7 +41,7 @@ interface FileUploadProps {
     className?: string;
 }
 
-const DEFAULT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 const UPLOAD_STEP_SIZE = 5;
 const FILE_SIZES = [
     "Bytes",

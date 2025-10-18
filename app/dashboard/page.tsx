@@ -13,6 +13,8 @@ import CourseDetailsTab from "@/components/tabs/course-details-tab"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import CourseLessonTab from "@/components/tabs/course-lesson-tab"
 import ProfileDropdown from "@/components/kokonutui/profile-dropdown"
+import { useConfirm } from "@/components/ui/confirm"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth/auth-context"
 
 export default function Dashboard() {
@@ -23,7 +25,9 @@ export default function Dashboard() {
   const [selectedCourse, setSelectedCourse] = useState<CourseDetails | null>(null)
   const [selectedModuleId, setSelectedModuleId] = useState<string | number | null>(null)
   const [selectedLessonId, setSelectedLessonId] = useState<string | number | null>(null)
-  const { user, logout } = useAuth()
+  const { user, logout, loading } = useAuth() as any
+  const confirm = useConfirm()
+  const router = useRouter()
 
   useEffect(() => {
     const updateDate = () => {
@@ -51,6 +55,12 @@ export default function Dashboard() {
     const interval = setInterval(updateDate, 24 * 60 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/")
+    }
+  }, [loading, user, router])
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -175,7 +185,15 @@ export default function Dashboard() {
               <div className="text-white text-lg md:text-xl font-medium">{currentDate}</div>
               <div className="text-[#a0a0b0] text-sm">2025</div>
             </div>
-            <ProfileDropdown data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png", xp: user?.xp || 0 }} onLogout={logout} />
+            <ProfileDropdown
+              data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png", xp: user?.xp || 0 }}
+              onLogout={async () => {
+                const ok = await confirm({ title: 'Выйти из аккаунта?', description: 'Вы будете разлогинены. Подтвердите выход.', confirmText: 'Выйти', cancelText: 'Отмена', variant: 'danger' })
+                if (!ok) return
+                await logout()
+                router.replace('/')
+              }}
+            />
           </div>
         </header>
 
