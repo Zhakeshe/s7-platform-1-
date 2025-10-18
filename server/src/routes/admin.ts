@@ -195,7 +195,14 @@ const teamSchema = z.object({
   logoUrl: z.string().optional(),
   maxMembers: z.number().int().positive().optional(),
   isActive: z.boolean().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.object({
+    city: z.string().optional(),
+    phone: z.string().optional(),
+    educationalInstitution: z.string().optional(),
+    mentorName: z.string().optional(),
+    positionsWanted: z.array(z.string()).optional(),
+    competitions: z.array(z.string()).optional(),
+  }).optional(),
 })
 
 // router already declared above
@@ -280,7 +287,7 @@ router.get("/users", async (_req: AuthenticatedRequest, res: Response) => {
     orderBy: { createdAt: "desc" },
     select: { id: true, email: true, role: true, fullName: true, createdAt: true, experiencePoints: true, banned: true, bannedReason: true } as any,
   })
-  res.json(users.map((u) => ({ ...u, xp: Number((u as any).experiencePoints || 0) })))
+  res.json((users as any[]).map((u: any) => ({ ...u, xp: Number((u as any).experiencePoints || 0) })))
 })
 
 const banSchema = z.object({ reason: z.string().optional() })
