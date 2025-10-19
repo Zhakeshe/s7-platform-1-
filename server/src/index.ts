@@ -23,9 +23,13 @@ app.use(helmet())
 app.use(cookieParser())
 app.use(express.json({ limit: "100mb" }))
 app.use(express.urlencoded({ extended: false }))
+// Allow multiple CORS origins via comma-separated env, or reflect all when unset
+const corsOrigin = env.CORS_ORIGIN
+  ? env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
+  : true
 app.use(
   cors({
-    origin: env.CORS_ORIGIN || true,
+    origin: corsOrigin as any,
     credentials: true,
   })
 )
