@@ -253,7 +253,8 @@ router.get("/:courseId", optionalAuth, async (req: AuthenticatedRequest, res: Re
   })
   if (!course) return res.status(404).json({ error: "Course not found" })
 
-  const hasAccess = await userHasCourseAccess(req.user?.id, course)
+  const isAdmin = (req.user as any)?.role === "ADMIN"
+  const hasAccess = isAdmin ? true : await userHasCourseAccess(req.user?.id, course)
 
   const safeModules = course.modules.map((module) => ({
     id: module.id,
@@ -292,7 +293,8 @@ router.get("/:courseId/lessons/:lessonId", optionalAuth, async (req: Authenticat
   const lesson = await prisma.lesson.findUnique({ where: { id: lessonId }, include: { module: { include: { course: true } } } })
   if (!lesson || lesson.module.courseId !== courseId) return res.status(404).json({ error: "Lesson not found" })
 
-  const hasAccess = await userHasCourseAccess(req.user?.id, lesson.module.course)
+  const isAdmin = (req.user as any)?.role === "ADMIN"
+  const hasAccess = isAdmin ? true : await userHasCourseAccess(req.user?.id, lesson.module.course)
   if (!hasAccess && !lesson.isFreePreview) return res.status(403).json({ error: "Lesson requires purchase" })
 
   res.json({

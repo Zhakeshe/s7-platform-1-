@@ -46,10 +46,9 @@ export default function Page() {
               {!u.banned ? (
                 <button
                   onClick={async()=>{
-                    const ok = await confirm({ title: 'Забанить пользователя?', variant: 'danger' })
-                    if (!ok) return
-                    let reason = ''
-                    try { reason = window.prompt('Причина бана (необязательно):','') || '' } catch {}
+                    const res = await confirm({ preset: 'ban' }) as any
+                    if (!res || res.ok !== true) return
+                    const reason = String(res.reason || '').trim()
                     await apiFetch(`/api/admin/users/${u.id}/ban`, { method: 'POST', body: JSON.stringify({ reason: reason || undefined }) })
                     setUsers(prev=>prev.map(x=>x.id===u.id?{...x,banned:true,bannedReason:reason||undefined}:x))
                   }}

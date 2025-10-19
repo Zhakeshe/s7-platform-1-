@@ -27,7 +27,7 @@ export default function Sidebar({
   const confirm = useConfirm()
 
   const handleLogout = async () => {
-    const ok = await confirm({ title: 'Выйти из аккаунта?', confirmText: 'Выйти', cancelText: 'Отмена', variant: 'danger' })
+    const ok = await confirm({ preset: 'logout' })
     if (!ok) return
     await logout()
     router.push('/')

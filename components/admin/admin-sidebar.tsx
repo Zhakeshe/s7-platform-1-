@@ -26,7 +26,7 @@ export default function AdminSidebar({ open, onClose }: { open: boolean; onClose
   ]
 
   const handleLogout = async () => {
-    const ok = await confirm({ title: 'Выйти из аккаунта?', description: 'Вы будете разлогинены. Подтвердите выход.', confirmText: 'Выйти', cancelText: 'Отмена', variant: 'danger' })
+    const ok = await confirm({ preset: 'logout' })
     if (!ok) return
     await logout()
     router.replace('/')

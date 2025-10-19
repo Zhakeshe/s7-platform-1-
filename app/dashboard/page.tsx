@@ -188,7 +188,7 @@ export default function Dashboard() {
             <ProfileDropdown
               data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png", xp: user?.xp || 0 }}
               onLogout={async () => {
-                const ok = await confirm({ title: 'Выйти из аккаунта?', description: 'Вы будете разлогинены. Подтвердите выход.', confirmText: 'Выйти', cancelText: 'Отмена', variant: 'danger' })
+                const ok = await confirm({ preset: 'logout' })
                 if (!ok) return
                 await logout()
                 router.replace('/')

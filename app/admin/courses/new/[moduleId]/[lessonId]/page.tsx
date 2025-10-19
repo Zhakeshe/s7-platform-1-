@@ -78,7 +78,12 @@ export default function Page() {
 
   const qs = useMemo(() => {
     const d = search.get("draft")
-    return d ? `?draft=${encodeURIComponent(d)}` : ""
+    const e = search.get("edit")
+    const params = new URLSearchParams()
+    if (d) params.set("draft", d)
+    if (e) params.set("edit", e)
+    const s = params.toString()
+    return s ? `?${s}` : ""
   }, [search])
 
   useEffect(() => {
@@ -101,7 +106,8 @@ export default function Page() {
       const stored = localStorage.getItem("s7_admin_course_default_id")
       const generated = stored || `s7-${(typeof crypto !== 'undefined' && crypto.getRandomValues ? Array.from(crypto.getRandomValues(new Uint32Array(2))).map(n=>n.toString().padStart(10,'0')).join('').slice(0,10) : `${Math.floor(1000000000 + Math.random()*9000000000)}`)}`
       if (!stored) localStorage.setItem("s7_admin_course_default_id", generated)
-      router.replace(`/admin/courses/new/${moduleId}/${lessonId}?draft=${encodeURIComponent(generated)}`)
+      const e = search.get('edit')
+      router.replace(`/admin/courses/new/${moduleId}/${lessonId}?draft=${encodeURIComponent(generated)}${e?`&edit=${encodeURIComponent(e)}`:''}`)
     }
   }, [search, moduleId, lessonId, router])
 
