@@ -31,7 +31,10 @@ function readDraftBy(key: string): DraftCourse | null {
 }
 
 function writeDraftBy(key: string, d: DraftCourse) {
-  try { localStorage.setItem(key, JSON.stringify(d)) } catch {}
+  try {
+    localStorage.setItem(key, JSON.stringify(d))
+    localStorage.setItem("s7_admin_course_draft", JSON.stringify(d))
+  } catch {}
 }
 
 export default function Page() {

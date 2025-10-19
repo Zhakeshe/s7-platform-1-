@@ -260,7 +260,7 @@ export default function Page() {
     // Build from draft if exists (contains lessons + rich fields)
     let finalModules = modules.map((m) => ({ id: m.id, title: m.title, lessons: [{ id: 1, title: "Введение", time: "10:21" }] }))
     try {
-      const draftRaw = localStorage.getItem("s7_admin_course_draft")
+      const draftRaw = draftKey ? localStorage.getItem(draftKey) : localStorage.getItem("s7_admin_course_draft")
       if (draftRaw) {
         const d = JSON.parse(draftRaw)
         if (Array.isArray(d.modules) && d.modules.length) {
@@ -380,7 +380,7 @@ export default function Page() {
         )
         // After creation, post lesson-level questions from draft (if any)
         try {
-          const draftRaw = localStorage.getItem(draftKey)
+          const draftRaw = draftKey ? localStorage.getItem(draftKey) : localStorage.getItem("s7_admin_course_draft")
           const draft = draftRaw ? JSON.parse(draftRaw) : null
           if (created?.id && draft && Array.isArray(draft.modules)) {
             // Build order-indexed maps from created object
