@@ -1,12 +1,13 @@
 "use client"
 import { useEffect, useRef, useState } from "react"
-import { ArrowUpRight, Upload, Image, BookOpen } from "lucide-react"
+import { ArrowUpRight, Upload, Image, BookOpen, ChevronDown, Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { apiFetch, getTokens } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
 import { useConfirm } from "@/components/ui/confirm"
 import FileUpload from "@/components/kokonutui/file-upload"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function Page() {
   const router = useRouter()
@@ -121,21 +122,36 @@ export default function Page() {
             <BookOpen className="w-4 h-4" />
             <div className="text-white/80">Переход к курсу (по свайпу/кнопке)</div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
-            <select
-              value={linkedCourseId || ""}
-              onChange={(e)=> setLinkedCourseId(e.target.value ? e.target.value : null)}
-              className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none text-white"
-            >
-              <option value="">Ничего — просто короткое видео</option>
+          <Select value={linkedCourseId || "none"} onValueChange={(v)=> setLinkedCourseId(v==="none" ? null : v)}>
+            <SelectTrigger className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2.5 text-white hover:border-[#00a3ff]/50 transition-all duration-200 focus:border-[#00a3ff] focus:ring-2 focus:ring-[#00a3ff]/20">
+              <SelectValue>
+                {linkedCourseId ? (
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-3.5 h-3.5 text-[#00a3ff]" />
+                    <span>{courses.find(c=>c.id===linkedCourseId)?.title || "Курс выбран"}</span>
+                  </div>
+                ) : (
+                  <span className="text-white/60">Ничего — просто короткое видео</span>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="bg-[#16161c] border border-[#2a2a35] rounded-xl shadow-2xl overflow-hidden">
+              <SelectItem value="none" className="text-white/80 hover:bg-[#2a2a35] hover:text-white cursor-pointer transition-colors rounded-lg mx-1 my-0.5">
+                <span className="flex items-center gap-2">
+                  <span className="text-white/60">Ничего — просто короткое видео</span>
+                </span>
+              </SelectItem>
+              {courses.length > 0 && <div className="h-px bg-[#2a2a35] my-1" />}
               {courses.map((c)=> (
-                <option key={c.id} value={c.id}>{c.title}</option>
+                <SelectItem key={c.id} value={c.id} className="text-white/80 hover:bg-[#2a2a35] hover:text-white cursor-pointer transition-colors rounded-lg mx-1 my-0.5">
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="w-3.5 h-3.5 text-[#00a3ff]" />
+                    <span>{c.title}</span>
+                  </span>
+                </SelectItem>
               ))}
-            </select>
-            {linkedCourseId && (
-              <span className="text-xs text-white/60">Выбрано: {courses.find(c=>c.id===linkedCourseId)?.title || linkedCourseId}</span>
-            )}
-          </div>
+            </SelectContent>
+          </Select>
         </div>
           <div className="flex gap-2 mt-3">
             <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={async (e)=>{

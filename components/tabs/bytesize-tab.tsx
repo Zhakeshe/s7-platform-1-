@@ -133,34 +133,38 @@ export default function ByteSizeTab() {
                 crossOrigin="anonymous"
                 muted
               />
-              <div className="absolute left-0 right-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                <div className="text-white font-medium text-sm line-clamp-2">{it.title}</div>
-                {it.description && <div className="text-white/80 text-xs line-clamp-2">{it.description}</div>}
+              <div className="absolute left-0 right-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 pb-3">
+                <div className="text-white font-semibold text-base leading-tight mb-1">{it.title}</div>
+                {it.description && <div className="text-white/70 text-xs leading-snug mb-2">{it.description}</div>}
+                {it.linkedCourseId && (
+                  <button
+                    onClick={() => openCourse(it.linkedCourseId)}
+                    className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 text-xs text-white/90 hover:text-white transition-colors"
+                  >
+                    <span className="text-[10px] leading-none">Перейти к<br/>курсу</span>
+                    <div className="w-8 h-8 rounded-full bg-[#00a3ff] hover:bg-[#0099ee] flex items-center justify-center transition-colors">
+                      <ArrowUpRight className="w-4 h-4 text-black" />
+                    </div>
+                  </button>
+                )}
               </div>
-              {it.linkedCourseId && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-3">
                 <button
-                  onClick={() => openCourse(it.linkedCourseId)}
-                  className="absolute right-3 bottom-3 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium text-xs"
+                  onClick={() => toggleLike(it.id)}
+                  className={`w-11 h-11 rounded-full flex flex-col items-center justify-center transition-all ${it.likedByMe ? 'bg-red-500/20' : 'bg-black/30 hover:bg-black/50'}`}
+                  aria-label="Лайк"
                 >
-                  Перейти к курсу
-                  <ArrowUpRight className="w-4 h-4" />
+                  <Heart className={`w-6 h-6 ${it.likedByMe ? 'text-red-500 fill-red-500' : 'text-white'}`} />
+                  <span className="text-white text-[10px] font-medium mt-0.5">{it.likesCount}</span>
                 </button>
-              )}
-              <button
-                onClick={() => toggleLike(it.id)}
-                className={`absolute right-3 bottom-16 w-12 h-12 rounded-full flex items-center justify-center transition ${it.likedByMe ? 'bg-red-600/80' : 'bg-white/10 hover:bg-white/20'}`}
-                aria-label="Лайк"
-              >
-                <Heart className={`w-6 h-6 ${it.likedByMe ? 'text-white fill-white' : 'text-white'}`} />
-              </button>
-              <button
-                onClick={() => share(it)}
-                className="absolute right-3 bottom-28 w-12 h-12 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition"
-                aria-label="Поделиться"
-              >
-                <Share2 className="w-6 h-6 text-white" />
-              </button>
-              <div className="absolute right-3 bottom-8 text-white text-xs opacity-90">{it.likesCount}</div>
+                <button
+                  onClick={() => share(it)}
+                  className="w-11 h-11 rounded-full flex items-center justify-center bg-black/30 hover:bg-black/50 transition-all"
+                  aria-label="Поделиться"
+                >
+                  <Share2 className="w-5 h-5 text-white" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
