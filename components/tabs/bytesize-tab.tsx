@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useRef, useState } from "react"
-import { Heart, Share2 } from "lucide-react"
+import { Heart, Share2, ArrowUpRight } from "lucide-react"
 import { apiFetch } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-context"
 import { toast } from "@/hooks/use-toast"
@@ -13,6 +13,7 @@ interface ReelItem {
   coverImageUrl?: string
   likesCount: number
   likedByMe: boolean
+  linkedCourseId?: string
 }
 
 export default function ByteSizeTab() {
@@ -22,6 +23,8 @@ export default function ByteSizeTab() {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const viewedRef = useRef<Set<string>>(new Set())
+  const startRef = useRef<{ x: number; y: number; id?: string } | null>(null)
+  const [swipeOutId, setSwipeOutId] = useState<string | null>(null)
 
   const share = async (it: ReelItem) => {
     try {
@@ -80,6 +83,13 @@ export default function ByteSizeTab() {
     }
   }
 
+  const openCourse = (courseId?: string) => {
+    if (!courseId) return
+    try {
+      window.dispatchEvent(new CustomEvent("s7-open-course", { detail: { courseId } }))
+    } catch {}
+  }
+
   if (loading) {
     return <div className="flex-1 p-8 text-white/70">Загрузка...</div>
   }
@@ -99,7 +109,19 @@ export default function ByteSizeTab() {
       <div className="h-full overflow-y-auto snap-y snap-mandatory no-scrollbar">
         {items.map((it) => (
           <div key={it.id} data-reel-id={it.id} className="snap-start h-[calc(100vh-120px)] flex items-center justify-center">
-            <div className="relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-xl overflow-hidden border border-[#2a2a35]">
+            <div
+              className={`relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-xl overflow-hidden border border-[#2a2a35] transition-transform duration-200 ${swipeOutId===it.id ? 'translate-x-full opacity-0' : ''}`}
+              onPointerDown={(e)=>{ startRef.current = { x: e.clientX, y: e.clientY, id: it.id } }}
+              onPointerUp={(e)=>{
+                const s = startRef.current; startRef.current = null
+                if (!s || s.id!==it.id) return
+                const dx = e.clientX - s.x; const dy = e.clientY - s.y
+                if (dx > 80 && Math.abs(dx) > Math.abs(dy) && it.linkedCourseId) {
+                  setSwipeOutId(it.id)
+                  setTimeout(()=>{ setSwipeOutId(null); openCourse(it.linkedCourseId) }, 180)
+                }
+              }}
+            >
               <video
                 ref={(el) => { videoRefs.current[it.id] = el }}
                 src={it.videoUrl?.startsWith('http') ? it.videoUrl : (typeof window !== 'undefined' ? new URL(it.videoUrl, window.location.origin).href : it.videoUrl)}
@@ -115,6 +137,15 @@ export default function ByteSizeTab() {
                 <div className="text-white font-medium text-sm line-clamp-2">{it.title}</div>
                 {it.description && <div className="text-white/80 text-xs line-clamp-2">{it.description}</div>}
               </div>
+              {it.linkedCourseId && (
+                <button
+                  onClick={() => openCourse(it.linkedCourseId)}
+                  className="absolute right-3 bottom-3 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium text-xs"
+                >
+                  Перейти к курсу
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={() => toggleLike(it.id)}
                 className={`absolute right-3 bottom-16 w-12 h-12 rounded-full flex items-center justify-center transition ${it.likedByMe ? 'bg-red-600/80' : 'bg-white/10 hover:bg-white/20'}`}

@@ -24,18 +24,25 @@ router.get("/", optionalAuth, async (req: AuthenticatedRequest, res: Response) =
     ? items.filter((it: any) => Array.isArray(it.tags) && it.tags.some((t: string) => String(t).toLowerCase() === tag.toLowerCase()))
     : items
   res.json(
-    filtered.map((it: any) => ({
-      id: it.id,
-      title: it.title,
-      description: it.description,
-      videoUrl: it.videoUrl,
-      coverImageUrl: it.coverImageUrl,
-      tags: Array.isArray(it.tags) ? it.tags : [],
-      createdAt: it.createdAt,
-      views: (it as any).views ?? viewCounters.get(it.id) ?? 0,
-      likesCount: it._count?.likes ?? 0,
-      likedByMe: Array.isArray(it.likes) ? it.likes.length > 0 : false,
-    }))
+    filtered.map((it: any) => {
+      const rawTags = Array.isArray(it.tags) ? it.tags : []
+      const linkTag = rawTags.find((t: any) => typeof t === "string" && t.startsWith("__course:"))
+      const linkedCourseId = (it as any).linkedCourseId || (typeof linkTag === "string" ? linkTag.slice("__course:".length) : undefined)
+      const publicTags = rawTags.filter((t: any) => !(typeof t === "string" && t.startsWith("__course:")))
+      return {
+        id: it.id,
+        title: it.title,
+        description: it.description,
+        videoUrl: it.videoUrl,
+        coverImageUrl: it.coverImageUrl,
+        tags: publicTags,
+        linkedCourseId,
+        createdAt: it.createdAt,
+        views: (it as any).views ?? viewCounters.get(it.id) ?? 0,
+        likesCount: it._count?.likes ?? 0,
+        likedByMe: Array.isArray(it.likes) ? it.likes.length > 0 : false,
+      }
+    })
   )
 })
 

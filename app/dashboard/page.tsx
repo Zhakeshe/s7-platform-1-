@@ -15,6 +15,7 @@ import CourseLessonTab from "@/components/tabs/course-lesson-tab"
 import ProfileDropdown from "@/components/kokonutui/profile-dropdown"
 import { useConfirm } from "@/components/ui/confirm"
 import { useRouter } from "next/navigation"
+import { apiFetch } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-context"
 
 export default function Dashboard() {
@@ -73,6 +74,32 @@ export default function Dashboard() {
       document.body.classList.remove("mobile-menu-open")
     }
   }, [isMobileMenuOpen])
+
+  // Handle cross-tab event from ByteSize reels: open linked course
+  useEffect(() => {
+    const onOpenCourse = async (ev: Event) => {
+      const detail = (ev as CustomEvent).detail as { courseId?: string } | undefined
+      const courseId = detail?.courseId
+      if (!courseId) return
+      try {
+        const data = await apiFetch<any>(`/courses/${courseId}`)
+        const mapped: CourseDetails = {
+          id: data.id,
+          title: data.title,
+          difficulty: data.difficulty || "",
+          author: (data.author?.fullName ?? data.author) as any,
+          price: Number(data.price || 0),
+          modules: (data.modules || []).map((m: any) => ({ id: m.id, title: m.title, lessons: (m.lessons || []).map((l: any) => ({ id: l.id, title: l.title })) })),
+        }
+        setSelectedCourse(mapped)
+        setActiveTab("course-details")
+      } catch {
+        setActiveTab("courses")
+      }
+    }
+    window.addEventListener("s7-open-course", onOpenCourse as any)
+    return () => window.removeEventListener("s7-open-course", onOpenCourse as any)
+  }, [])
 
   const handleOpenCourse = (course: CourseDetails) => {
     setSelectedCourse(course)

@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useRef, useState } from "react"
-import { ArrowUpRight, Upload, Image } from "lucide-react"
+import { ArrowUpRight, Upload, Image, BookOpen } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { apiFetch, getTokens } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
@@ -21,6 +21,8 @@ export default function Page() {
   const [uploading, setUploading] = useState(false)
   const videoInputRef = useRef<HTMLInputElement | null>(null)
   const coverInputRef = useRef<HTMLInputElement | null>(null)
+  const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([])
+  const [linkedCourseId, setLinkedCourseId] = useState<string | null>(null)
 
   const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"]
   const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"]
@@ -36,7 +38,18 @@ export default function Page() {
       if (Array.isArray(d.category)) setCategory(d.category)
       if (d.videoUrl) setVideoUrl(d.videoUrl)
       if (d.coverUrl) setCoverUrl(d.coverUrl)
+      if (d.linkedCourseId) setLinkedCourseId(d.linkedCourseId)
     } catch {}
+  }, [])
+
+  // Load published courses for linking
+  useEffect(() => {
+    apiFetch<any[]>("/courses")
+      .then((list)=>{
+        const m = (list||[]).map((c:any)=>({ id: c.id, title: c.title }))
+        setCourses(m)
+      })
+      .catch(()=>setCourses([]))
   }, [])
 
   const uploadMedia = async (file: File): Promise<string> => {
@@ -101,6 +114,29 @@ export default function Page() {
               />
             )}
           </div>
+
+        {/* Link to course (optional) */}
+        <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-4 text-white">
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen className="w-4 h-4" />
+            <div className="text-white/80">Переход к курсу (по свайпу/кнопке)</div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
+            <select
+              value={linkedCourseId || ""}
+              onChange={(e)=> setLinkedCourseId(e.target.value ? e.target.value : null)}
+              className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none text-white"
+            >
+              <option value="">Ничего — просто короткое видео</option>
+              {courses.map((c)=> (
+                <option key={c.id} value={c.id}>{c.title}</option>
+              ))}
+            </select>
+            {linkedCourseId && (
+              <span className="text-xs text-white/60">Выбрано: {courses.find(c=>c.id===linkedCourseId)?.title || linkedCourseId}</span>
+            )}
+          </div>
+        </div>
           <div className="flex gap-2 mt-3">
             <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={async (e)=>{
               const f = e.target.files?.[0]; if(!f) return;
@@ -177,7 +213,7 @@ export default function Page() {
             <button
               type="button"
               onClick={() => {
-                try { localStorage.setItem('s7_admin_bytesize_draft', JSON.stringify({ title, description, category, videoUrl, coverUrl })) } catch {}
+                try { localStorage.setItem('s7_admin_bytesize_draft', JSON.stringify({ title, description, category, videoUrl, coverUrl, linkedCourseId })) } catch {}
                 toast({ title: 'Черновик сохранён' })
               }}
               className="rounded-2xl bg-[#2a2a35] hover:bg-[#333344] text-white font-medium py-4 transition-colors"
@@ -190,7 +226,8 @@ export default function Page() {
                 const ok = await confirm({ title: 'Опубликовать видео?', confirmText: 'Опубликовать', cancelText: 'Отмена' })
                 if (!ok) return
                 try {
-                  await apiFetch("/api/admin/bytesize", { method: "POST", body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, videoUrl, coverImageUrl: coverUrl || undefined, tags: category }) })
+                  const tags = Array.from(new Set([...(category||[]), ...(linkedCourseId ? [`__course:${linkedCourseId}`] : [])]))
+                  await apiFetch("/api/admin/bytesize", { method: "POST", body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, videoUrl, coverImageUrl: coverUrl || undefined, tags }) })
                   toast({ title: "Видео опубликовано" })
                   try { localStorage.removeItem('s7_admin_bytesize_draft') } catch {}
                   router.push("/admin/bytesize")
