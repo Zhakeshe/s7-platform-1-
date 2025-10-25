@@ -15,11 +15,12 @@ function normalizeMediaUrl(u?: string): string | undefined {
   try {
     if (!u) return undefined
     const s = String(u)
-    if (s.startsWith("/api/media/")) return s.replace("/api/media/", "/media/")
-    if (s.startsWith("/media/")) return s
+    // Prefer /api/media to work with common nginx configs
+    if (s.startsWith("/api/media/")) return s
+    if (s.startsWith("/media/")) return s.replace("/media/", "/api/media/")
     const url = new URL(s)
-    if (url.pathname.startsWith("/api/media/")) return url.pathname.replace("/api/media/", "/media/")
-    if (url.pathname.startsWith("/media/")) return url.pathname
+    if (url.pathname.startsWith("/api/media/")) return url.pathname
+    if (url.pathname.startsWith("/media/")) return url.pathname.replace("/media/", "/api/media/")
     return s
   } catch {
     return u
@@ -602,6 +603,30 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
             })
           )
         } else {
+          // Fallback: if draft lost lesson id, update existing lesson with the same orderIndex instead of creating
+          const targetOrder = lesson.orderIndex ?? lessonIndex
+          const sameOrder = (prevModule.lessons || []).find((l) => Number(l.orderIndex) === Number(targetOrder))
+          if (sameOrder) {
+            ops.push(
+              prisma.lesson.update({
+                where: { id: sameOrder.id },
+                data: {
+                  title: lesson.title,
+                  content: typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content,
+                  duration: typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration,
+                  orderIndex: targetOrder,
+                  isFreePreview: lesson.isFreePreview ?? sameOrder.isFreePreview ?? false,
+                  videoUrl: normalizeMediaUrl(lesson.videoUrl) || (sameOrder.videoUrl as any),
+                  videoStoragePath: lesson.videoStoragePath ?? (sameOrder.videoStoragePath as any),
+                  presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || (sameOrder.presentationUrl as any),
+                  presentationStoragePath: lesson.presentationStoragePath ?? (sameOrder.presentationStoragePath as any),
+                  slides: lesson.slides !== undefined ? normalizeSlides(lesson.slides) : (sameOrder.slides as any),
+                  contentType: lesson.contentType !== undefined ? lesson.contentType : (sameOrder.contentType ?? "text"),
+                },
+              })
+            )
+            continue
+          }
           ops.push(
             prisma.lesson.create({
               data: {

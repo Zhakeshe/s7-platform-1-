@@ -1,3 +1,16 @@
+function toApiMedia(u?: string | null): string | undefined {
+  try {
+    if (!u) return undefined
+    const s = String(u)
+    if (s.startsWith('/api/media/')) return s
+    if (s.startsWith('/media/')) return s.replace('/media/', '/api/media/')
+    const url = new URL(s)
+    if (url.pathname.startsWith('/api/media/')) return url.pathname
+    if (url.pathname.startsWith('/media/')) return url.pathname.replace('/media/','/api/media/')
+    return s
+  } catch { return u as any }
+}
+
 import { Router, type Request, type Response } from "express"
 import { z } from "zod"
 import { prisma } from "../db"
@@ -261,16 +274,29 @@ router.get("/:courseId", optionalAuth, async (req: AuthenticatedRequest, res: Re
     title: module.title,
     description: module.description,
     orderIndex: module.orderIndex,
-    lessons: module.lessons.map((lesson) =>
-      hasAccess || lesson.isFreePreview
-        ? lesson
-        : {
-            id: lesson.id,
-            title: lesson.title,
-            duration: lesson.duration,
-            isFreePreview: lesson.isFreePreview,
-          }
-    ),
+    lessons: module.lessons.map((lesson: any) => {
+      if (!(hasAccess || lesson.isFreePreview)) {
+        return {
+          id: lesson.id,
+          title: lesson.title,
+          duration: lesson.duration,
+          isFreePreview: lesson.isFreePreview,
+        }
+      }
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        content: lesson.content,
+        duration: lesson.duration,
+        orderIndex: lesson.orderIndex,
+        isFreePreview: lesson.isFreePreview,
+        videoUrl: toApiMedia(lesson.videoUrl),
+        presentationUrl: toApiMedia(lesson.presentationUrl),
+        slides: Array.isArray(lesson.slides)
+          ? lesson.slides.map((s: any) => (s && typeof s === 'object' && s.url ? { ...s, url: toApiMedia(s.url) } : s))
+          : lesson.slides,
+      }
+    }),
   }))
 
   res.json({
@@ -302,9 +328,11 @@ router.get("/:courseId/lessons/:lessonId", optionalAuth, async (req: Authenticat
     title: lesson.title,
     content: lesson.content,
     duration: lesson.duration,
-    videoUrl: lesson.videoUrl,
-    presentationUrl: lesson.presentationUrl,
-    slides: lesson.slides,
+    videoUrl: toApiMedia(lesson.videoUrl),
+    presentationUrl: toApiMedia(lesson.presentationUrl),
+    slides: Array.isArray(lesson.slides)
+      ? (lesson.slides as any[]).map((s: any) => (s && typeof s === 'object' && s.url ? { ...s, url: toApiMedia(s.url) } : s))
+      : lesson.slides,
     isFreePreview: lesson.isFreePreview,
     moduleId: lesson.moduleId,
   })

@@ -12,7 +12,7 @@ export default function AdminToolsPage() {
   useEffect(() => {
     Promise.all([
       apiFetch<Stats>("/api/admin/stats").catch(() => null),
-      fetch("/health").then(r => r.ok ? r.json() : Promise.reject()).catch(() => ({ status: "error" })),
+      fetch("/api/health").then(r => r.ok ? r.json() : Promise.reject()).catch(() => ({ status: "error" })),
     ]).then(([s, h]: any) => { setStats(s); setHealth(h?.status || "error") }).finally(() => setLoading(false))
   }, [])
 

@@ -59,6 +59,16 @@ app.get("/health", async (_req, res) => {
   }
 })
 
+// Alias for health under /api to avoid conflicts with Next routing
+app.get("/api/health", async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`
+    res.json({ status: "ok" })
+  } catch (error) {
+    res.status(500).json({ status: "error", error: String(error) })
+  }
+})
+
 app.use("/auth", authRouter)
 app.use("/courses", courseRouter)
 app.use("/api/admin", adminRouter)

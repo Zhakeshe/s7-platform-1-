@@ -15,12 +15,18 @@ import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import CourseLessonTab from "@/components/tabs/course-lesson-tab"
 import ProfileDropdown from "@/components/kokonutui/profile-dropdown"
 import { useConfirm } from "@/components/ui/confirm"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-context"
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("home")
+  const searchParams = useSearchParams()
+  const initialTab = (() => {
+    const t = searchParams.get("tab") || "home"
+    const allowed = new Set(["home","courses","course-details","lesson-details","s7-tools","teams","profile","masterclass","bytesize","clubs"])
+    return allowed.has(t) ? t : "home"
+  })()
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [currentDate, setCurrentDate] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -194,7 +200,14 @@ export default function Dashboard() {
 
       <Sidebar
         activeTab={activeTab === "course-details" || activeTab === "lesson-details" ? "courses" : activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab)
+          if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            params.set('tab', tab)
+            window.history.replaceState({}, '', `/dashboard?${params.toString()}`)
+          }
+        }}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         onCollapseChange={setIsSidebarCollapsed}

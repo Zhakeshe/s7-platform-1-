@@ -61,7 +61,7 @@ router.post("/media", (req: AuthenticatedRequest, res) => {
     }
     if (!req.file) return res.status(400).json({ error: "No file uploaded" })
     const relativePath = (req.file as any).filename
-    const url = `/media/${relativePath}`
+    const url = `/api/media/${relativePath}`
     return res.status(201).json({
       filename: (req.file as any).originalname,
       mimeType: (req.file as any).mimetype,
