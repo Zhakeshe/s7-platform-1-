@@ -34,8 +34,16 @@ app.use(
     credentials: true,
   })
 )
-app.set("trust proxy", true)
-app.use(rateLimit({ windowMs: 60_000, max: 200 }))
+// Behind a single reverse proxy (e.g., Nginx) in production. Avoid permissive boolean `true`.
+app.set("trust proxy", 1)
+app.use(
+  rateLimit({
+    windowMs: 60_000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+)
 
 ensureDir(env.MEDIA_DIR).catch((err) => console.error("Failed to ensure media dir", err))
 app.use("/media", express.static(path.resolve(env.MEDIA_DIR)))

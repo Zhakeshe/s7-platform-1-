@@ -460,11 +460,11 @@ model Attendance {
   id         String   @id @default(cuid())
   session    ClubSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId  String
-  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student    User     @relation("AttendanceStudent", fields: [studentId], references: [id], onDelete: Cascade)
   studentId  String
   status     AttendanceStatus @default(present)
   feedback   String?
-  markedBy   User?    @relation(fields: [markedById], references: [id], onDelete: SetNull)
+  markedBy   User?    @relation("AttendanceMarker", fields: [markedById], references: [id], onDelete: SetNull)
   markedById String?
   markedAt   DateTime @default(now())
 
