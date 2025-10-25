@@ -102,6 +102,13 @@ model User {
   eventRegistrations EventRegistration[]
   authoredQuestions  CourseQuestion[]
   courseAnswers      CourseAnswer[]
+  // Clubs/Classes (opposite relations)
+  clubsOwned         Club[]            @relation("ClubOwner")
+  clubMentorRoles    ClubMentor[]
+  classEnrollments   ClassEnrollment[]
+  attendanceStudent  Attendance[]      @relation("AttendanceStudent")
+  attendanceMarker   Attendance[]      @relation("AttendanceMarker")
+  assignmentSubmissions AssignmentSubmission[]
 }
 
 model Session {
@@ -381,7 +388,7 @@ model Club {
   description String?
   location    String?
   isActive    Boolean  @default(true)
-  owner       User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  owner       User?    @relation("ClubOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   ownerId     String?
   createdAt   DateTime @default(now())
 
@@ -398,10 +405,11 @@ model ClubClass {
   location    String?
   createdAt   DateTime @default(now())
 
-  mentors       ClubMentor[]
   enrollments   ClassEnrollment[]
   scheduleItems ScheduleItem[]
   sessions      ClubSession[]
+  resources     ClubResource[]
+  assignments   ClubAssignment[]
 }
 
 model ClubMentor {
@@ -437,6 +445,7 @@ model ScheduleItem {
   endTime   String
   location  String?
   createdAt DateTime @default(now())
+  sessions  ClubSession[]
 }
 
 model ClubSession {
