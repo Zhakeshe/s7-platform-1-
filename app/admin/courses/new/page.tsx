@@ -83,7 +83,7 @@ export default function Page() {
       const existing = existingRaw ? JSON.parse(existingRaw) : { modules: [] }
       const mergedModules = modules.map((m) => {
         const prev = (existing.modules || []).find((pm: any) => pm.id === m.id)
-        return { id: m.id, title: m.title, lessons: prev?.lessons || [] }
+        return { id: m.id, title: m.title, remoteId: prev?.remoteId, lessons: prev?.lessons || [] }
       })
       const draft = {
         ...existing,
@@ -206,7 +206,7 @@ export default function Page() {
       const existing = existingRaw ? JSON.parse(existingRaw) : { modules: [] }
       const mergedModules = modules.map((m) => {
         const prev = (existing.modules || []).find((pm: any) => pm.id === m.id)
-        return { id: m.id, title: m.title, lessons: prev?.lessons || [] }
+        return { id: m.id, title: m.title, remoteId: prev?.remoteId, lessons: prev?.lessons || [] }
       })
       const draft = {
         ...existing,
@@ -233,11 +233,7 @@ export default function Page() {
   const removeModule = async (id: number) => {
     const ok = await confirm({ title: `Удалить модуль ${id}?`, confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
     if (!ok) return
-    setModules((prev) => {
-      const filtered = prev.filter((m) => m.id !== id)
-      // reindex ids to keep 1..n for UI
-      return filtered.map((m, idx) => ({ ...m, id: idx + 1 }))
-    })
+    setModules((prev) => prev.filter((m) => m.id !== id))
     // draft persistence is handled by useEffect([modules]) below
     try { toast({ title: 'Модуль удалён' } as any) } catch {}
   }
@@ -267,6 +263,7 @@ export default function Page() {
           finalModules = d.modules.map((m: any) => ({
             id: m.id,
             title: m.title,
+            remoteId: m.remoteId,
             lessons: (m.lessons || []).map((l: any) => ({
               id: l.id,
               title: l.title,
@@ -282,6 +279,7 @@ export default function Page() {
               videoUrl: l.videoUrl || undefined,
               presentationUrl: l.presentationUrl || undefined,
               slideUrls: l.slideUrls || [],
+              remoteId: l.remoteId,
             })),
           }))
         }
@@ -356,10 +354,12 @@ export default function Page() {
           isPublished: true,
           modules: finalModules.map((m, mi) => ({
             // do NOT send id to let DB generate unique cuid
+            ...( (m as any).remoteId ? { id: (m as any).remoteId } : {} ),
             title: (m as any).title || `Модуль ${mi + 1}`,
             orderIndex: mi,
             lessons: (m as any).lessons?.map((l: any, li: number) => ({
               // do NOT send id to avoid PK collisions
+              ...( (l as any).remoteId ? { id: (l as any).remoteId } : {} ),
               title: l.title || `Урок ${li + 1}`,
               duration: l.time || l.duration || undefined,
               orderIndex: li,
@@ -590,11 +590,18 @@ export default function Page() {
             type="button"
             onClick={() => {
               try {
+                const existingRaw = draftKey ? localStorage.getItem(draftKey) : null
+                const existing = existingRaw ? JSON.parse(existingRaw) : { modules: [] }
+                const mergedModules = modules.map((m) => {
+                  const prev = (existing.modules || []).find((pm: any) => pm.id === m.id)
+                  return { id: m.id, title: m.title, remoteId: prev?.remoteId, lessons: prev?.lessons || [] }
+                })
                 const draft = {
+                  ...existing,
                   title,
                   author,
                   difficulty,
-                  modules: modules.map((m) => ({ id: m.id, title: m.title })),
+                  modules: mergedModules,
                   price: free ? 0 : price,
                 }
                 if (draftKey) localStorage.setItem(draftKey, JSON.stringify(draft))

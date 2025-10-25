@@ -5,6 +5,21 @@ import type { AuthenticatedRequest } from "../types"
 
 export const router = Router()
 
+function normalizeMediaUrl(u?: string | null): string | undefined {
+  try {
+    if (!u) return undefined
+    const s = String(u)
+    if (s.startsWith("/api/media/")) return s.replace("/api/media/", "/media/")
+    if (s.startsWith("/media/")) return s
+    const url = new URL(s)
+    if (url.pathname.startsWith("/api/media/")) return url.pathname.replace("/api/media/", "/media/")
+    if (url.pathname.startsWith("/media/")) return url.pathname
+    return s
+  } catch {
+    return u || undefined
+  }
+}
+
 // In-memory view counters as fallback when DB column is missing
 const viewCounters = new Map<string, number>()
 const lastViewByIp: Map<string, number> = new Map()
@@ -33,8 +48,8 @@ router.get("/", optionalAuth, async (req: AuthenticatedRequest, res: Response) =
         id: it.id,
         title: it.title,
         description: it.description,
-        videoUrl: it.videoUrl,
-        coverImageUrl: it.coverImageUrl,
+        videoUrl: normalizeMediaUrl(it.videoUrl) || it.videoUrl,
+        coverImageUrl: normalizeMediaUrl(it.coverImageUrl) || it.coverImageUrl,
         tags: publicTags,
         linkedCourseId,
         createdAt: it.createdAt,

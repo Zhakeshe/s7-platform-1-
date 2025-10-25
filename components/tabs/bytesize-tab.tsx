@@ -16,6 +16,28 @@ interface ReelItem {
   linkedCourseId?: string
 }
 
+function resolveMediaUrl(u?: string | null): string {
+  try {
+    const s = String(u || "").trim()
+    if (!s) return ""
+    if (s.startsWith("http://") || s.startsWith("https://")) {
+      try {
+        const url = new URL(s)
+        if (url.pathname.startsWith("/media/")) {
+          return new URL(url.pathname.replace("/media/", "/api/media/"), window.location.origin).href
+        }
+        return s
+      } catch {
+        return s
+      }
+    }
+    const path = s.startsWith("/media/") ? s.replace("/media/", "/api/media/") : s
+    return new URL(path, window.location.origin).href
+  } catch {
+    return String(u || "")
+  }
+}
+
 export default function ByteSizeTab() {
   const { user } = useAuth()
   const [items, setItems] = useState<ReelItem[]>([])
@@ -28,7 +50,7 @@ export default function ByteSizeTab() {
 
   const share = async (it: ReelItem) => {
     try {
-      const url = it.videoUrl?.startsWith('http') ? it.videoUrl : new URL(it.videoUrl, window.location.origin).href
+      const url = resolveMediaUrl(it.videoUrl)
       if (navigator.share) {
         await navigator.share({ title: it.title, text: it.description || it.title, url })
       } else if (navigator.clipboard) {
@@ -124,8 +146,8 @@ export default function ByteSizeTab() {
             >
               <video
                 ref={(el) => { videoRefs.current[it.id] = el }}
-                src={it.videoUrl?.startsWith('http') ? it.videoUrl : (typeof window !== 'undefined' ? new URL(it.videoUrl, window.location.origin).href : it.videoUrl)}
-                poster={it.coverImageUrl}
+                src={resolveMediaUrl(it.videoUrl)}
+                poster={resolveMediaUrl(it.coverImageUrl)}
                 controls={false}
                 playsInline
                 className="w-full h-full object-cover"

@@ -9,6 +9,28 @@ import { apiFetch } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
 const ReactMarkdown = dynamic(() => import("react-markdown").then((m) => m.default as any), { ssr: false }) as any
 
+function resolveMediaUrl(u?: string | null): string {
+  try {
+    const s = String(u || "").trim()
+    if (!s) return ""
+    if (s.startsWith("http://") || s.startsWith("https://")) {
+      try {
+        const url = new URL(s)
+        if (url.pathname.startsWith("/media/")) {
+          return new URL(url.pathname.replace("/media/", "/api/media/"), window.location.origin).href
+        }
+        return s
+      } catch {
+        return s
+      }
+    }
+    const path = s.startsWith("/media/") ? s.replace("/media/", "/api/media/") : s
+    return new URL(path, window.location.origin).href
+  } catch {
+    return String(u || "")
+  }
+}
+
 export default function CourseLessonTab({
   course,
   moduleId,
@@ -73,7 +95,7 @@ export default function CourseLessonTab({
     ;(async () => {
       // Video
       if ((lesson as any)?.videoUrl) {
-        setVideoUrl((lesson as any).videoUrl)
+        setVideoUrl(resolveMediaUrl((lesson as any).videoUrl))
       } else if (lesson?.videoMediaId) {
         const url = await getObjectUrl(lesson.videoMediaId)
         if (alive) setVideoUrl(url)
@@ -84,7 +106,10 @@ export default function CourseLessonTab({
       // Slides (server -> local fallback)
       const serverSlides = (lesson as any)?.serverSlides || (lesson as any)?.slides
       if (Array.isArray(serverSlides) && serverSlides.length) {
-        const urls = serverSlides.map((s: any) => (typeof s === 'string' ? s : s?.url)).filter(Boolean)
+        const urls = serverSlides
+          .map((s: any) => (typeof s === 'string' ? s : s?.url))
+          .filter(Boolean)
+          .map((u: string) => resolveMediaUrl(u))
         setSlideUrls(urls)
       } else if (Array.isArray(lesson?.slideMediaIds) && lesson!.slideMediaIds!.length) {
         const urls = await Promise.all(lesson!.slideMediaIds!.map((id) => getObjectUrl(id)))
@@ -95,7 +120,7 @@ export default function CourseLessonTab({
 
       // Presentation
       if ((lesson as any)?.presentationUrl) {
-        setPresUrl((lesson as any).presentationUrl)
+        setPresUrl(resolveMediaUrl((lesson as any).presentationUrl))
       } else if (lesson?.presentationMediaId) {
         const url = await getObjectUrl(lesson.presentationMediaId)
         if (alive) setPresUrl(url)
@@ -117,10 +142,13 @@ export default function CourseLessonTab({
         // Successful fetch implies access for this lesson (or it is free preview)
         setCanAccess((prev) => prev || true)
         if (typeof data.content === 'string') setLessonContent(data.content)
-        if (data.videoUrl) setVideoUrl(data.videoUrl)
-        if (data.presentationUrl) setPresUrl(data.presentationUrl)
+        if (data.videoUrl) setVideoUrl(resolveMediaUrl(data.videoUrl))
+        if (data.presentationUrl) setPresUrl(resolveMediaUrl(data.presentationUrl))
         if (Array.isArray(data.slides)) {
-          const urls = data.slides.map((s: any) => (typeof s === 'string' ? s : s?.url)).filter(Boolean)
+          const urls = data.slides
+            .map((s: any) => (typeof s === 'string' ? s : s?.url))
+            .filter(Boolean)
+            .map((u: string) => resolveMediaUrl(u))
           setSlideUrls(urls)
         }
       })
@@ -195,7 +223,7 @@ export default function CourseLessonTab({
                 preload="metadata"
                 crossOrigin="anonymous"
                 className="w-full rounded-2xl border border-[#2a2a35] bg-black animate-slide-up"
-                src={videoUrl.startsWith('http') ? videoUrl : (typeof window !== 'undefined' ? new URL(videoUrl, window.location.origin).href : videoUrl)}
+                src={videoUrl}
               />
             ) : (
               <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-2xl p-6 text-white min-h-[220px] flex items-center justify-center animate-slide-up">

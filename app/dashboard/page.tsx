@@ -8,6 +8,7 @@ import S7ToolsTab from "@/components/tabs/s7-tools-tab"
 import MasterclassTab from "@/components/tabs/masterclass-tab"
 import ProfileTab from "@/components/tabs/profile-tab"
 import ByteSizeTab from "@/components/tabs/bytesize-tab"
+import ClubsTab from "@/components/tabs/clubs-tab"
 import FooterSocial from "@/components/footer-social"
 import CourseDetailsTab from "@/components/tabs/course-details-tab"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
@@ -133,6 +134,8 @@ export default function Dashboard() {
         return "Мастерклассы"
       case "bytesize":
         return "Byte Size"
+      case "clubs":
+        return "Кружок"
       default:
         return "Главная"
     }
@@ -163,6 +166,8 @@ export default function Dashboard() {
         )
       case "s7-tools":
         return <S7ToolsTab />
+      case "clubs":
+        return <ClubsTab />
       case "teams":
         return <TeamsTab />
       case "masterclass":
@@ -177,7 +182,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0e0e12] flex flex-col md:flex-row relative">
+    <div className="min-h-screen bg-[#0e0e12] bg-dots-pattern flex flex-col md:flex-row relative">
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         className="md:hidden fixed top-4 left-4 z-50 text-white p-2 bg-[#16161c] hover:bg-[#636370]/20 rounded-lg transition-all duration-300 border border-[#636370]/20 hover:border-[#636370]/40 shadow-lg"

@@ -15,6 +15,7 @@ import { router as achievementsRouter } from "./routes/achievements"
 import { router as bytesizeRouter } from "./routes/bytesize"
 import { router as teamsRouter } from "./routes/teams"
 import { router as uploadRouter } from "./routes/uploads"
+import { router as clubsRouter } from "./routes/clubs"
 import { ensureDir } from "./utils/fs"
 
 const app = express()
@@ -60,6 +61,7 @@ app.use("/bytesize", bytesizeRouter)
 app.use("/teams", teamsRouter)
 app.use("/uploads", uploadRouter)
 app.use("/api/uploads", uploadRouter)
+app.use("/clubs", clubsRouter)
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err)

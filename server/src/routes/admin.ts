@@ -11,6 +11,40 @@ export const router = Router()
 
 router.use(requireAuth, requireAdmin)
 
+function normalizeMediaUrl(u?: string): string | undefined {
+  try {
+    if (!u) return undefined
+    const s = String(u)
+    if (s.startsWith("/api/media/")) return s.replace("/api/media/", "/media/")
+    if (s.startsWith("/media/")) return s
+    const url = new URL(s)
+    if (url.pathname.startsWith("/api/media/")) return url.pathname.replace("/api/media/", "/media/")
+    if (url.pathname.startsWith("/media/")) return url.pathname
+    return s
+  } catch {
+    return u
+  }
+}
+
+function normalizeSlides(slides?: any): any {
+  try {
+    if (!Array.isArray(slides)) return slides
+    return slides.map((s) => {
+      if (s && typeof s === "object") {
+        const url = normalizeMediaUrl((s as any).url)
+        return url ? { ...s, url } : s
+      }
+      if (typeof s === "string") {
+        const url = normalizeMediaUrl(s)
+        return url ? { url } : { url: s }
+      }
+      return s
+    })
+  } catch {
+    return slides
+  }
+}
+
 const slideSchema = z.object({
   title: z.string().optional(),
   url: z.string().url(),
@@ -59,8 +93,8 @@ router.post("/bytesize", async (req: AuthenticatedRequest, res: Response) => {
     data: {
       title: data.title,
       description: data.description,
-      videoUrl: data.videoUrl,
-      coverImageUrl: data.coverImageUrl,
+      videoUrl: normalizeMediaUrl(data.videoUrl) || data.videoUrl,
+      coverImageUrl: normalizeMediaUrl(data.coverImageUrl) || data.coverImageUrl,
       tags: data.tags && data.tags.length ? data.tags : undefined,
       authorId: req.user!.id,
     },
@@ -478,15 +512,15 @@ router.post("/courses", async (req: AuthenticatedRequest, res: Response) => {
             create: module.lessons.map((lesson, lessonIndex) => ({
               ...(lesson.id ? { id: lesson.id } : {}),
               title: lesson.title,
-              content: lesson.content,
-              duration: lesson.duration,
+              content: typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content,
+              duration: typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration,
               orderIndex: lesson.orderIndex ?? lessonIndex,
               isFreePreview: lesson.isFreePreview ?? false,
-              videoUrl: lesson.videoUrl,
+              videoUrl: normalizeMediaUrl(lesson.videoUrl) || lesson.videoUrl,
               videoStoragePath: lesson.videoStoragePath,
-              presentationUrl: lesson.presentationUrl,
+              presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || lesson.presentationUrl,
               presentationStoragePath: lesson.presentationStoragePath,
-              slides: lesson.slides ?? [],
+              slides: normalizeSlides(lesson.slides) ?? [],
               contentType: lesson.contentType,
             })),
           },
@@ -507,8 +541,41 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
   const data = parsed.data
 
-  const existing = await prisma.course.findUnique({ where: { id: courseId } })
+  const existing = await prisma.course.findUnique({ where: { id: courseId }, include: { modules: { include: { lessons: true } } } })
   if (!existing) return res.status(404).json({ error: "Course not found" })
+
+  const existingModulesById = new Map(existing.modules.map((m) => [m.id, m]))
+  const prevModulesSorted = [...existing.modules].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+  const mergedModules = data.modules.map((module, moduleIndex) => {
+    const prevModule = module.id ? existingModulesById.get(module.id) : prevModulesSorted[moduleIndex]
+    const prevLessonsById = new Map((prevModule?.lessons || []).map((l) => [l.id, l]))
+    const prevLessonsSorted = [...(prevModule?.lessons || [])].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+    return {
+      ...(module.id ? { id: module.id } : {}),
+      title: module.title,
+      description: module.description ?? prevModule?.description,
+      orderIndex: module.orderIndex ?? moduleIndex,
+      lessons: {
+        create: module.lessons.map((lesson, lessonIndex) => {
+          const prevLesson = lesson.id ? prevLessonsById.get(lesson.id) : prevLessonsSorted[lessonIndex]
+          return {
+            ...(lesson.id ? { id: lesson.id } : {}),
+            title: lesson.title,
+            content: (typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content) ?? (prevLesson?.content as any),
+            duration: (typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration) ?? (prevLesson?.duration as any),
+            orderIndex: lesson.orderIndex ?? lessonIndex,
+            isFreePreview: lesson.isFreePreview !== undefined ? lesson.isFreePreview : (prevLesson?.isFreePreview ?? false),
+            videoUrl: (typeof lesson.videoUrl === "string" ? (normalizeMediaUrl(lesson.videoUrl?.trim() || undefined) || undefined) : lesson.videoUrl) ?? (prevLesson?.videoUrl as any),
+            videoStoragePath: (typeof lesson.videoStoragePath === "string" ? (lesson.videoStoragePath.trim() ? lesson.videoStoragePath : undefined) : lesson.videoStoragePath) ?? (prevLesson?.videoStoragePath as any),
+            presentationUrl: (typeof lesson.presentationUrl === "string" ? (normalizeMediaUrl(lesson.presentationUrl?.trim() || undefined) || undefined) : lesson.presentationUrl) ?? (prevLesson?.presentationUrl as any),
+            presentationStoragePath: (typeof lesson.presentationStoragePath === "string" ? (lesson.presentationStoragePath.trim() ? lesson.presentationStoragePath : undefined) : lesson.presentationStoragePath) ?? (prevLesson?.presentationStoragePath as any),
+            slides: lesson.slides !== undefined ? normalizeSlides(lesson.slides) : (prevLesson?.slides as any),
+            contentType: lesson.contentType !== undefined ? lesson.contentType : (prevLesson?.contentType ?? "text"),
+          }
+        }),
+      },
+    }
+  })
 
   await prisma.$transaction([
     prisma.lesson.deleteMany({ where: { module: { courseId } } }),
@@ -526,30 +593,9 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
       isPublished: data.isPublished,
       coverImageUrl: data.coverImageUrl,
       estimatedHours: data.estimatedHours,
-      totalModules: data.modules.length,
+      totalModules: mergedModules.length,
       modules: {
-        create: data.modules.map((module, moduleIndex) => ({
-          ...(module.id ? { id: module.id } : {}),
-          title: module.title,
-          description: module.description,
-          orderIndex: module.orderIndex ?? moduleIndex,
-          lessons: {
-            create: module.lessons.map((lesson, lessonIndex) => ({
-              ...(lesson.id ? { id: lesson.id } : {}),
-              title: lesson.title,
-              content: lesson.content,
-              duration: lesson.duration,
-              orderIndex: lesson.orderIndex ?? lessonIndex,
-              isFreePreview: lesson.isFreePreview ?? false,
-              videoUrl: lesson.videoUrl,
-              videoStoragePath: lesson.videoStoragePath,
-              presentationUrl: lesson.presentationUrl,
-              presentationStoragePath: lesson.presentationStoragePath,
-              slides: lesson.slides ?? [],
-              contentType: lesson.contentType,
-            })),
-          },
-        })),
+        create: mergedModules,
       },
     },
     include: {

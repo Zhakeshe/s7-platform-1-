@@ -15,7 +15,7 @@ export default function Page() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const presets = ["Robotics", "Coding", "AI", "Design", "Education", "News", "Tips"]
-  const [category, setCategory] = useState<string[]>(["Robotics"]) // визуальные теги
+  const [category, setCategory] = useState<string[]>(["Robotics"]) 
   const [newTag, setNewTag] = useState("")
   const [videoUrl, setVideoUrl] = useState<string>("")
   const [coverUrl, setCoverUrl] = useState<string>("")
@@ -77,7 +77,8 @@ export default function Page() {
         }
         const data = await res.json()
         const u = String(data.url || "")
-        const abs = u.startsWith("http://") || u.startsWith("https://") ? u : new URL(u, window.location.origin).href
+        const path = u.startsWith('/media/') ? u.replace('/media/', '/api/media/') : u
+        const abs = path.startsWith("http://") || path.startsWith("https://") ? path : new URL(path, window.location.origin).href
         return abs
       } catch (e) {
         lastErr = e

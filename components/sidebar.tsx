@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Home, BookOpen, User, Users, GraduationCap, FileText, Wrench, ChevronLeft, ChevronRight, LogOut, Shield } from "lucide-react"
+import { Home, BookOpen, User, Users, GraduationCap, FileText, Wrench, ChevronLeft, ChevronRight, LogOut, Shield, Calendar } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-context"
 import { useConfirm } from "@/components/ui/confirm"
 import { useRouter } from "next/navigation"
@@ -51,6 +51,7 @@ export default function Sidebar({
   const navItems = [
     { id: "home", label: "Главная", icon: Home },
     { id: "courses", label: "Курсы", icon: BookOpen },
+    { id: "clubs", label: "Кружок", icon: Calendar },
     { id: "s7-tools", label: "S7 Tools", icon: Wrench },
     { id: "teams", label: "Команда", icon: Users },
     { id: "profile", label: "Профиль", icon: User },

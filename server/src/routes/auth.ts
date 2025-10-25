@@ -26,6 +26,64 @@ const refreshSchema = z.object({
 
 export const router = Router()
 
+// Development-only auth bypass (no DB). Enable with ENV: DEV_AUTH=1
+const DEV_AUTH = process.env.DEV_AUTH === "1"
+
+if (DEV_AUTH) {
+  // Login with email "1" and password "1" -> ADMIN
+  router.post("/login", async (req: Request, res: Response) => {
+    const { email, password } = (req.body || {}) as { email?: string; password?: string }
+    if (email === "1" && password === "1") {
+      const accessToken = signAccessToken("dev-admin", "ADMIN")
+      const refreshToken = signRefreshToken("dev-admin", "ADMIN")
+      return res.json({
+        accessToken,
+        refreshToken,
+        user: {
+          id: "dev-admin",
+          email: "admin@dev.local",
+          role: "ADMIN",
+          fullName: "Dev Admin",
+          xp: 0,
+        },
+      })
+    }
+    return res.status(401).json({ error: "Invalid credentials" })
+  })
+
+  // Refresh without DB: verify provided refreshToken and rotate
+  router.post("/refresh", async (req: Request, res: Response) => {
+    const { refreshToken } = (req.body || {}) as { refreshToken?: string }
+    if (!refreshToken) return res.status(400).json({ error: "Missing refresh token" })
+    try {
+      const payload = verifyToken(refreshToken)
+      const accessToken = signAccessToken(payload.sub, payload.role)
+      const newRefreshToken = signRefreshToken(payload.sub, payload.role)
+      return res.json({ accessToken, refreshToken: newRefreshToken })
+    } catch {
+      return res.status(401).json({ error: "Invalid refresh token" })
+    }
+  })
+
+  // Logout is a no-op in dev mode
+  router.post("/logout", async (_req: Request, res: Response) => {
+    return res.json({ success: true })
+  })
+
+  // Current user info without DB
+  router.get("/me", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" })
+    return res.json({
+      id: "dev-admin",
+      email: "admin@dev.local",
+      role: "ADMIN",
+      fullName: "Dev Admin",
+      xp: 0,
+      profile: null,
+    })
+  })
+}
+
 router.post("/register", async (req: Request, res: Response) => {
   const parsed = registerSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
