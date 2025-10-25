@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://s7robotics.space',
     title: 'S7 Robotics',
-    description: 'Курсы, ивенты и инструменты по IT и робототехнике',
+    description: 'Курсы, ивенты, инструменты по IT и робототехнике',
     siteName: 'S7 Robotics',
     images: [
       { url: '/opengraph-image', width: 1200, height: 630, alt: 'S7 Robotics' },
