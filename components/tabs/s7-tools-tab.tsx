@@ -1,5 +1,4 @@
 "use client"
-import Link from "next/link"
 import { ExternalLink, Plus, Phone, MessageCircle, Mail } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
@@ -16,6 +15,7 @@ interface EventItem {
   contact?: string
   date?: string
   imageUrl?: string
+  url?: string
 }
 
 export default function S7ToolsTab() {
@@ -51,19 +51,22 @@ export default function S7ToolsTab() {
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {events.map((ev, index) => (
-            <Link key={ev.id} href={`/events/${ev.id}`} className="block">
-              <div
-                className={`bg-[#16161c] border border-[#636370]/20 text-white rounded-lg p-6 hover:scale-102 transition-all duration-200 cursor-pointer group animate-slide-up`}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <h3 className={`text-lg font-medium group-hover:text-[#00a3ff] transition-colors duration-200`}>{ev.title}</h3>
-                  <ExternalLink className={`w-5 h-5 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200`} />
-                </div>
-                <div className="text-[#a0a0b0] text-sm line-clamp-3">{ev.description}</div>
-                {ev.date && <div className="text-xs text-white/60 mt-3">Дата: {new Date(ev.date).toLocaleString("ru-RU")}</div>}
+            <div
+              key={ev.id}
+              className={`bg-[#16161c] border border-[#636370]/20 text-white rounded-lg p-6 hover:scale-102 transition-all duration-200 group animate-slide-up`}
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <h3 className={`text-lg font-medium group-hover:text-[#00a3ff] transition-colors duration-200`}>{ev.title}</h3>
+                {ev.url && (
+                  <a href={ev.url} target="_blank" rel="noopener noreferrer" aria-label="Открыть ссылку" className="inline-flex">
+                    <ExternalLink className={`w-5 h-5 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200`} />
+                  </a>
+                )}
               </div>
-            </Link>
+              <div className="text-[#a0a0b0] text-sm line-clamp-3">{ev.description}</div>
+              {ev.date && <div className="text-xs text-white/60 mt-3">Дата: {new Date(ev.date).toLocaleString("ru-RU")}</div>}
+            </div>
           ))}
         </div>
 

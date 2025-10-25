@@ -340,9 +340,9 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(rgba(255, 214, 120, 0.06) 1px, transparent 1px),
-    linear-gradient(rgba(255, 214, 120, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 214, 120, 0.035) 1px, transparent 1px);
+    radial-gradient(rgba(0, 163, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(rgba(0, 163, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 163, 255, 0.035) 1px, transparent 1px);
   background-size: 22px 22px, 22px 22px, 22px 22px;
   background-position: center center;
 }
@@ -353,15 +353,15 @@ body::before {
 .bg-grid-pattern::before {
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
   background-image:
-    linear-gradient(rgba(255, 214, 120, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 214, 120, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(0, 163, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 163, 255, 0.035) 1px, transparent 1px);
   background-size: 32px 32px; background-position: center center;
 }
 
 .bg-dots-pattern { position: relative; }
 .bg-dots-pattern::before {
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-  background-image: radial-gradient(rgba(255, 214, 120, 0.06) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(rgba(0, 163, 255, 0.06) 1.5px, transparent 1.5px);
   background-size: 22px 22px; background-position: center center;
 }
 

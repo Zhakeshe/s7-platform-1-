@@ -545,62 +545,118 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
   if (!existing) return res.status(404).json({ error: "Course not found" })
 
   const existingModulesById = new Map(existing.modules.map((m) => [m.id, m]))
-  const prevModulesSorted = [...existing.modules].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-  const mergedModules = data.modules.map((module, moduleIndex) => {
-    const prevModule = module.id ? existingModulesById.get(module.id) : prevModulesSorted[moduleIndex]
-    const prevLessonsById = new Map((prevModule?.lessons || []).map((l) => [l.id, l]))
-    const prevLessonsSorted = [...(prevModule?.lessons || [])].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-    return {
-      ...(module.id ? { id: module.id } : {}),
-      title: module.title,
-      description: module.description ?? prevModule?.description,
-      orderIndex: module.orderIndex ?? moduleIndex,
-      lessons: {
-        create: module.lessons.map((lesson, lessonIndex) => {
-          const prevLesson = lesson.id ? prevLessonsById.get(lesson.id) : prevLessonsSorted[lessonIndex]
-          return {
-            ...(lesson.id ? { id: lesson.id } : {}),
-            title: lesson.title,
-            content: (typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content) ?? (prevLesson?.content as any),
-            duration: (typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration) ?? (prevLesson?.duration as any),
-            orderIndex: lesson.orderIndex ?? lessonIndex,
-            isFreePreview: lesson.isFreePreview !== undefined ? lesson.isFreePreview : (prevLesson?.isFreePreview ?? false),
-            videoUrl: (typeof lesson.videoUrl === "string" ? (normalizeMediaUrl(lesson.videoUrl?.trim() || undefined) || undefined) : lesson.videoUrl) ?? (prevLesson?.videoUrl as any),
-            videoStoragePath: (typeof lesson.videoStoragePath === "string" ? (lesson.videoStoragePath.trim() ? lesson.videoStoragePath : undefined) : lesson.videoStoragePath) ?? (prevLesson?.videoStoragePath as any),
-            presentationUrl: (typeof lesson.presentationUrl === "string" ? (normalizeMediaUrl(lesson.presentationUrl?.trim() || undefined) || undefined) : lesson.presentationUrl) ?? (prevLesson?.presentationUrl as any),
-            presentationStoragePath: (typeof lesson.presentationStoragePath === "string" ? (lesson.presentationStoragePath.trim() ? lesson.presentationStoragePath : undefined) : lesson.presentationStoragePath) ?? (prevLesson?.presentationStoragePath as any),
-            slides: lesson.slides !== undefined ? normalizeSlides(lesson.slides) : (prevLesson?.slides as any),
-            contentType: lesson.contentType !== undefined ? lesson.contentType : (prevLesson?.contentType ?? "text"),
-          }
-        }),
+  const ops: any[] = []
+
+  ops.push(
+    prisma.course.update({
+      where: { id: courseId },
+      data: {
+        title: data.title,
+        description: data.description,
+        difficulty: data.difficulty,
+        price: data.price,
+        isFree: data.isFree,
+        isPublished: data.isPublished,
+        coverImageUrl: data.coverImageUrl,
+        estimatedHours: data.estimatedHours,
+        totalModules: Math.max(existing.modules.length, data.modules.length),
       },
+    })
+  )
+
+  for (let moduleIndex = 0; moduleIndex < data.modules.length; moduleIndex++) {
+    const module = data.modules[moduleIndex]
+    const prevModule = module.id ? existingModulesById.get(module.id) : undefined
+    if (prevModule) {
+      ops.push(
+        prisma.courseModule.update({
+          where: { id: prevModule.id },
+          data: {
+            title: module.title,
+            description: module.description ?? prevModule.description,
+            orderIndex: module.orderIndex ?? moduleIndex,
+          },
+        })
+      )
+      const prevLessonsById = new Map((prevModule.lessons || []).map((l) => [l.id, l]))
+      for (let lessonIndex = 0; lessonIndex < (module.lessons || []).length; lessonIndex++) {
+        const lesson = module.lessons[lessonIndex]
+        if (lesson.id && prevLessonsById.has(lesson.id)) {
+          const prevLesson = prevLessonsById.get(lesson.id)!
+          ops.push(
+            prisma.lesson.update({
+              where: { id: lesson.id },
+              data: {
+                title: lesson.title,
+                content: (typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content) ?? (prevLesson.content as any),
+                duration: (typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration) ?? (prevLesson.duration as any),
+                orderIndex: lesson.orderIndex ?? lessonIndex,
+                isFreePreview: lesson.isFreePreview !== undefined ? lesson.isFreePreview : (prevLesson.isFreePreview ?? false),
+                videoUrl: (typeof lesson.videoUrl === "string" ? (normalizeMediaUrl(lesson.videoUrl?.trim() || undefined) || undefined) : lesson.videoUrl) ?? (prevLesson.videoUrl as any),
+                videoStoragePath: (typeof lesson.videoStoragePath === "string" ? (lesson.videoStoragePath.trim() ? lesson.videoStoragePath : undefined) : lesson.videoStoragePath) ?? (prevLesson.videoStoragePath as any),
+                presentationUrl: (typeof lesson.presentationUrl === "string" ? (normalizeMediaUrl(lesson.presentationUrl?.trim() || undefined) || undefined) : lesson.presentationUrl) ?? (prevLesson.presentationUrl as any),
+                presentationStoragePath: (typeof lesson.presentationStoragePath === "string" ? (lesson.presentationStoragePath.trim() ? lesson.presentationStoragePath : undefined) : lesson.presentationStoragePath) ?? (prevLesson.presentationStoragePath as any),
+                slides: lesson.slides !== undefined ? normalizeSlides(lesson.slides) : (prevLesson.slides as any),
+                contentType: lesson.contentType !== undefined ? lesson.contentType : (prevLesson.contentType ?? "text"),
+              },
+            })
+          )
+        } else {
+          ops.push(
+            prisma.lesson.create({
+              data: {
+                moduleId: prevModule.id,
+                title: lesson.title,
+                content: typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content,
+                duration: typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration,
+                orderIndex: lesson.orderIndex ?? lessonIndex,
+                isFreePreview: lesson.isFreePreview ?? false,
+                videoUrl: normalizeMediaUrl(lesson.videoUrl) || lesson.videoUrl,
+                videoStoragePath: lesson.videoStoragePath,
+                presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || lesson.presentationUrl,
+                presentationStoragePath: lesson.presentationStoragePath,
+                slides: normalizeSlides(lesson.slides) ?? [],
+                contentType: lesson.contentType,
+              },
+            })
+          )
+        }
+      }
+    } else {
+      ops.push(
+        prisma.courseModule.create({
+          data: {
+            courseId,
+            title: module.title,
+            description: module.description,
+            orderIndex: module.orderIndex ?? moduleIndex,
+            lessons: {
+              create: (module.lessons || []).map((lesson, lessonIndex) => ({
+                ...(lesson.id ? { id: lesson.id } : {}),
+                title: lesson.title,
+                content: typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content,
+                duration: typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration,
+                orderIndex: lesson.orderIndex ?? lessonIndex,
+                isFreePreview: lesson.isFreePreview ?? false,
+                videoUrl: normalizeMediaUrl(lesson.videoUrl) || lesson.videoUrl,
+                videoStoragePath: lesson.videoStoragePath,
+                presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || lesson.presentationUrl,
+                presentationStoragePath: lesson.presentationStoragePath,
+                slides: normalizeSlides(lesson.slides) ?? [],
+                contentType: lesson.contentType,
+              })),
+            },
+          },
+        })
+      )
     }
-  })
+  }
 
-  await prisma.$transaction([
-    prisma.lesson.deleteMany({ where: { module: { courseId } } }),
-    prisma.courseModule.deleteMany({ where: { courseId } }),
-  ])
+  await prisma.$transaction(ops as any)
 
-  const updated = await prisma.course.update({
+  const updated = await prisma.course.findUnique({
     where: { id: courseId },
-    data: {
-      title: data.title,
-      description: data.description,
-      difficulty: data.difficulty,
-      price: data.price,
-      isFree: data.isFree,
-      isPublished: data.isPublished,
-      coverImageUrl: data.coverImageUrl,
-      estimatedHours: data.estimatedHours,
-      totalModules: mergedModules.length,
-      modules: {
-        create: mergedModules,
-      },
-    },
-    include: {
-      modules: { include: { lessons: true }, orderBy: { orderIndex: "asc" } },
-    },
+    include: { modules: { include: { lessons: true }, orderBy: { orderIndex: "asc" } } },
   })
 
   res.json(updated)

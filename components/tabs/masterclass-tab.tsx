@@ -5,7 +5,7 @@ import { apiFetch } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-context"
 import { toast } from "@/hooks/use-toast"
 
-interface EventItem { id: string; title: string; description?: string; date?: string; imageUrl?: string }
+interface EventItem { id: string; title: string; description?: string; date?: string; imageUrl?: string; url?: string }
 
 export default function MasterclassTab() {
   const { user } = useAuth()
@@ -76,26 +76,12 @@ export default function MasterclassTab() {
               <div key={e.id} className="bg-[#16161c] border border-[#636370]/20 rounded-lg p-6 hover:border-[#00a3ff]/50 transition-all duration-200 group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
                 <div className="flex items-start justify-between mb-4">
                   <h3 className="text-white text-lg font-medium group-hover:text-[#00a3ff] transition-colors duration-200">{e.title}</h3>
-                  <ExternalLink className="w-5 h-5 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
+                  {e.url && (
+                    <a href={e.url} target="_blank" rel="noopener noreferrer" aria-label="Открыть ссылку" className="inline-flex">
+                      <ExternalLink className="w-5 h-5 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
+                    </a>
+                  )}
                 </div>
-
-      {openReg.open && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="w-full max-w-sm bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white">
-            <div className="text-lg font-medium mb-3">Запись на мастер-класс</div>
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Номер телефона"
-              className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none mb-3"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => setOpenReg({ open: false })} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={submitRegister} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Отправить</button>
-            </div>
-          </div>
-        </div>
-      )}
                 {e.imageUrl && <img src={e.imageUrl} alt={e.title} className="w-full h-40 object-cover rounded-md mb-3" />}
                 <div className="space-y-2 text-sm text-[#a0a0b0]">
                   {e.description && <div>{e.description}</div>}
@@ -125,6 +111,37 @@ export default function MasterclassTab() {
           </div>
         </div>
       </div>
+
+      {/* Single global modal rendered once */}
+      {openReg.open && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in"
+          onClick={() => setOpenReg({ open: false })}
+          aria-modal="true"
+          role="dialog"
+        >
+          <div
+            className="w-full max-w-sm bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => { if (e.key === 'Escape') setOpenReg({ open: false }) }}
+            tabIndex={-1}
+          >
+            <div className="text-lg font-medium mb-3">Запись на мастер-класс</div>
+            <input
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Номер телефона"
+              className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none mb-3"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => setOpenReg({ open: false })} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
+              <button onClick={submitRegister} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Отправить</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
