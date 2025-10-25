@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Sidebar from "@/components/sidebar"
 import HomeTab from "@/components/tabs/home-tab"
 import CoursesTab from "@/components/tabs/courses-tab"
@@ -19,7 +19,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-context"
 
-export default function Dashboard() {
+function DashboardInner() {
   const searchParams = useSearchParams()
   const initialTab = (() => {
     const t = searchParams.get("tab") || "home"
@@ -247,5 +247,13 @@ export default function Dashboard() {
 
       <FooterSocial />
     </div>
+  )
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardInner />
+    </Suspense>
   )
 }
