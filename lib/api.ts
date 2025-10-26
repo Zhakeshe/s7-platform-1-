@@ -80,12 +80,19 @@ function deleteCookie(name: string) {
 
 async function refreshTokens(currentRefresh: string): Promise<Tokens | null> {
   try {
-    const res = await fetch("/auth/refresh", {
+    let res = await fetch("/auth/refresh", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ refreshToken: currentRefresh }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ refreshToken: currentRefresh }),
+      })
+      if (!res.ok) return null
+    }
     const data = (await res.json()) as { accessToken: string; refreshToken: string }
     setTokens(data)
     return data

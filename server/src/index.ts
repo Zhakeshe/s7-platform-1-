@@ -70,6 +70,7 @@ app.get("/api/health", async (_req, res) => {
 })
 
 app.use("/auth", authRouter)
+app.use("/api/auth", authRouter)
 app.use("/courses", courseRouter)
 app.use("/api/admin", adminRouter)
 app.use("/events", eventsRouter)
@@ -80,6 +81,7 @@ app.use("/teams", teamsRouter)
 app.use("/uploads", uploadRouter)
 app.use("/api/uploads", uploadRouter)
 app.use("/clubs", clubsRouter)
+app.use("/api/clubs", clubsRouter)
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err)

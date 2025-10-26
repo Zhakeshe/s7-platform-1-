@@ -256,33 +256,39 @@ export default function Page() {
     // Build from draft if exists (contains lessons + rich fields)
     let finalModules = modules.map((m) => ({ id: m.id, title: m.title, lessons: [{ id: 1, title: "Введение", time: "10:21" }] }))
     try {
-      const draftRaw = draftKey ? localStorage.getItem(draftKey) : localStorage.getItem("s7_admin_course_draft")
-      if (draftRaw) {
-        const d = JSON.parse(draftRaw)
-        if (Array.isArray(d.modules) && d.modules.length) {
-          finalModules = d.modules.map((m: any) => ({
-            id: m.id,
-            title: m.title,
-            remoteId: m.remoteId,
-            lessons: (m.lessons || []).map((l: any) => ({
-              id: l.id,
-              title: l.title,
-              time: l.time,
-              videoName: l.videoName,
-              slides: l.slides || [],
-              content: l.content || "",
-              presentationFileName: l.presentationFileName || "",
-              videoMediaId: l.videoMediaId || undefined,
-              slideMediaIds: l.slideMediaIds || [],
-              presentationMediaId: l.presentationMediaId || undefined,
-              // uploaded URLs used for publishing
-              videoUrl: l.videoUrl || undefined,
-              presentationUrl: l.presentationUrl || undefined,
-              slideUrls: l.slideUrls || [],
-              remoteId: l.remoteId,
-            })),
-          }))
-        }
+      const fromKey = draftKey ? localStorage.getItem(draftKey) : null
+      const fromGlobal = localStorage.getItem("s7_admin_course_draft")
+      const parseSafe = (raw: string | null) => { try { return raw ? JSON.parse(raw) : null } catch { return null } }
+      const dk = parseSafe(fromKey)
+      const dg = parseSafe(fromGlobal)
+      const pick = (() => {
+        if (dk && Array.isArray(dk.modules) && dk.modules.length) return dk
+        if (dg && Array.isArray(dg.modules) && dg.modules.length) return dg
+        return dk || dg
+      })()
+      if (pick && Array.isArray(pick.modules) && pick.modules.length) {
+        finalModules = pick.modules.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          remoteId: m.remoteId,
+          lessons: (m.lessons || []).map((l: any) => ({
+            id: l.id,
+            title: l.title,
+            time: l.time,
+            videoName: l.videoName,
+            slides: l.slides || [],
+            content: l.content || "",
+            presentationFileName: l.presentationFileName || "",
+            videoMediaId: l.videoMediaId || undefined,
+            slideMediaIds: l.slideMediaIds || [],
+            presentationMediaId: l.presentationMediaId || undefined,
+            // uploaded URLs used for publishing
+            videoUrl: l.videoUrl || undefined,
+            presentationUrl: l.presentationUrl || undefined,
+            slideUrls: l.slideUrls || [],
+            remoteId: l.remoteId,
+          })),
+        }))
       }
     } catch {}
 
