@@ -72,6 +72,8 @@ export default function ClubsTab() {
       setDesc("")
       await load()
       toast({ title: "Кружок создан" })
+    } catch (e: any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось создать", variant: "destructive" as any })
     } finally {
       setCreating(false)
     }

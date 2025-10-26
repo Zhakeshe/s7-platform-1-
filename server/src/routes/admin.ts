@@ -560,7 +560,7 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
         isPublished: data.isPublished,
         coverImageUrl: data.coverImageUrl,
         estimatedHours: data.estimatedHours,
-        totalModules: Math.max(existing.modules.length, data.modules.length),
+        totalModules: existing.modules.length + data.modules.filter((m) => !m.id).length,
       },
     })
   )
@@ -654,7 +654,7 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
             courseId,
             title: module.title,
             description: module.description,
-            orderIndex: module.orderIndex ?? moduleIndex,
+            orderIndex: Math.max(module.orderIndex ?? moduleIndex, existing.modules.length),
             lessons: {
               create: (module.lessons || []).map((lesson, lessonIndex) => ({
                 ...(lesson.id ? { id: lesson.id } : {}),
