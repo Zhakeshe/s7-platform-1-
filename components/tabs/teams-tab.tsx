@@ -91,7 +91,7 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
             placeholder="Название команды"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+            className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none"
             required
           />
           <div className="grid grid-cols-1 gap-3">
@@ -100,28 +100,28 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
               placeholder="Город"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none"
             />
             <input
               type="tel"
               placeholder="Телефон"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none"
             />
             <input
               type="text"
               placeholder="Учебное заведение команды"
               value={educationalInstitution}
               onChange={(e) => setEducationalInstitution(e.target.value)}
-              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none"
             />
             <input
               type="text"
               placeholder="Имя ментора"
               value={mentorName}
               onChange={(e) => setMentorName(e.target.value)}
-              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none"
             />
           </div>
           <div>
@@ -132,7 +132,7 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
                   key={p}
                   type="button"
                   onClick={() => setPositionsWanted((s) => ({ ...s, [p]: !s[p] }))}
-                  className={`text-xs font-medium px-3 py-1 rounded-full border ${positionsWanted[p] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                  className={`text-xs font-medium px-3 py-1 rounded-full border ${positionsWanted[p] ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
                 >
                   {p}
                 </button>
@@ -143,7 +143,7 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
               placeholder="Другая должность (через запятую)"
               value={customPositions}
               onChange={(e) => setCustomPositions(e.target.value)}
-              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none"
             />
           </div>
 
@@ -155,7 +155,7 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
                   key={c}
                   type="button"
                   onClick={() => setCompetitions((s) => ({ ...s, [c]: !s[c] }))}
-                  className={`text-xs font-medium px-3 py-1 rounded-full border ${competitions[c] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                  className={`text-xs font-medium px-3 py-1 rounded-full border ${competitions[c] ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
                 >
                   {c}
                 </button>
@@ -166,7 +166,7 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
               placeholder="Другие (через запятую)"
               value={customCompetitions}
               onChange={(e) => setCustomCompetitions(e.target.value)}
-              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none"
+              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none"
             />
           </div>
           <div>
@@ -174,7 +174,7 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
               placeholder="Описание (опционально)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none h-24 resize-none"
+              className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none h-24 resize-none"
             />
           </div>
           <div className="flex gap-3">
@@ -188,7 +188,7 @@ function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
             <button
               type="submit"
               disabled={isLoading || !teamName.trim()}
-              className="flex-1 bg-[#00a3ff] text-white py-3 rounded-lg hover:bg-[#0088cc] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-[var(--color-accent-warm)] text-white py-3 rounded-lg hover:bg-[var(--color-accent-warm-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Создаем...' : 'Создать'}
             </button>
@@ -269,7 +269,7 @@ export default function TeamsTab() {
           </h2>
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="btn bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium"
+            className="btn bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium"
           >
             Создать команду
           </button>
@@ -283,7 +283,7 @@ export default function TeamsTab() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-white text-lg font-medium mb-2">{t.name}</h3>
-                    <span className="chip bg-[#00a3ff] text-white border-[#00a3ff]">Участников: {t.membersCount}</span>
+                    <span className="chip bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]">Участников: {t.membersCount}</span>
                   </div>
                   <ArrowUpRight className="w-6 h-6 text-[#a0a0b0] group-hover:text-white transition-colors duration-300" />
                 </div>
@@ -365,7 +365,7 @@ export default function TeamsTab() {
                       {myMemberships[t.id].status === 'pending' ? 'На проверке' : myMemberships[t.id].status === 'active' ? 'Вы в команде' : 'Отклонено'}
                     </span>
                   ) : (
-                    <button onClick={() => join(t.id, t.name)} className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium">Записаться</button>
+                    <button onClick={() => join(t.id, t.name)} className="px-4 py-2 rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium">Записаться</button>
                   )}
                 </div>
               </div>
@@ -381,7 +381,7 @@ export default function TeamsTab() {
           <div className="flex justify-center">
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="w-16 h-16 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-300"
+              className="w-16 h-16 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center hover:bg-[var(--color-accent-warm-hover)] transition-colors duration-300"
             >
               <Plus className="w-8 h-8 text-white" />
             </button>
@@ -403,8 +403,8 @@ export default function TeamsTab() {
             <div className="text-lg font-medium mb-2">Запись в команду</div>
             {joinModal.teamName && <div className="text-white/70 text-sm mb-4">Команда: {joinModal.teamName}</div>}
             <div className="grid grid-cols-1 gap-3">
-              <input value={tg} onChange={(e)=>setTg(e.target.value)} placeholder="Telegram @username" className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none" />
-              <input value={wa} onChange={(e)=>setWa(e.target.value)} placeholder="WhatsApp номер" className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[#00a3ff] focus:outline-none" />
+              <input value={tg} onChange={(e)=>setTg(e.target.value)} placeholder="Telegram @username" className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none" />
+              <input value={wa} onChange={(e)=>setWa(e.target.value)} placeholder="WhatsApp номер" className="w-full bg-[#0e0e12] border border-[#636370]/20 rounded-lg px-4 py-3 text-white placeholder:text-[#a0a0b0] focus:border-[var(--color-accent-warm)] focus:outline-none" />
             </div>
             <div className="mt-4 flex gap-3">
               <button onClick={()=>setJoinModal({ open:false })} className="flex-1 bg-[#636370]/20 text-white py-3 rounded-lg hover:bg-[#636370]/30 transition-colors">Отмена</button>
@@ -417,7 +417,7 @@ export default function TeamsTab() {
                 } catch(e:any) {
                   toast({ title: 'Ошибка', description: e?.message || 'Не удалось отправить заявку', variant: 'destructive' as any })
                 }
-              }} className="flex-1 bg-[#00a3ff] text-black py-3 rounded-lg hover:bg-[#0088cc] transition-colors">Отправить</button>
+              }} className="flex-1 bg-[var(--color-accent-warm)] text-black py-3 rounded-lg hover:bg-[var(--color-accent-warm-hover)] transition-colors">Отправить</button>
             </div>
           </div>
         </div>,

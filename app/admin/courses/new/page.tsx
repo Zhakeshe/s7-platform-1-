@@ -518,7 +518,7 @@ export default function Page() {
                       key={lvl}
                       type="button"
                       onClick={() => setDifficulty(lvl)}
-                      className={`px-3 py-1 rounded-full text-xs border ${difficulty === lvl ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                      className={`px-3 py-1 rounded-full text-xs border ${difficulty === lvl ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
                     >
                       {lvl}
                     </button>
@@ -644,7 +644,7 @@ export default function Page() {
           </button>
           <button
             onClick={publish}
-            className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
+            className="rounded-2xl bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
           >
             Опубликовать
             <ArrowUpRight className="w-5 h-5" />

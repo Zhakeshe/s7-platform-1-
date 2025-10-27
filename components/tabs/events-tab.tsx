@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useState } from "react"
 import { ExternalLink, LogIn, Link2, ArrowLeft } from "lucide-react"
 
@@ -71,7 +71,7 @@ export default function EventsTab({
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                <div className="w-7 h-7 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                   1
                 </div>
                 <div className="text-left">
@@ -90,7 +90,7 @@ export default function EventsTab({
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                <div className="w-7 h-7 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                   2
                 </div>
                 <div className="text-left">

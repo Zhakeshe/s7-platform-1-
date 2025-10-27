@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from 'react'
 import { cn } from '@/lib/utils'
@@ -104,7 +104,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3">
               {(() => {
                 const Cls = preset === 'logout' ? LogOut : preset === 'ban' ? BanIcon : preset === 'delete' ? Trash2 : (isDanger ? AlertTriangle : Info)
-                const color = isDanger ? '#ef4444' : '#00a3ff'
+                const color = isDanger ? '#ef4444' : 'var(--color-accent-warm)'
                 return <Cls className="w-6 h-6" style={{ color }} />
               })()}
               <DrawerTitle className="text-white text-2xl md:text-xl font-semibold leading-tight">{title}</DrawerTitle>
@@ -119,7 +119,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 value={reason}
                 onChange={(e)=>setReason(e.target.value)}
                 placeholder={reasonPlaceholder || 'Причина (необязательно)'}
-                className="w-full mt-2 bg-[#0f0f14] border border-[#2a2a35] rounded-xl text-white/90 px-3 py-2 min-h-[72px] placeholder:text-white/40 outline-none focus:border-[#00a3ff]"
+                className="w-full mt-2 bg-[#0f0f14] border border-[#2a2a35] rounded-xl text-white/90 px-3 py-2 min-h-[72px] placeholder:text-white/40 outline-none focus:border-[var(--color-accent-warm)]"
               />
             </div>
           )}
@@ -135,7 +135,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 'w-full md:w-auto h-11 rounded-xl font-medium',
                 isDanger
                   ? 'bg-[#ef4444] hover:bg-[#dc2626] text-white'
-                  : 'bg-[#00a3ff] hover:bg-[#0088cc] text-black',
+                  : 'bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black',
               )}
             >
               {confirmText}

@@ -92,7 +92,7 @@ export default function ClubsTab() {
           <input value={desc} onChange={(e)=>setDesc(e.target.value)} placeholder="Описание (необязательно)" className="bg-surface-2 border border-1 rounded-[var(--radius-md)] px-3 py-2 text-white outline-none focus:border-[var(--color-border-hover-1)] transition-colors" />
         </div>
         <div className="mt-3">
-          <button onClick={createClub} disabled={creating || !name.trim()} className="btn bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium">Создать</button>
+          <button onClick={createClub} disabled={creating || !name.trim()} className="btn bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] disabled:opacity-60 text-black font-medium">Создать</button>
         </div>
       </section>
 
@@ -123,7 +123,7 @@ export default function ClubsTab() {
                   await apiFetch(`/api/clubs/${c.id}/mentors-by-email`,{ method:"POST", body: JSON.stringify({ email })})
                   setMentorEmail(prev=>({...prev,[c.id]:""}))
                   await load()
-                }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-2">Добавить</button>
+                }} className="text-xs rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2">Добавить</button>
               </div>
               <div className="text-white/70 text-xs mt-2 space-y-1">
                 {(!(c.mentors||[]).length) && <div>Нет менторов</div>}
@@ -203,7 +203,7 @@ export default function ClubsTab() {
                               }
                               setEnrollEmail(prev=>({...prev,[cl.id]:""}))
                               await load()
-                            }} className="text-xs rounded-full bg-[#00a3ff] hover:bg-[#0088cc] px-3 py-2 text-black font-medium">Добавить</button>
+                            }} className="text-xs rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2 text-black font-medium">Добавить</button>
                           </div>
 
                         <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3 space-y-2">
@@ -212,13 +212,13 @@ export default function ClubsTab() {
                             <input placeholder="Название" value={(resForm[cl.id]?.title)||""} onChange={(e)=>setResForm(prev=>({ ...prev, [cl.id]: { ...(prev[cl.id]||{ title:"", url:"" }), title: e.target.value } }))} className="bg-[#0c0c10] border border-[#2a2a35] rounded-lg px-2 py-2" />
                             <input placeholder="URL" value={(resForm[cl.id]?.url)||""} onChange={(e)=>setResForm(prev=>({ ...prev, [cl.id]: { ...(prev[cl.id]||{ title:"", url:"" }), url: e.target.value } }))} className="bg-[#0c0c10] border border-[#2a2a35] rounded-lg px-2 py-2" />
                             <input placeholder="Описание (опц.)" value={(resForm[cl.id]?.description)||""} onChange={(e)=>setResForm(prev=>({ ...prev, [cl.id]: { ...(prev[cl.id]||{ title:"", url:"" }), description: e.target.value } }))} className="bg-[#0c0c10] border border-[#2a2a35] rounded-lg px-2 py-2" />
-                            <button onClick={async()=>{ const payload=resForm[cl.id]; if(!payload?.title?.trim()||!payload?.url?.trim()) return; try { await apiFetch(`/api/clubs/classes/${cl.id}/resources`,{ method: 'POST', body: JSON.stringify({ title: payload.title.trim(), url: payload.url.trim(), description: payload.description?.trim()||undefined })}); toast({ title: "Материал добавлен" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось добавить", variant: "destructive" as any }) } setResForm(prev=>{ const n={...prev}; delete n[cl.id]; return n}); const list = await apiFetch<any[]>(`/api/clubs/classes/${cl.id}/resources`); setResources(prev=>({ ...prev, [cl.id]: list })); }} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-2">Добавить</button>
+                            <button onClick={async()=>{ const payload=resForm[cl.id]; if(!payload?.title?.trim()||!payload?.url?.trim()) return; try { await apiFetch(`/api/clubs/classes/${cl.id}/resources`,{ method: 'POST', body: JSON.stringify({ title: payload.title.trim(), url: payload.url.trim(), description: payload.description?.trim()||undefined })}); toast({ title: "Материал добавлен" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось добавить", variant: "destructive" as any }) } setResForm(prev=>{ const n={...prev}; delete n[cl.id]; return n}); const list = await apiFetch<any[]>(`/api/clubs/classes/${cl.id}/resources`); setResources(prev=>({ ...prev, [cl.id]: list })); }} className="rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2">Добавить</button>
                           </div>
                           <div className="space-y-1">
                             {((resources[cl.id]||[]).length===0) && <div className="text-white/60 text-sm">Нет материалов</div>}
                             {(resources[cl.id]||[]).map(r => (
                               <div key={r.id} className="flex items-center justify-between text-sm">
-                                <a href={r.url} target="_blank" rel="noreferrer" className="text-[#00a3ff] hover:underline">{r.title}</a>
+                                <a href={r.url} target="_blank" rel="noreferrer" className="text-[var(--color-accent-warm)] hover:underline">{r.title}</a>
                                 <button onClick={async()=>{ try { await apiFetch(`/api/clubs/resources/${r.id}`, { method: 'DELETE' }); toast({ title: "Материал удалён" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось удалить", variant: "destructive" as any }) } const list = await apiFetch<any[]>(`/api/clubs/classes/${cl.id}/resources`); setResources(prev=>({ ...prev, [cl.id]: list })); }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Удалить</button>
                               </div>
                             ))}
@@ -231,7 +231,7 @@ export default function ClubsTab() {
                             <input placeholder="Название" value={(assignForm[cl.id]?.title)||""} onChange={(e)=>setAssignForm(prev=>({ ...prev, [cl.id]: { ...(prev[cl.id]||{ title:"" }), title: e.target.value } }))} className="bg-[#0c0c10] border border-[#2a2a35] rounded-lg px-2 py-2" />
                             <input type="date" value={(assignForm[cl.id]?.dueAt)||""} onChange={(e)=>setAssignForm(prev=>({ ...prev, [cl.id]: { ...(prev[cl.id]||{ title:"" }), dueAt: e.target.value } }))} className="bg-[#0c0c10] border border-[#2a2a35] rounded-lg px-2 py-2" />
                             <input placeholder="Описание (опц.)" value={(assignForm[cl.id]?.description)||""} onChange={(e)=>setAssignForm(prev=>({ ...prev, [cl.id]: { ...(prev[cl.id]||{ title:"" }), description: e.target.value } }))} className="bg-[#0c0c10] border border-[#2a2a35] rounded-lg px-2 py-2" />
-                            <button onClick={async()=>{ const payload=assignForm[cl.id]; if(!payload?.title?.trim()) return; try { await apiFetch(`/api/clubs/classes/${cl.id}/assignments`,{ method: 'POST', body: JSON.stringify({ title: payload.title.trim(), description: payload.description?.trim()||undefined, dueAt: payload.dueAt||undefined })}); toast({ title: "Задание создано" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось создать", variant: "destructive" as any }) } setAssignForm(prev=>{ const n={...prev}; delete n[cl.id]; return n}); const list = await apiFetch<any[]>(`/api/clubs/classes/${cl.id}/assignments`); setAssignments(prev=>({ ...prev, [cl.id]: list })); }} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-2">Создать</button>
+                            <button onClick={async()=>{ const payload=assignForm[cl.id]; if(!payload?.title?.trim()) return; try { await apiFetch(`/api/clubs/classes/${cl.id}/assignments`,{ method: 'POST', body: JSON.stringify({ title: payload.title.trim(), description: payload.description?.trim()||undefined, dueAt: payload.dueAt||undefined })}); toast({ title: "Задание создано" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось создать", variant: "destructive" as any }) } setAssignForm(prev=>{ const n={...prev}; delete n[cl.id]; return n}); const list = await apiFetch<any[]>(`/api/clubs/classes/${cl.id}/assignments`); setAssignments(prev=>({ ...prev, [cl.id]: list })); }} className="rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2">Создать</button>
                           </div>
                           <div className="space-y-1">
                             {((assignments[cl.id]||[]).length===0) && <div className="text-white/60 text-sm">Нет заданий</div>}
@@ -240,8 +240,8 @@ export default function ClubsTab() {
                                 <div className="flex items-center justify-between text-sm">
                                   <div>{a.title}{a.dueAt?` — до ${new Date(a.dueAt).toLocaleDateString()}`:""}</div>
                                   <div className="flex gap-2">
-                                    <button onClick={async()=>{ try{ const list = await apiFetch<any[]>(`/api/clubs/assignments/${a.id}/submissions`); setSubs(prev=>({ ...prev, [a.id]: list })); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить ответы", variant: "destructive" as any }) } }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Проверить</button>
-                                    <button onClick={async()=>{ const mine = mySub[a.id]||{}; const payload={ answerText: (mine.answerText||"").trim()||undefined, attachmentUrl: (mine.attachmentUrl||"").trim()||undefined }; try{ await apiFetch(`/api/clubs/assignments/${a.id}/submissions`, { method: 'POST', body: JSON.stringify(payload) }); toast({ title: "Ответ отправлен" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось отправить", variant: "destructive" as any }) } }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Отправить ответ</button>
+                                    <button onClick={async()=>{ try{ const list = await apiFetch<any[]>(`/api/clubs/assignments/${a.id}/submissions`); setSubs(prev=>({ ...prev, [a.id]: list })); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить ответы", variant: "destructive" as any }) } }} className="text-xs rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-1">Проверить</button>
+                                    <button onClick={async()=>{ const mine = mySub[a.id]||{}; const payload={ answerText: (mine.answerText||"").trim()||undefined, attachmentUrl: (mine.attachmentUrl||"").trim()||undefined }; try{ await apiFetch(`/api/clubs/assignments/${a.id}/submissions`, { method: 'POST', body: JSON.stringify(payload) }); toast({ title: "Ответ отправлен" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось отправить", variant: "destructive" as any }) } }} className="text-xs rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-1">Отправить ответ</button>
                                     <button onClick={async()=>{ try{ await apiFetch(`/api/clubs/assignments/${a.id}`, { method: 'DELETE' }); toast({ title: "Задание удалено" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось удалить", variant: "destructive" as any }) } const list = await apiFetch<any[]>(`/api/clubs/classes/${cl.id}/assignments`); setAssignments(prev=>({ ...prev, [cl.id]: list })); }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Удалить</button>
                                   </div>
                                 </div>
@@ -257,7 +257,7 @@ export default function ClubsTab() {
                                         <div className="col-span-2">{s.student.fullName || s.student.email}</div>
                                         <input type="number" min={0} max={100} value={gradeForm[s.id]?.grade ?? (s.grade ?? "")} onChange={(e)=>setGradeForm(prev=>({ ...prev, [s.id]: { ...(prev[s.id]||{}), grade: e.target.value? Number(e.target.value): undefined } }))} className="bg-[#0c0c10] border border-[#2a2a35] rounded-lg px-2 py-2" />
                                         <input placeholder="Фидбек" value={gradeForm[s.id]?.feedback ?? (s.feedback ?? "")} onChange={(e)=>setGradeForm(prev=>({ ...prev, [s.id]: { ...(prev[s.id]||{}), feedback: e.target.value } }))} className="bg-[#0c0c10] border border-[#2a2a35] rounded-lg px-2 py-2" />
-                                        <button onClick={async()=>{ const gf=gradeForm[s.id]||{}; try{ await apiFetch(`/api/clubs/submissions/${s.id}/grade`, { method: 'PATCH', body: JSON.stringify({ grade: gf.grade, feedback: gf.feedback }) }); toast({ title: "Оценка сохранена" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось сохранить оценку", variant: "destructive" as any }) } const list = await apiFetch<any[]>(`/api/clubs/assignments/${a.id}/submissions`); setSubs(prev=>({ ...prev, [a.id]: list })); }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-2">Оценить</button>
+                                        <button onClick={async()=>{ const gf=gradeForm[s.id]||{}; try{ await apiFetch(`/api/clubs/submissions/${s.id}/grade`, { method: 'PATCH', body: JSON.stringify({ grade: gf.grade, feedback: gf.feedback }) }); toast({ title: "Оценка сохранена" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось сохранить оценку", variant: "destructive" as any }) } const list = await apiFetch<any[]>(`/api/clubs/assignments/${a.id}/submissions`); setSubs(prev=>({ ...prev, [a.id]: list })); }} className="text-xs rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2">Оценить</button>
                                       </div>
                                     ))}
                                   </div>
@@ -301,7 +301,7 @@ export default function ClubsTab() {
                             <button onClick={async()=>{
                               try { await apiFetch(`/api/clubs/classes/${cl.id}/schedule`,{ method:"POST", body: JSON.stringify({ ...sched }) }); toast({ title: "Слот добавлен" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось добавить", variant: "destructive" as any }) }
                               await load()
-                            }} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-2">Добавить</button>
+                            }} className="rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2">Добавить</button>
                           </div>
                           <div className="text-white/60 text-xs mt-2 space-y-1">
                             <div className="text-white/80">Имеющиеся слоты:</div>
@@ -337,7 +337,7 @@ export default function ClubsTab() {
                                 }
                               }
                               if (Object.keys(draftEntries).length) setAttendanceDraft(prev=>({ ...draftEntries, ...prev }))
-                            }} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-2">Сгенерировать</button>
+                            }} className="rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2">Сгенерировать</button>
                             <div className="text-white/60 text-xs inline-flex items-center gap-1"><Clock className="w-3 h-3" />Занятий: {classSessions.length}</div>
                           </div>
                         </div>
@@ -374,12 +374,12 @@ export default function ClubsTab() {
                                             const d = attendanceDraft[key] || {}
                                             const next = { ...d, [u.id]: { status: "present", feedback: fb } }
                                             setAttendanceDraft(prev=>({ ...prev, [key]: next }))
-                                          }} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-2 flex items-center gap-1"><Check className="w-3 h-3"/>Пришёл</button>
+                                          }} className="rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2 flex items-center gap-1"><Check className="w-3 h-3"/>Пришёл</button>
                                           <button onClick={()=>{
                                             const d = attendanceDraft[key] || {}
                                             const next = { ...d, [u.id]: { status: "absent", feedback: fb } }
                                             setAttendanceDraft(prev=>({ ...prev, [key]: next }))
-                                          }} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-2 flex items-center gap-1"><X className="w-3 h-3"/>Нет</button>
+                                          }} className="rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-3 py-2 flex items-center gap-1"><X className="w-3 h-3"/>Нет</button>
                                         </div>
                                       </div>
                                     )
@@ -393,7 +393,7 @@ export default function ClubsTab() {
                                       if (marks.length === 0) return
                                       try { await apiFetch(`/api/clubs/sessions/${s.id}/attendance`, { method: "POST", body: JSON.stringify({ marks }) }); toast({ title: "Отметки отправлены" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось отправить", variant: "destructive" as any }) }
                                       setAttendanceDraft(prev=>{ const n = { ...prev }; delete n[key]; return n })
-                                    }} className="rounded-full bg-[#00a3ff] hover:bg-[#0088cc] px-4 py-2 text-black font-medium">Отправить отметки</button>
+                                    }} className="rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-4 py-2 text-black font-medium">Отправить отметки</button>
                                   </div>
                                 )}
                               </div>

@@ -15,7 +15,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={() => reset()}
-            className="rounded-full bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium px-5 py-2 transition-colors"
+            className="rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium px-5 py-2 transition-colors"
           >
             Повторить
           </button>

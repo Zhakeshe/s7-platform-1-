@@ -64,7 +64,7 @@ export default function AdminAchievementsPage() {
       <div className="mb-4">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#00a3ff] hover:bg-[#0088cc] text-black">Выдать достижение</Button>
+            <Button className="bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black">Выдать достижение</Button>
           </DialogTrigger>
           <DialogContent className="bg-[#16161c] border border-[#2a2a35] text-white">
             <DialogHeader>
@@ -116,7 +116,7 @@ export default function AdminAchievementsPage() {
                     toast({ title: 'Ошибка', description: e?.message || 'Не удалось выдать', variant: 'destructive' as any })
                   } finally { setSaving(false) }
                 }}
-                className="bg-[#00a3ff] hover:bg-[#0088cc] text-black"
+                className="bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black"
               >
                 Сохранить
               </Button>
@@ -138,7 +138,7 @@ export default function AdminAchievementsPage() {
               {rows.map((r) => (
                 <div key={r.id} className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                       {(r.user.fullName || r.user.email || "?").charAt(0)}
                     </div>
                     <div>
@@ -183,7 +183,7 @@ export default function AdminAchievementsPage() {
               {winners.map((w) => (
                 <div key={w.id} className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                       {(w.user.fullName || w.user.email || "?").charAt(0)}
                     </div>
                     <div>

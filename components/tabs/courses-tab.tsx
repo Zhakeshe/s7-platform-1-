@@ -166,7 +166,7 @@ export default function CoursesTab({
               key={f.id}
               onClick={() => setFilter(f.id as any)}
               className={`chip transition-all ${
-                filter === f.id ? "bg-[#00a3ff] text-white border-[#00a3ff]" : "hover:bg-surface-2"
+                filter === f.id ? "bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]" : "hover:bg-surface-2"
               }`}
             >
               {f.label}

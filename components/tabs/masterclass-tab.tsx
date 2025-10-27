@@ -61,7 +61,7 @@ export default function MasterclassTab() {
             <button
               key={c}
               onClick={() => setActiveCat(c)}
-              className={`text-xs font-medium px-3 py-1 rounded-full border ${activeCat === c ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+              className={`text-xs font-medium px-3 py-1 rounded-full border ${activeCat === c ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
             >
               {c}
             </button>
@@ -75,12 +75,12 @@ export default function MasterclassTab() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {events.map((e, index) => (
-              <div key={e.id} className="bg-[#16161c] border border-[#636370]/20 rounded-lg p-6 hover:border-[#00a3ff]/50 transition-all duration-200 group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
+              <div key={e.id} className="bg-[#16161c] border border-[#636370]/20 rounded-lg p-6 hover:border-[var(--color-accent-warm)]/50 transition-all duration-200 group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
                 <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-white text-lg font-medium group-hover:text-[#00a3ff] transition-colors duration-200">{e.title}</h3>
+                  <h3 className="text-white text-lg font-medium group-hover:text-[var(--color-accent-warm)] transition-colors duration-200">{e.title}</h3>
                   {e.url && (
                     <a href={e.url} target="_blank" rel="noopener noreferrer" aria-label="Открыть ссылку" className="inline-flex">
-                      <ExternalLink className="w-5 h-5 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
+                      <ExternalLink className="w-5 h-5 text-[#a0a0b0] group-hover:text-[var(--color-accent-warm)] transition-colors duration-200" />
                     </a>
                   )}
                 </div>
@@ -90,7 +90,7 @@ export default function MasterclassTab() {
                   {e.date && <div>Дата: {new Date(e.date).toLocaleString('ru-RU')}</div>}
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <button onClick={() => openRegister(e.id)} className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium">Записаться</button>
+                  <button onClick={() => openRegister(e.id)} className="px-4 py-2 rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium">Записаться</button>
                 </div>
               </div>
             ))}
@@ -101,13 +101,13 @@ export default function MasterclassTab() {
         <div className="mt-12 animate-slide-up" style={{ animationDelay: "900ms" }}>
           <p className="text-[#a0a0b0] mb-4">Есть вопросы? Свяжись с нами:</p>
           <div className="flex gap-4">
-            <a href="https://t.me/s7robotics" target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+            <a href="https://t.me/s7robotics" target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="w-12 h-12 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center hover:bg-[var(--color-accent-warm-hover)] transition-colors duration-200">
               <i className="bi bi-telegram text-white text-xl"></i>
             </a>
-            <a href="https://wa.me/77760457776" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+            <a href="https://wa.me/77760457776" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-12 h-12 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center hover:bg-[var(--color-accent-warm-hover)] transition-colors duration-200">
               <i className="bi bi-whatsapp text-white text-xl"></i>
             </a>
-            <a href="https://www.instagram.com/s7.robotics?igsh=OGkyaW41enI0ZzQz" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
+            <a href="https://www.instagram.com/s7.robotics?igsh=OGkyaW41enI0ZzQz" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-12 h-12 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center hover:bg-[var(--color-accent-warm-hover)] transition-colors duration-200">
               <i className="bi bi-instagram text-white text-xl"></i>
             </a>
           </div>
@@ -139,7 +139,7 @@ export default function MasterclassTab() {
             />
             <div className="grid grid-cols-2 gap-2">
               <button onClick={() => setOpenReg({ open: false })} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={submitRegister} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Отправить</button>
+              <button onClick={submitRegister} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-2">Отправить</button>
             </div>
           </div>
         </div>

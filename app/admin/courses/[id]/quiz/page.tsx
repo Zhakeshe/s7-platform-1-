@@ -141,7 +141,7 @@ export default function CourseQuizAdminPage() {
           </div>
         </div>
         <div className="flex justify-end">
-          <button onClick={create} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium px-4 py-2">Создать</button>
+          <button onClick={create} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium px-4 py-2">Создать</button>
         </div>
       </div>
 

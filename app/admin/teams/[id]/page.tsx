@@ -56,7 +56,7 @@ export default function TeamMembersAdminPage() {
             {members.map((m) => (
               <div key={m.id} className="py-3 flex items-center justify-between animate-slide-up">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                     {(m.user.fullName || m.user.email || "?").charAt(0)}
                   </div>
                   <div>

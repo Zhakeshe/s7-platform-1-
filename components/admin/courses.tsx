@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
@@ -107,7 +107,7 @@ export default function AdminCourses() {
             {(["Все","Легкий","Средний","Сложный"] as string[]).map((lvl)=> (
               <button
                 key={lvl}
-                className={`text-xs px-3 py-1 rounded-full border ${difficulty===lvl ? 'bg-[#00a3ff] text-black border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                className={`text-xs px-3 py-1 rounded-full border ${difficulty===lvl ? 'bg-[var(--color-accent-warm)] text-black border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
                 onClick={()=>setDifficulty(lvl)}
               >
                 {lvl}

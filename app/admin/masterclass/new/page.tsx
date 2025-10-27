@@ -128,7 +128,7 @@ export default function Page() {
                 key={c}
                 type="button"
                 onClick={() => setSelected((s) => ({ ...s, [c]: !s[c] }))}
-                className={`text-xs font-medium px-3 py-1 rounded-full border ${selected[c] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                className={`text-xs font-medium px-3 py-1 rounded-full border ${selected[c] ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
               >
                 {c}
               </button>
@@ -177,7 +177,7 @@ export default function Page() {
           >
             Сохранить черновик
           </button>
-          <button onClick={publish} disabled={loading} className="flex-1 rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors">
+          <button onClick={publish} disabled={loading} className="flex-1 rounded-2xl bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors">
             {loading ? 'Сохраняем...' : 'Опубликовать'}
             <ArrowUpRight className="w-5 h-5" />
           </button>

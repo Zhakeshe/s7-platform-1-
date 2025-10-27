@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Home, BookOpen, Users, GraduationCap, FileText, Wrench, CreditCard, Award, LogOut } from "lucide-react"
@@ -46,7 +46,7 @@ export default function AdminSidebar({ open, onClose }: { open: boolean; onClose
           </div>
         )}
         {typeof user?.xp === 'number' && (
-          <div className="mt-1 text-xs text-[#00a3ff]">XP: {user.xp}</div>
+          <div className="mt-1 text-xs text-[var(--color-accent-warm)]">XP: {user.xp}</div>
         )}
       </div>
       

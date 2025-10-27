@@ -151,7 +151,7 @@ export default function Page() {
               className="w-full flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors animate-slide-up"
             >
               <button onClick={() => openLesson(l.id)} className="flex items-center gap-3 flex-1 text-left">
-                <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">{l.id}</span>
+                <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">{l.id}</span>
                 <span className="text-white/80">{l.title || "Название урока"}</span>
               </button>
               <span className="text-white/60 text-sm">{l.time || "Время курса"}</span>
@@ -164,7 +164,7 @@ export default function Page() {
             className="w-full flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors"
           >
             <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+              <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                 <Plus className="w-4 h-4" />
               </span>
               <span className="text-white/80">Добавить урок</span>

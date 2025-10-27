@@ -38,7 +38,7 @@ export default function Page() {
                 {u.id.slice(-2)}
               </span>
               <span className="text-white font-medium">{u.fullName || u.email}</span>
-              <span className="text-xs rounded-full bg-[#00a3ff] text-black px-2 py-0.5">XP: {u.xp ?? 0}</span>
+              <span className="text-xs rounded-full bg-[var(--color-accent-warm)] text-black px-2 py-0.5">XP: {u.xp ?? 0}</span>
               {u.banned && (
                 <span className="text-xs rounded-full bg-[#ef4444]/20 text-[#ef4444] px-2 py-0.5">Забанен</span>
               )}

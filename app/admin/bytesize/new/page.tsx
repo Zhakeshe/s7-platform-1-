@@ -122,11 +122,11 @@ export default function Page() {
             <div className="text-white/80">РџРµСЂРµС…РѕРґ Рє РєСѓСЂСЃСѓ (РїРѕ СЃРІР°Р№РїСѓ/РєРЅРѕРїРєРµ)</div>
           </div>
           <Select value={linkedCourseId || "none"} onValueChange={(v)=> setLinkedCourseId(v==="none" ? null : v)}>
-            <SelectTrigger className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2.5 text-white hover:border-[#00a3ff]/50 transition-all duration-200 focus:border-[#00a3ff] focus:ring-2 focus:ring-[#00a3ff]/20">
+            <SelectTrigger className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2.5 text-white hover:border-[var(--color-accent-warm)]/50 transition-all duration-200 focus:border-[var(--color-accent-warm)] focus:ring-2 focus:ring-[var(--color-accent-warm)] focus:ring-opacity-20">
               <SelectValue>
                 {linkedCourseId ? (
                   <div className="flex items-center gap-2">
-                    <BookOpen className="w-3.5 h-3.5 text-[#00a3ff]" />
+                    <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent-warm)]" />
                     <span>{courses.find(c=>c.id===linkedCourseId)?.title || "РљСѓСЂСЃ РІС‹Р±СЂР°РЅ"}</span>
                   </div>
                 ) : (
@@ -144,7 +144,7 @@ export default function Page() {
               {courses.map((c)=> (
                 <SelectItem key={c.id} value={c.id} className="text-white/80 hover:bg-[#2a2a35] hover:text-white cursor-pointer transition-colors rounded-lg mx-1 my-0.5">
                   <span className="flex items-center gap-2">
-                    <BookOpen className="w-3.5 h-3.5 text-[#00a3ff]" />
+                    <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent-warm)]" />
                     <span>{c.title}</span>
                   </span>
                 </SelectItem>
@@ -199,7 +199,7 @@ export default function Page() {
                   key={t}
                   type="button"
                   onClick={() => setCategory((prev)=> active ? prev.filter(x=>x!==t) : [...prev, t])}
-                  className={`text-xs font-medium px-3 py-1 rounded-full border ${active ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                  className={`text-xs font-medium px-3 py-1 rounded-full border ${active ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
                 >
                   {t}
                 </button>
@@ -209,7 +209,7 @@ export default function Page() {
           {category.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {category.map((t) => (
-                <span key={t} className="inline-flex items-center gap-2 text-xs bg-[#00a3ff] text-white rounded-full px-3 py-1">
+                <span key={t} className="inline-flex items-center gap-2 text-xs bg-[var(--color-accent-warm)] text-white rounded-full px-3 py-1">
                   {t}
                   <button onClick={()=>setCategory((prev)=>prev.filter(x=>x!==t))} className="text-white/80 hover:text-white">Г—</button>
                 </span>
@@ -250,7 +250,7 @@ export default function Page() {
                   toast({ title: "РћС€РёР±РєР°", description: e?.message || "РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСѓР±Р»РёРєРѕРІР°С‚СЊ", variant: "destructive" as any })
                 }
               }}
-              className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
+              className="rounded-2xl bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
             >
               РћРїСѓР±Р»РёРєРѕРІР°С‚СЊ
               <ArrowUpRight className="w-5 h-5" />

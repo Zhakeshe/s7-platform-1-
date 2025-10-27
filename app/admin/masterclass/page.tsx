@@ -34,7 +34,7 @@ function MCItem({
         </div>
       </div>
       <div className="text-white text-lg font-medium mb-3">{title}</div>
-      <span className="inline-block bg-[#00a3ff] text-white text-xs font-medium px-3 py-1 rounded-full mb-4">
+      <span className="inline-block bg-[var(--color-accent-warm)] text-white text-xs font-medium px-3 py-1 rounded-full mb-4">
         {badge}
       </span>
       <div className="text-[#a0a0b0] text-sm space-y-1">

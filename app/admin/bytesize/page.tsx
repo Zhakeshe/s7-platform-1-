@@ -34,7 +34,7 @@ function BSCard({ id, title, tag, views, openHref, onDelete }: { id?: string; ti
         </div>
       </div>
       <div className="text-xl font-semibold mb-6">{title}</div>
-      <span className="inline-block bg-[#00a3ff] text-white text-xs font-medium px-3 py-1 rounded-full">
+      <span className="inline-block bg-[var(--color-accent-warm)] text-white text-xs font-medium px-3 py-1 rounded-full">
         {tag}
       </span>
     </div>

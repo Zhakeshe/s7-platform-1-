@@ -171,7 +171,7 @@ export default function CourseDetailsTab({
               </div>
               <div className="text-right">
                 {course.price && course.price > 0 ? (
-                  <div className="text-2xl font-bold text-[#00a3ff]">{course.price.toLocaleString()} ₸</div>
+                  <div className="text-2xl font-bold text-[var(--color-accent-warm)]">{course.price.toLocaleString()} ₸</div>
                 ) : (
                   <div className="text-xl font-medium text-[#22c55e]">Бесплатно</div>
                 )}
@@ -183,7 +183,7 @@ export default function CourseDetailsTab({
               <button
                 onClick={handlePurchase}
                 disabled={isPurchasing || !user}
-                className="w-full bg-[#00a3ff] hover:bg-[#0088cc] text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="w-5 h-5" />
                 {isPurchasing ? 'Покупаем...' : 'Купить курс'}
@@ -213,7 +213,7 @@ export default function CourseDetailsTab({
                 } ${!canAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                  <div className="w-7 h-7 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                     {modIdx + 1}
                   </div>
                   <div className="text-left">
@@ -243,7 +243,7 @@ export default function CourseDetailsTab({
                 className={`w-full flex items-center justify-between bg-[#16161c] border border-[#636370]/20 rounded-full px-4 py-3 text-white hover:bg-[#1b1b22] transition-colors ${!canAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                     {lesIdx + 1}
                   </div>
                   <div>
@@ -289,7 +289,7 @@ export default function CourseDetailsTab({
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setShowPayment(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={confirmPaymentSent} disabled={isPurchasing} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2 disabled:opacity-60">
+              <button onClick={confirmPaymentSent} disabled={isPurchasing} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-2 disabled:opacity-60">
                 {isPurchasing ? 'Отправляем...' : 'Я отправил'}
               </button>
             </div>

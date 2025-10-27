@@ -100,7 +100,7 @@ export default function CourseAnalyticsPage() {
             </div>
             <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white">
               <div className="text-white/60 text-xs">Доход</div>
-              <div className="text-2xl font-semibold text-[#00a3ff]">{Number(summary?.revenue || 0).toLocaleString()} ₸</div>
+              <div className="text-2xl font-semibold text-[var(--color-accent-warm)]">{Number(summary?.revenue || 0).toLocaleString()} ₸</div>
             </div>
           </div>
 

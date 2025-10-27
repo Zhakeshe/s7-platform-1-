@@ -196,7 +196,7 @@ export default function CourseLessonTab({
 
         
         <div className="rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-2 text-white inline-flex items-center gap-3">
-          <span className="w-7 h-7 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+          <span className="w-7 h-7 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
             {(lessonIndex >= 0 ? lessonIndex : 0) + 1}
           </span>
           <span className="font-medium">{lesson.title}</span>
@@ -277,7 +277,7 @@ export default function CourseLessonTab({
                                       : 'bg-[#0f0f14] border-[#2a2a35] hover:bg-[#1a1a22]'
                                 }`}
                               >
-                                <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+                                <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items_center justify-center font-semibold">
                                   {idx + 1}
                                 </span>
                                 <span className="text-white/80 flex-1">{opt}</span>
@@ -339,7 +339,7 @@ export default function CourseLessonTab({
                 <span>Контент доступен после покупки</span>
               </div>
               <div>
-                <button onClick={onBack} className="mt-2 rounded-full bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium px-5 py-2">
+                <button onClick={onBack} className="mt-2 rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium px-5 py-2">
                   Купить курс
                 </button>
               </div>

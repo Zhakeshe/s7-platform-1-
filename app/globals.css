@@ -379,6 +379,7 @@ body::before {
   --color-border-hover-1: #2a2a2a;
   --color-border-hover-2: #3a3a3a;
   --color-accent-warm: #00a3ff;
+  --color-accent-warm-hover: #0088cc;
   --color-accent-warm-2: #e0a96d;
   --grad-hero-from: #00a3ff;
   --grad-hero-to: #0088cc;
