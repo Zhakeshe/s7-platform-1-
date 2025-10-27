@@ -1,4 +1,4 @@
-﻿import { ArrowUpRight, Plus, MessageCircle, Phone, Mail, Users, Shield } from "lucide-react"
+import { ArrowUpRight, Plus, MessageCircle, Phone, Mail, Users, Shield } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
@@ -261,32 +261,33 @@ export default function TeamsTab() {
     }
   }
   return (
-    <main className="flex-1 p-8 overflow-y-auto animate-slide-up">
-      
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto">
       <section className="mb-12">
-        <div className="flex items-center justify-between mb-6 animate-slide-up" style={{ animationDelay: "200ms" }}>
-          <h2 className="text-white text-xl font-medium">Команды</h2>
+        <div className="flex items-center justify-between mb-6 animate-fade-in-up">
+          <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white">
+            Наши <span className="italic text-[var(--color-accent-warm)]">команды</span>
+          </h2>
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="px-4 py-2 rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium"
+            className="btn bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium"
           >
             Создать команду
           </button>
         </div>
         {teams.length === 0 ? (
-          <div className="text-white/70 bg-[#16161c] border border-[#636370]/20 rounded-2xl p-8">Пока нет команд</div>
+          <div className="card text-center text-white/70">Пока нет команд</div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
             {teams.map((t, idx) => (
-              <div key={t.id} className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 hover:border-[#636370]/40 transition-all duration-300 group animate-slide-up" style={{ animationDelay: `${300 + idx*50}ms` }}>
+              <div key={t.id} className="card group hover:scale-[1.01] animate-fade-in-up" style={{ animationDelay: `${idx*100}ms` }}>
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-white text-lg font-medium mb-2">{t.name}</h3>
-                    <span className="inline-block bg-[#00a3ff] text-white text-xs font-medium px-3 py-1 rounded-full">Участников: {t.membersCount}</span>
+                    <span className="chip bg-[#00a3ff] text-white border-[#00a3ff]">Участников: {t.membersCount}</span>
                   </div>
                   <ArrowUpRight className="w-6 h-6 text-[#a0a0b0] group-hover:text-white transition-colors duration-300" />
                 </div>
-                <div className="text-[#a0a0b0] text-sm space-y-1 mb-4">
+                <div className="font-mono text-xs text-3 space-y-1 mb-4">
                   {t.description && <div>{t.description}</div>}
                   {t.metadata?.city && <div>Город: {t.metadata.city}</div>}
                   {t.metadata?.educationalInstitution && <div>Уч. заведение: {t.metadata.educationalInstitution}</div>}

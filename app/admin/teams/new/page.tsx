@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useState } from "react"
 import { ArrowUpRight } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -104,7 +104,7 @@ export default function Page() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
       <h2 className="text-white text-xl font-medium mb-6">{isEdit ? "Редактировать команду" : "Добавить команду"}</h2>
 
       <div className="max-w-3xl space-y-5">

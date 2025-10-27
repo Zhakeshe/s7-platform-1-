@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
@@ -97,7 +97,7 @@ export default function CourseQuizAdminPage() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-white text-xl font-medium">Вопросы для курса</h2>
         <button onClick={() => router.push("/admin/courses")} className="text-white/70 hover:text-white">Назад</button>

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import Link from "next/link"
 import { Plus, User, Clock, CheckCircle } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -30,7 +30,7 @@ interface AdminPurchase {
 
 function Card({ children, add, href, loading }: { children: React.ReactNode; add?: boolean; href?: string; loading?: boolean }) {
   return (
-    <div className="relative bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white min-h-[120px]">
+    <div className="relative card text-white min-h-[120px]">
       {loading ? (
         <div className="animate-pulse">
           <div className="h-4 bg-gray-600 rounded w-3/4 mb-2"></div>
@@ -77,7 +77,7 @@ export default function AdminHome() {
   }, [])
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto animate-fade-in">
       
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white mb-2">Добро пожаловать, {user?.fullName || user?.email}</h1>

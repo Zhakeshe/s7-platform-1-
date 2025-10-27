@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { ExternalLink, Plus, Phone, MessageCircle, Mail } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
@@ -44,16 +44,17 @@ export default function S7ToolsTab() {
   }
 
   return (
-    <div className="flex-1 p-8 animate-slide-up">
+    <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto">
       <div className="mb-8">
-        <h2 className="text-white text-xl mb-6">Соревнования и события</h2>
+        <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6 animate-fade-in-up">
+          Соревнования и <span className="italic text-[var(--color-accent-warm)]">события</span>
+        </h2>
 
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {events.map((ev, index) => (
             <div
               key={ev.id}
-              className={`bg-[#16161c] border border-[#636370]/20 text-white rounded-lg p-6 hover:scale-102 transition-all duration-200 group animate-slide-up`}
+              className="card group hover:scale-[1.01] animate-fade-in-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex items-start justify-between mb-4">

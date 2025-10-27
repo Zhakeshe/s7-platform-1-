@@ -120,7 +120,10 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    background: var(--color-bg);
+    color: var(--color-text-1);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    position: relative;
   }
 }
 
@@ -384,6 +387,8 @@ body::before {
   --radius-md: 14px;
   --radius-lg: 20px;
 
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --text-xs: 13px;
   --text-sm: 15px;
   --text-base: 18px;
@@ -395,7 +400,7 @@ body::before {
   --dur-mid: 300ms;
 }
 
-.font-mono { font-family: var(--font-jetbrains-mono) !important; }
+.font-mono { font-family: var(--font-mono) !important; }
 
 @keyframes fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fade-in-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -420,9 +425,46 @@ body::before {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 8px; font-size: 11px; border-radius: 999px;
   background: var(--color-surface-2); border: 1px solid var(--color-border-2);
-  color: #dcdcdc; font-family: var(--font-jetbrains-mono, monospace);
+  color: #dcdcdc; font-family: var(--font-mono);
 }
 
 .link-dotted { position: relative; padding-right: 14px; }
 .link-dotted::after { content: ""; position: absolute; left: 0; right: 14px; bottom: -2px; border-bottom: 1px dotted var(--color-border-1); }
 .link-dotted:hover::after { border-bottom-color: var(--color-border-hover-1); }
+
+.text-h1 { font-size: var(--h1); line-height: 1.1; }
+.text-h2 { font-size: var(--h2); line-height: 1.2; }
+.text-base { font-size: var(--text-base); }
+.text-sm { font-size: var(--text-sm); }
+.text-xs { font-size: var(--text-xs); }
+
+.text-1 { color: var(--color-text-1); }
+.text-2 { color: var(--color-text-2); }
+.text-3 { color: var(--color-text-3); }
+.text-4 { color: var(--color-text-4); }
+.text-5 { color: var(--color-text-5); }
+
+.bg-surface-1 { background: var(--color-surface-1); }
+.bg-surface-2 { background: var(--color-surface-2); }
+.bg-surface-3 { background: var(--color-surface-3); }
+
+.border-1 { border-color: var(--color-border-1); }
+.border-2 { border-color: var(--color-border-2); }
+
+.gradient-hero {
+  background: linear-gradient(to right, var(--grad-hero-from), var(--grad-hero-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card {
+  position: relative;
+  background: var(--color-surface-1);
+  border: 1px dashed var(--color-border-1);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  overflow: hidden;
+  transition: border-color var(--dur-mid) ease-out;
+}
+.card:hover { border-color: var(--color-border-hover-1); }

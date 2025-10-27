@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Info, Play, Image, Lock, FileText } from "lucide-react"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
@@ -60,15 +60,15 @@ export default function CourseLessonTab({
   }, [course?.id, course?.price, user?.id])
   if (!course || moduleId == null || lessonId == null) {
     return (
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-6 md:p-8 bg-dots-pattern relative z-10">
         <button
           onClick={onBack}
-          className="text-white/80 hover:text-white transition-colors inline-flex items-center gap-2 mb-4"
+          className="btn mb-4"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span>К курсу</span>
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          К курсу
         </button>
-        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white">
+        <div className="card text-white">
           Не удалось загрузить урок.
         </div>
       </div>

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useMemo, useState, useEffect } from "react"
 import { ArrowUpRight, LogIn, Trash } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -482,12 +482,13 @@ export default function Page() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
-      <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+      <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
+        Создать <span className="italic text-[var(--color-accent-warm)]">курс</span>
+      </h2>
 
       <div className="max-w-2xl space-y-5">
-        
-        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-5 text-white relative">
+        <div className="card relative">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}

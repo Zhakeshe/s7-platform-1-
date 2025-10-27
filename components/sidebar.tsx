@@ -70,12 +70,12 @@ export default function Sidebar({
       )}
 
       <div
-        className={`sidebar-container bg-[#0b0b0b] border-r border-[#1f1f1f] flex flex-col transition-all duration-300 ease-in-out
+        className={`sidebar-container bg-surface-1 border-r border-1 flex flex-col transition-all duration-300 ease-in-out
         ${isCollapsed ? "w-16" : "w-64"}
         ${isMobileMenuOpen ? "fixed inset-y-0 left-0 z-50 w-64 animate-slide-in-left" : "hidden md:flex md:fixed md:inset-y-0 md:left-0 md:z-30"}`}
       >
         <div
-          className={`${isCollapsed ? "p-3" : "p-6"} border-b border-[#1f1f1f] flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}
+          className={`${isCollapsed ? "p-3" : "p-6"} border-b border-1 flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}
         >
           <Image
             src="/logo-s7.png"
@@ -87,7 +87,7 @@ export default function Sidebar({
           {!isCollapsed && (
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-[#a7a7a7] hover:text-white transition-colors duration-200 hover:bg-[#141414] rounded-lg p-1 hidden md:block"
+              className="text-3 hover:text-white transition-colors duration-200 hover:bg-surface-2 rounded-lg p-1 hidden md:block"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -95,10 +95,10 @@ export default function Sidebar({
         </div>
 
         {isCollapsed && (
-          <div className="p-2 border-b border-[#1f1f1f] hidden md:block">
+          <div className="p-2 border-b border-1 hidden md:block">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="w-full text-[#a7a7a7] hover:text-white transition-colors duration-200 hover:bg-[#141414] rounded-lg p-2 flex justify-center"
+              className="w-full text-3 hover:text-white transition-colors duration-200 hover:bg-surface-2 rounded-lg p-2 flex justify-center"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -122,10 +122,10 @@ export default function Sidebar({
                     }
                     setIsMobileMenuOpen(false)
                   }}
-                  className={`group relative flex items-center ${isCollapsed ? "justify-center p-3" : "space-x-3 px-4 py-3"} rounded-lg transition-all duration-200 cursor-pointer animate-slide-up ${
+                  className={`group relative flex items-center ${isCollapsed ? "justify-center p-3" : "space-x-3 px-4 py-3"} rounded-full transition-all duration-200 cursor-pointer animate-fade-in ${
                     isActive
-                      ? "bg-[#141414] border border-[#2a2a2a] text-white"
-                      : "text-[#a7a7a7] hover:text-white hover:bg-[#141414]"
+                      ? "bg-surface-2 border border-1 text-white"
+                      : "text-3 hover:text-white hover:bg-surface-2"
                   }`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
@@ -145,7 +145,7 @@ export default function Sidebar({
                   )}
 
                   {isCollapsed && !isMobileMenuOpen && (
-                    <div className="absolute left-full ml-2 px-2 py-1 bg-[#141414] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    <div className="absolute left-full ml-2 px-3 py-1 bg-surface-2 border border-1 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 font-mono">
                       {item.label}
                     </div>
                   )}

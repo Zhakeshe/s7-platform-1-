@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Image, Upload, Trash, Bold, Italic, Heading2, List } from "lucide-react"
@@ -293,7 +293,7 @@ export default function Page() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
       <div className="mb-4">
         <button
           onClick={() => { if (course) { try { writeDraftBy(draftKey, course) } catch {} } router.push(`/admin/courses/new/${moduleId}${qs}`) }}

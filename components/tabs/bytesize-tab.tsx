@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useRef, useState } from "react"
 import { Heart, Share2, ArrowUpRight } from "lucide-react"
 import { apiFetch } from "@/lib/api"
@@ -112,12 +112,12 @@ export default function ByteSizeTab() {
   }
 
   if (loading) {
-    return <div className="flex-1 p-8 text-white/70">Загрузка...</div>
+    return <div className="flex-1 p-8 text-white/70 bg-dots-pattern">Загрузка...</div>
   }
 
   if (items.length === 0) {
     return (
-      <div className="flex-1 p-8">
+      <div className="flex-1 overflow-y-hidden relative bg-black bg-dots-pattern">
         <div className="text-center text-white/70 bg-[#16161c] border border-[#636370]/20 rounded-2xl p-10">
           Пока нет видео
         </div>

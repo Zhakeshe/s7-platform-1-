@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { ArrowUpRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "@/hooks/use-toast"
@@ -120,7 +120,10 @@ export default function Page({ params }: { params: { id: string } }) {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+      <h1 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
+        <span className="italic text-[var(--color-accent-warm)]">{name}</span>
+      </h1>
       <div className="max-w-4xl space-y-4">
         
         <div className="flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-2 py-2 text-white">

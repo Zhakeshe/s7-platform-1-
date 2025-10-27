@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { ArrowUpRight, Trash2 } from "lucide-react"
@@ -24,7 +24,7 @@ function MCItem({
   onView?: () => void
 }) {
   return (
-    <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative animate-slide-up">
+    <div className="card text-white relative animate-fade-in-up">
       <div className="absolute top-4 right-4 text-white/70">
         <div className="flex items-center gap-2">
           <button onClick={onDelete} className="p-1 rounded hover:bg-[#2a2a35]" title="Удалить">

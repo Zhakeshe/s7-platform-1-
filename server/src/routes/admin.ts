@@ -1,4 +1,4 @@
-﻿import { Router, type Response, type Request } from "express"
+import { Router, type Response, type Request } from "express"
 import path from "path"
 import { env } from "../env"
 import { z } from "zod"
@@ -529,6 +529,9 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
   let nextModuleOrder = existing.modules.length
   const syncParam = String((req.query as any)?.sync || "").toLowerCase()
   const syncIds = syncParam === "ids" || syncParam === "true"
+  // Only delete missing entities if explicitly requested via purge/delete flag
+  const purgeParam = String((req.query as any)?.purge || (req.query as any)?.delete || "").toLowerCase()
+  const deleteMissing = purgeParam === "1" || purgeParam === "true" || purgeParam === "yes" || purgeParam === "purge"
 
   const existingModulesByOrder = new Map<number, any>(
     (existing.modules || []).map((m) => [Number(m.orderIndex), m])
@@ -547,10 +550,10 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
       }
     }
   }
-  const modulesToDeleteIds = syncIds
+  const modulesToDeleteIds = syncIds && deleteMissing
     ? (existing.modules || []).filter((m) => !keepModuleIds.has(m.id)).map((m) => m.id)
     : []
-  const finalTotalModules = (existing.modules.length - modulesToDeleteIds.length) + newModulesToCreateCount
+  const finalTotalModules = (existing.modules.length - (deleteMissing ? modulesToDeleteIds.length : 0)) + newModulesToCreateCount
 
   ops.push(
     prisma.course.update({
@@ -610,12 +613,14 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
           const targetOrder = lesson.orderIndex ?? lessonIndex
           const sameOrder = (prevModule.lessons || []).find((l) => Number(l.orderIndex) === Number(targetOrder))
           if (sameOrder) {
-            ops.push(
-              prisma.lesson.updateMany({
-                where: { moduleId: prevModule.id, orderIndex: { gte: targetOrder } },
-                data: { orderIndex: { increment: 1 } },
-              })
-            )
+            const _shiftPrev = (prevModule.lessons || [])
+              .filter((l: any) => Number(l.orderIndex) >= Number(targetOrder))
+              .sort((a: any, b: any) => Number(b.orderIndex) - Number(a.orderIndex))
+            for (const row of _shiftPrev) {
+              ops.push(
+                prisma.lesson.update({ where: { id: row.id }, data: { orderIndex: Number(row.orderIndex) + 1 } })
+              )
+            }
             ops.push(
               prisma.lesson.create({
                 data: {
@@ -660,12 +665,14 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
       const targetModuleOrder = module.orderIndex ?? moduleIndex
       const sameModule = (existing.modules || []).find((m) => Number(m.orderIndex) === Number(targetModuleOrder))
       if (sameModule) {
-        ops.push(
-          prisma.courseModule.updateMany({
-            where: { courseId, orderIndex: { gte: targetModuleOrder } },
-            data: { orderIndex: { increment: 1 } },
-          })
-        )
+        const _shiftMods = (existing.modules || [])
+          .filter((m: any) => Number(m.orderIndex) >= Number(targetModuleOrder))
+          .sort((a: any, b: any) => Number(b.orderIndex) - Number(a.orderIndex))
+        for (const row of _shiftMods) {
+          ops.push(
+            prisma.courseModule.update({ where: { id: row.id }, data: { orderIndex: Number(row.orderIndex) + 1 } })
+          )
+        }
         ops.push(
           prisma.courseModule.create({
             data: {
@@ -724,7 +731,7 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
     }
   }
 
-  if (syncIds) {
+  if (syncIds && deleteMissing) {
     if (modulesToDeleteIds.length > 0) {
       ops.push(prisma.courseModule.deleteMany({ where: { id: { in: modulesToDeleteIds } } }))
     }

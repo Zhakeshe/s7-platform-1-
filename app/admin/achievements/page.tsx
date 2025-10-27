@@ -56,8 +56,10 @@ export default function AdminAchievementsPage() {
   }, [])
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
-      <h1 className="text-white text-2xl font-bold mb-6">Достижения участников</h1>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+      <h1 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
+        Достижения <span className="italic text-[var(--color-accent-warm)]">участников</span>
+      </h1>
 
       <div className="mb-4">
         <Dialog open={open} onOpenChange={setOpen}>

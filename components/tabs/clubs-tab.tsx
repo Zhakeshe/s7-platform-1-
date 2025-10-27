@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
 import { Plus, Calendar, MapPin, Users, Check, X, Clock } from "lucide-react"
@@ -80,33 +80,32 @@ export default function ClubsTab() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up space-y-6">
-      <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 space-y-6 max-w-[1400px] mx-auto">
+      <section className="card">
         <div className="flex items-center gap-3 mb-3">
           <Plus className="w-5 h-5" />
-          <div className="font-semibold">Создать кружок</div>
+          <div className="font-semibold text-lg">Создать кружок</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Название" className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl px-3 py-2" />
-          <input value={location} onChange={(e)=>setLocation(e.target.value)} placeholder="Локация" className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl px-3 py-2" />
-          <input value={desc} onChange={(e)=>setDesc(e.target.value)} placeholder="Описание (необязательно)" className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl px-3 py-2" />
+          <input value={name} onChange={(e)=>setName(e.target.value)} placeholder="Название" className="bg-surface-2 border border-1 rounded-[var(--radius-md)] px-3 py-2 text-white outline-none focus:border-[var(--color-border-hover-1)] transition-colors" />
+          <input value={location} onChange={(e)=>setLocation(e.target.value)} placeholder="Локация" className="bg-surface-2 border border-1 rounded-[var(--radius-md)] px-3 py-2 text-white outline-none focus:border-[var(--color-border-hover-1)] transition-colors" />
+          <input value={desc} onChange={(e)=>setDesc(e.target.value)} placeholder="Описание (необязательно)" className="bg-surface-2 border border-1 rounded-[var(--radius-md)] px-3 py-2 text-white outline-none focus:border-[var(--color-border-hover-1)] transition-colors" />
         </div>
         <div className="mt-3">
-          <button onClick={createClub} disabled={creating || !name.trim()} className="rounded-full bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium px-5 py-2">Создать</button>
+          <button onClick={createClub} disabled={creating || !name.trim()} className="btn bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium">Создать</button>
         </div>
       </section>
 
       <section className="space-y-3">
-        <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 bg-[#1b1b22] border border-[#2a2a35] text-white/80">
-          <Calendar className="w-4 h-4" />
-          <span>Мои кружки</span>
-        </div>
+        <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-4">
+          Мои <span className="italic text-[var(--color-accent-warm)]">кружки</span>
+        </h2>
         {loading && <div className="text-white/60">Загрузка...</div>}
         {!loading && clubs.length === 0 && (
           <div className="text-white/60">Кружков пока нет</div>
         )}
         {!loading && clubs.map((c) => (
-          <div key={c.id} className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-2">
+          <div key={c.id} className="card space-y-2">
             <div className="text-lg font-semibold">{c.name}</div>
             {c.location && (
               <div className="text-white/70 text-sm inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{c.location}</div>

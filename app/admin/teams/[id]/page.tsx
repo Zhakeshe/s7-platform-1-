@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { apiFetch } from "@/lib/api"
@@ -41,10 +41,12 @@ export default function TeamMembersAdminPage() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
-      <h1 className="text-white text-2xl font-bold mb-6">Участники команды</h1>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+      <h1 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
+        Участники <span className="italic text-[var(--color-accent-warm)]">команды</span>
+      </h1>
 
-      <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4">
+      <div className="card">
         {loading ? (
           <div className="text-white/70">Загрузка...</div>
         ) : members.length === 0 ? (

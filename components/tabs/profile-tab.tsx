@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { User as UserIcon, Trophy, ExternalLink, Plus } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth/auth-context"
@@ -63,13 +63,9 @@ export default function ProfileTab() {
     )
   }
   return (
-    <div className="flex-1 p-4 md:p-8 animate-slide-up">
+    <div className="flex-1 p-6 md:p-8 bg-dots-pattern relative z-10">
       <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
-        
-        <div
-          className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
-          style={{ animationDelay: "100ms" }}
-        >
+        <div className="card animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#00a3ff] to-[#0080cc] rounded-full flex items-center justify-center">
               <UserIcon className="w-8 h-8 md:w-10 md:h-10 text-white" />
@@ -77,7 +73,7 @@ export default function ProfileTab() {
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
                 <h2 className="text-white text-xl md:text-2xl font-medium">{user?.fullName || "Пользователь"}</h2>
-                <span className="bg-[#00a3ff] text-white px-3 py-1 rounded-full text-sm font-medium w-fit">
+                <span className="chip bg-[#00a3ff] text-white border-[#00a3ff] w-fit">
                   {user?.level ?? 1} Уровень
                 </span>
               </div>

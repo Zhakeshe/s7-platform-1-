@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { ArrowLeft, BadgeInfo, LogIn, ShoppingCart, CheckCircle, ShieldAlert, Copy } from "lucide-react"
@@ -126,22 +126,22 @@ export default function CourseDetailsTab({
     }
   }
 
-  if (!course) {
+  if (!course && !fullCourse) {
     return (
-      <div className="flex-1 p-8">
-        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white flex items-center gap-3">
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto">
+        <div className="card flex items-center gap-3">
           <BadgeInfo className="w-5 h-5 text-[#a0a0b0]" />
-          <span>Курс не найден. Вернитесь назад и выберите курс.</span>
+          <span className="text-white/70">Курс не найден</span>
         </div>
-      </div>
+      </main>
     )
   }
 
-  const viewCourse = fullCourse || course
+  const viewCourse = fullCourse || course!
   const activeModule = viewCourse.modules.find((m) => String(m.id) === String(activeModuleId)) || viewCourse.modules[0]
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto animate-fade-in">
       
       <div className="mb-6 flex items-center gap-2 text-white">
         <button

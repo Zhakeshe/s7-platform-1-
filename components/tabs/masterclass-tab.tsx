@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useEffect, useState } from "react"
 import { ExternalLink, Phone, MessageCircle, Mail } from "lucide-react"
 import { apiFetch } from "@/lib/api"
@@ -51,9 +51,11 @@ export default function MasterclassTab() {
   }
 
   return (
-    <div className="flex-1 p-8 animate-slide-up">
+    <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto">
       <div className="mb-8">
-        <h2 className="text-white text-xl mb-6">Мастер-классы</h2>
+        <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6 animate-fade-in-up">
+          Мастер<span className="italic text-[var(--color-accent-warm)]">классы</span>
+        </h2>
         <div className="flex items-center gap-2 mb-6">
           {categories.map((c) => (
             <button
