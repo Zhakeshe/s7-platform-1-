@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
@@ -103,7 +103,7 @@ export default function CourseQuizAdminPage() {
         <button onClick={() => router.push("/admin/courses")} className="text-white/70 hover:text-white">Назад</button>
       </div>
 
-      {/* selectors */}
+      
       {course && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <select value={moduleId} onChange={(e)=>{ setModuleId(e.target.value); const first = course.modules.find(m=>m.id===e.target.value)?.lessons?.[0]?.id || ""; setLessonId(first); }} className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 text-white">
@@ -116,7 +116,7 @@ export default function CourseQuizAdminPage() {
         </div>
       )}
 
-      {/* Create form */}
+      
       <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-5 text-white space-y-4">
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Текст вопроса" className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
         <div className="space-y-2">
@@ -145,7 +145,7 @@ export default function CourseQuizAdminPage() {
         </div>
       </div>
 
-      {/* List */}
+      
       <div className="mt-6 space-y-3">
         {loading ? (
           <div className="text-white/60">Загрузка...</div>

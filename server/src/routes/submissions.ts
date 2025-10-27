@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express"
+﻿import { Router, type Request, type Response } from "express"
 import { z } from "zod"
 import { prisma } from "../db"
 import { requireAuth } from "../middleware/auth"
@@ -13,17 +13,14 @@ const competitionSubmissionSchema = z.object({
   venue: z.string().optional(),
   placement: z.string().optional(),
   eventDate: z.union([z.string(), z.date()]).optional(),
-  // allow any string; we'll sanitize to http(s) on save
   imageUrl: z.string().optional(),
 })
 
-// List my submissions
 router.get("/competitions/mine", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const list = await prisma.competitionSubmission.findMany({ where: { userId: req.user!.id }, orderBy: { createdAt: "desc" } })
   res.json(list)
 })
 
-// Create new competition submission (pending)
 router.post("/competitions", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const parsed = competitionSubmissionSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })

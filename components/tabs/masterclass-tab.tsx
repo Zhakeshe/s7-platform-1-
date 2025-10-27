@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useState } from "react"
 import { ExternalLink, Phone, MessageCircle, Mail } from "lucide-react"
 import { apiFetch } from "@/lib/api"
@@ -95,7 +95,7 @@ export default function MasterclassTab() {
           </div>
         )}
 
-        {/* Contact Section */}
+        
         <div className="mt-12 animate-slide-up" style={{ animationDelay: "900ms" }}>
           <p className="text-[#a0a0b0] mb-4">Есть вопросы? Свяжись с нами:</p>
           <div className="flex gap-4">
@@ -112,7 +112,7 @@ export default function MasterclassTab() {
         </div>
       </div>
 
-      {/* Single global modal rendered once */}
+      
       {openReg.open && (
         <div
           className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in"

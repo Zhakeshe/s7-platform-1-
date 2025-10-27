@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { ArrowUpRight } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -20,7 +20,7 @@ export default function Page() {
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
-      {/* Header row */}
+      
       <div className="flex items-center justify-between mb-6 gap-4 max-w-5xl">
         <h2 className="text-white text-xl font-medium">Пользователи</h2>
         <input

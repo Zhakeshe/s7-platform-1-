@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { ArrowUpRight, Trash2 } from "lucide-react"
@@ -129,7 +129,7 @@ export default function Page() {
           </div>
         </Link>
       </div>
-      {/* Registrations modal */}
+      
       {openRegs.open && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="w-full max-w-xl bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white">

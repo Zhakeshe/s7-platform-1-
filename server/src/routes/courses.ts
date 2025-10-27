@@ -1,4 +1,4 @@
-function toApiMedia(u?: string | null): string | undefined {
+﻿function toApiMedia(u?: string | null): string | undefined {
   try {
     if (!u) return undefined
     const s = String(u)
@@ -30,7 +30,6 @@ const purchaseSchema = z.object({
   metadata: z.record(z.any()).optional(),
 })
 
-// Course analytics (admin)
 router.get("/:courseId/analytics", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   if (req.user?.role !== "ADMIN") return res.status(403).json({ error: "Admin only" })
   const { courseId } = req.params
@@ -47,7 +46,6 @@ router.get("/:courseId/analytics", requireAuth, async (req: AuthenticatedRequest
   res.json({ totalPurchases, approvedPurchases, pendingPurchases, enrollmentsCount, activeEnrollments, completedEnrollments, revenue: revenueSum })
 })
 
-// ----- Quiz endpoints -----
 const questionSchema = z.object({
   text: z.string().min(1),
   options: z.array(z.string().min(1)).min(2).max(8),
@@ -57,14 +55,12 @@ const questionSchema = z.object({
   lessonId: z.string().optional(),
 })
 
-// Create question (admin)
 router.post("/:courseId/questions", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   if (req.user?.role !== "ADMIN") return res.status(403).json({ error: "Admin only" })
   const { courseId } = req.params
   const parsed = questionSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
   const data = parsed.data
-  // verify course exists
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } })
   if (!course) return res.status(404).json({ error: "Course not found" })
   const q = await (prisma as any).courseQuestion.create({
@@ -82,13 +78,11 @@ router.post("/:courseId/questions", requireAuth, async (req: AuthenticatedReques
   res.status(201).json(q)
 })
 
-// List questions for a course (optionally filter by moduleId/lessonId)
 router.get("/:courseId/questions", optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { courseId } = req.params
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true, isFree: true, price: true } })
   if (!course) return res.status(404).json({ error: "Course not found" })
 
-  // Admins can always view questions; others must have access
   if (req.user?.role !== "ADMIN") {
     const hasAccess = await userHasCourseAccess(req.user?.id, course)
     if (!hasAccess) return res.status(403).json({ error: "No access" })
@@ -102,7 +96,6 @@ router.get("/:courseId/questions", optionalAuth, async (req: AuthenticatedReques
   res.json(list.map((q: any) => ({ id: q.id, text: q.text, options: q.options, moduleId: q.moduleId, lessonId: q.lessonId })))
 })
 
-// Answer a question
 router.post("/questions/:questionId/answer", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { questionId } = req.params
   const { selectedIndex } = z.object({ selectedIndex: z.number().int().min(0) }).parse(req.body)
@@ -120,7 +113,6 @@ router.post("/questions/:questionId/answer", requireAuth, async (req: Authentica
   res.status(201).json({ isCorrect, answerId: ans.id, correctIndex: q.correctIndex, xpAwarded: awarded })
 })
 
-// Analytics for a course (admin)
 router.get("/:courseId/questions/analytics", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   if (req.user?.role !== "ADMIN") return res.status(403).json({ error: "Admin only" })
   const { courseId } = req.params
@@ -135,7 +127,6 @@ router.get("/:courseId/questions/analytics", requireAuth, async (req: Authentica
   res.json(data)
 })
 
-// Answers listing for a course (admin)
 router.get("/:courseId/questions/answers", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   if (req.user?.role !== "ADMIN") return res.status(403).json({ error: "Admin only" })
   const { courseId } = req.params
@@ -162,7 +153,6 @@ const progressSchema = z.object({
   watchTimeSeconds: z.number().int().nonnegative().optional(),
 })
 
-// Published courses with optional search/filtering
 router.get("/", async (req: Request, res: Response) => {
   const search = (req.query.search as string | undefined)?.trim()
   const filter = (req.query.filter as string | undefined) // 'free' | 'paid' | 'all'
@@ -210,7 +200,6 @@ router.get("/", async (req: Request, res: Response) => {
   )
 })
 
-// Continue list: courses where the user has completed at least 1 lesson
 router.get("/continue", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const enrollments = (await prisma.enrollment.findMany({
     where: { userId: req.user!.id },

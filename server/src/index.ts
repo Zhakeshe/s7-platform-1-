@@ -1,4 +1,4 @@
-import express from "express"
+﻿import express from "express"
 import cors from "cors"
 import helmet from "helmet"
 import rateLimit from "express-rate-limit"
@@ -24,7 +24,6 @@ app.use(helmet())
 app.use(cookieParser())
 app.use(express.json({ limit: "100mb" }))
 app.use(express.urlencoded({ extended: false }))
-// Allow multiple CORS origins via comma-separated env, or reflect all when unset
 const corsOrigin = env.CORS_ORIGIN
   ? env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
   : true
@@ -34,7 +33,6 @@ app.use(
     credentials: true,
   })
 )
-// Behind a single reverse proxy (e.g., Nginx) in production. Avoid permissive boolean `true`.
 app.set("trust proxy", 1)
 app.use(
   rateLimit({
@@ -47,7 +45,6 @@ app.use(
 
 ensureDir(env.MEDIA_DIR).catch((err) => console.error("Failed to ensure media dir", err))
 app.use("/media", express.static(path.resolve(env.MEDIA_DIR)))
-// Also expose under /api to avoid proxy misconfiguration issues
 app.use("/api/media", express.static(path.resolve(env.MEDIA_DIR)))
 
 app.get("/health", async (_req, res) => {
@@ -59,7 +56,6 @@ app.get("/health", async (_req, res) => {
   }
 })
 
-// Alias for health under /api to avoid conflicts with Next routing
 app.get("/api/health", async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useState } from "react"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import { Menu } from "lucide-react"
@@ -33,7 +33,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setCurrentDate(`${day} ${month} ${year}`)
   }, [])
 
-  // Persist sidebar state; default open
   useEffect(() => {
     try {
       const raw = localStorage.getItem("s7_admin_nav_open")

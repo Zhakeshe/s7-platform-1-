@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useState, useEffect, Suspense } from "react"
 import Sidebar from "@/components/sidebar"
 import HomeTab from "@/components/tabs/home-tab"
@@ -82,7 +82,6 @@ function DashboardInner() {
     }
   }, [isMobileMenuOpen])
 
-  // Handle cross-tab event from ByteSize reels: open linked course
   useEffect(() => {
     const onOpenCourse = async (ev: Event) => {
       const detail = (ev as CustomEvent).detail as { courseId?: string } | undefined
@@ -213,13 +212,13 @@ function DashboardInner() {
         onCollapseChange={setIsSidebarCollapsed}
       />
 
-      {/* Main Content */}
+      
       <div
         className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${
           isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
         }`}
       >
-        {/* Header */}
+        
         <header className="bg-[#16161c] border-b border-[#636370]/20 px-4 md:px-8 py-4 md:py-6 flex items-center gap-4 animate-slide-up relative z-10">
           <div className="flex items-center">
             <h1 className="text-white text-xl md:text-2xl font-medium ml-12 md:ml-0">{getTabTitle(activeTab)}</h1>

@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express"
+﻿import { Router, type Request, type Response } from "express"
 import { z } from "zod"
 import { prisma } from "../db"
 import { hashPassword, verifyPassword } from "../utils/password"
@@ -26,11 +26,9 @@ const refreshSchema = z.object({
 
 export const router = Router()
 
-// Development-only auth bypass (no DB). Enable with ENV: DEV_AUTH=1
 const DEV_AUTH = process.env.DEV_AUTH === "1"
 
 if (DEV_AUTH) {
-  // Login with email "1" and password "1" -> ADMIN
   router.post("/login", async (req: Request, res: Response) => {
     const { email, password } = (req.body || {}) as { email?: string; password?: string }
     if (email === "1" && password === "1") {
@@ -51,7 +49,6 @@ if (DEV_AUTH) {
     return res.status(401).json({ error: "Invalid credentials" })
   })
 
-  // Refresh without DB: verify provided refreshToken and rotate
   router.post("/refresh", async (req: Request, res: Response) => {
     const { refreshToken } = (req.body || {}) as { refreshToken?: string }
     if (!refreshToken) return res.status(400).json({ error: "Missing refresh token" })
@@ -65,12 +62,10 @@ if (DEV_AUTH) {
     }
   })
 
-  // Logout is a no-op in dev mode
   router.post("/logout", async (_req: Request, res: Response) => {
     return res.json({ success: true })
   })
 
-  // Current user info without DB
   router.get("/me", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: "Unauthorized" })
     return res.json({
@@ -93,7 +88,6 @@ router.post("/register", async (req: Request, res: Response) => {
   if (existing) return res.status(409).json({ error: "Email already registered" })
 
   const passwordHash = await hashPassword(password)
-  // Bootstrap: first user becomes ADMIN; also special admin email
   const anyAdmin = await prisma.user.findFirst({ where: { role: "ADMIN" } })
   const isBootstrapAdmin = !anyAdmin
   const isSpecialAdmin = email.trim().toLowerCase() === "qynon@mail.ru"
@@ -250,7 +244,6 @@ router.get("/me", requireAuth, async (req: AuthenticatedRequest, res: Response) 
   })
 })
 
-// Update current user's basic fields
 const profileUpdateSchema = z.object({
   fullName: z.string().min(1).optional(),
   age: z.number().int().min(10).max(100).optional(),

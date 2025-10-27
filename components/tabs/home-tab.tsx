@@ -1,4 +1,4 @@
-import { ArrowUpRight, Search } from "lucide-react"
+﻿import { ArrowUpRight, Search } from "lucide-react"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
@@ -29,7 +29,7 @@ export default function HomeTab({
   }, [])
   return (
     <main className="flex-1 p-4 md:p-8 overflow-y-auto animate-slide-up">
-      {/* Continue Section */}
+      
       <section className="mb-8 md:mb-12">
         <h2
           className="text-white text-xl font-medium mb-4 md:mb-6 animate-slide-up"
@@ -72,9 +72,9 @@ export default function HomeTab({
         )}
       </section>
 
-      {/* Events Section removed per request */}
+      
 
-      {/* News Section */}
+      
       <section>
         <h2
           className="text-white text-xl font-medium mb-4 md:mb-6 animate-slide-up"

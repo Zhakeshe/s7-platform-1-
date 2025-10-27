@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useState } from "react"
 import { ArrowUpRight, LogIn } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -22,7 +22,6 @@ export default function Page() {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [customCats, setCustomCats] = useState("")
 
-  // Restore draft
   useEffect(() => {
     try {
       const raw = localStorage.getItem('s7_admin_mc_draft')
@@ -85,7 +84,7 @@ export default function Page() {
       <h2 className="text-white text-xl font-medium mb-6">Новый мастер-класс</h2>
 
       <div className="max-w-2xl space-y-5">
-        {/* Title Card */}
+        
         <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-5 text-white">
           <input
             value={title}
@@ -105,7 +104,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Step: Description */}
+        
         <div className="flex items-center justify-between bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white">
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 rounded-full bg-[#2a2a35] text-white/80 flex items-center justify-center text-xs">1</span>
@@ -120,7 +119,7 @@ export default function Page() {
           placeholder="Текст описания..."
           className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-2xl p-4 text-white outline-none"
         />
-        {/* Categories */}
+        
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-4 text-white">
           <div className="text-white/80 mb-2">Категории</div>
           <div className="flex flex-wrap gap-2 mb-2">
@@ -160,7 +159,7 @@ export default function Page() {
           )}
         </div>
 
-        {/* Draft + Publish */}
+        
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -184,7 +183,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Price toggle */}
+        
         <div className="flex items-center gap-3">
           <span className="text-white/70">Цена</span>
           <div className="rounded-full border border-[#2a2a35] p-1 flex items-center bg-[#0f0f14]">

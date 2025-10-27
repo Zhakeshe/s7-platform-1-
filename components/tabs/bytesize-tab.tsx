@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useRef, useState } from "react"
 import { Heart, Share2, ArrowUpRight } from "lucide-react"
 import { apiFetch } from "@/lib/api"
@@ -67,7 +67,6 @@ export default function ByteSizeTab() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Autoplay/pause current reel
   useEffect(() => {
     if (!containerRef.current) return
     const observer = new IntersectionObserver(

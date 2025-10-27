@@ -1,6 +1,4 @@
-// Central place to configure public social links used across the app
-// TODO: replace placeholders with your real links
-export const social = {
+﻿export const social = {
   telegram: "https://t.me/s7robotics",         // e.g. https://t.me/<username>
   whatsapp: "https://wa.me/77760457776",      // use digits-only for wa.me
   phone: "+77760457776",                      // human-readable phone, used for tel:
@@ -18,7 +16,6 @@ export function linkFor(type: keyof typeof social): string {
     case "email":
       return `mailto:${social.email}`
     case "phone":
-      // strip spaces for tel link
       return `tel:${social.phone.replace(/\s+/g, '')}`
     case "instagram":
       return social.instagram

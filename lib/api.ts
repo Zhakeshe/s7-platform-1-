@@ -1,7 +1,4 @@
-"use client"
-
-// Simple API client with token storage and automatic refresh
-// Assumes backend is available under same origin with nginx proxying
+﻿"use client"
 
 const ACCESS_TOKEN_KEY = "s7.accessToken"
 const REFRESH_TOKEN_KEY = "s7.refreshToken"
@@ -13,7 +10,6 @@ export function getTokens(): Tokens | null {
     const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY)
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
     if (accessToken && refreshToken) return { accessToken, refreshToken }
-    // fallback to cookies if localStorage is empty or unavailable
     const cookieMap = getCookieMap()
     const ca = cookieMap[ACCESS_TOKEN_KEY]
     const cr = cookieMap[REFRESH_TOKEN_KEY]
@@ -28,7 +24,6 @@ export function setTokens(t: Tokens) {
   try {
     localStorage.setItem(ACCESS_TOKEN_KEY, t.accessToken)
     localStorage.setItem(REFRESH_TOKEN_KEY, t.refreshToken)
-    // also persist in cookies (30 days)
     setCookie(ACCESS_TOKEN_KEY, t.accessToken, 30)
     setCookie(REFRESH_TOKEN_KEY, t.refreshToken, 30)
   } catch {}
@@ -43,7 +38,6 @@ export function clearTokens() {
   } catch {}
 }
 
-// --- Cookie helpers ---
 function getCookieMap(): Record<string, string> {
   try {
     return document.cookie
@@ -106,7 +100,6 @@ export async function apiFetch<T = any>(path: string, init: RequestInit = {}): P
   const headers = new Headers(init.headers || {})
   if (!headers.has("content-type") && init.body) headers.set("content-type", "application/json")
   if (tokens?.accessToken) headers.set("authorization", `Bearer ${tokens.accessToken}`)
-  // Prevent any stale caching on client
   if (!headers.has("cache-control")) headers.set("cache-control", "no-cache")
 
   const doFetch = async (): Promise<Response> => fetch(path, { ...init, headers, cache: "no-store" })

@@ -1,6 +1,4 @@
-// Simple IndexedDB wrapper for storing media blobs (video/images/docs) on the client.
-// It returns generated media IDs and can produce object URLs for playback/preview.
-
+﻿
 const DB_NAME = "s7media.v1"
 const STORE = "media"
 

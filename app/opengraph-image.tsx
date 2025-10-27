@@ -1,4 +1,4 @@
-import { ImageResponse } from 'next/og'
+﻿import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
 export const size = { width: 1200, height: 630 }
@@ -35,7 +35,7 @@ export default async function Image() {
               boxShadow: '0 0 0 10px #00a3ff22',
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            
             <img src={logo} alt="S7 Robotics" width={72} height={72} style={{ borderRadius: 999 }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>

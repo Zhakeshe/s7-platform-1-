@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useMemo, useState, useEffect } from "react"
 import { ArrowUpRight, LogIn, Trash } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -108,8 +108,7 @@ export default function Page() {
         setTitle(found.title || "")
         setAuthor(found.author || "")
         if (found.difficulty) setDifficulty(found.difficulty)
-        // Build local numeric ids for routing, keep remote ids in draft
-        const mapped = (found.modules || []).map((m: any, idx: number) => ({ localId: idx + 1, remoteId: m.id, title: m.title, lessons: (m.lessons||[]).map((l:any, li:number)=>({ localId: li+1, remoteId: l.id, title: l.title, time: l.duration })) }))
+        const mapped = (found.modules || []).map((m: any, idx: number) => ({ localId: idx + 1, remoteId: m.remoteId || m.id, title: m.title, lessons: (m.lessons||[]).map((l:any, li:number)=>({ localId: li+1, remoteId: l.remoteId || l.id, title: l.title, time: l.duration })) }))
         setModules(mapped.map((m:any)=>({ id: m.localId, title: m.title })))
         if (typeof found.price === "number" && found.price > 0) {
           setFree(false)
@@ -118,14 +117,12 @@ export default function Page() {
           setFree(true)
           setPrice(0)
         }
-        // seed draft with local+remote ids for module/lesson pages
         const seeded = { courseId: found.id, title: found.title, author: found.author, difficulty: found.difficulty, price: found.price, modules: mapped.map((m:any)=>({ id: m.localId, remoteId: m.remoteId, title: m.title, lessons: m.lessons.map((l:any)=>({ id: l.localId, remoteId: l.remoteId, title: l.title, time: l.time })) })) }
         if (draftKey) {
           localStorage.setItem(draftKey, JSON.stringify(seeded))
         }
         localStorage.setItem("s7_admin_course_draft", JSON.stringify(seeded))
       } else {
-        // Fallback to backend fetch if not in local storage
         apiFetch<any[]>("/api/admin/courses")
           .then((list) => {
             const foundSrv = (list || []).find((c: any) => c.id === editId)
@@ -148,7 +145,6 @@ export default function Page() {
     finally { setHydrated(true) }
   }, [editId, draftKey])
 
-  // Hydrate from draft when creating
   useEffect(() => {
     if (editId || isFresh) return
     try {
@@ -167,7 +163,6 @@ export default function Page() {
     finally { setHydrated(true) }
   }, [editId, isFresh, draftKey])
 
-  // If explicitly opened in fresh mode, clear draft and reset state once
   useEffect(() => {
     if (!isFresh) return
     try {
@@ -197,7 +192,6 @@ export default function Page() {
     setHydrated(true)
   }, [isFresh, draftKey])
 
-  // Persist draft on changes
   useEffect(() => {
     if (!hydrated) return
     try {
@@ -234,7 +228,6 @@ export default function Page() {
     const ok = await confirm({ title: `Удалить модуль ${id}?`, confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
     if (!ok) return
     setModules((prev) => prev.filter((m) => m.id !== id))
-    // draft persistence is handled by useEffect([modules]) below
     try { toast({ title: 'Модуль удалён' } as any) } catch {}
   }
 
@@ -253,8 +246,7 @@ export default function Page() {
   const publish = async () => {
     const ok = await confirm({ title: 'Опубликовать курс?', confirmText: 'Опубликовать', cancelText: 'Отмена' })
     if (!ok) return
-    // Build from draft if exists (contains lessons + rich fields)
-    let finalModules = modules.map((m) => ({ id: m.id, title: m.title, lessons: [{ id: 1, title: "Введение", time: "10:21" }] }))
+    let finalModules = modules.map((m) => ({ id: m.id, title: m.title, lessons: [] as any[] }))
     try {
       const fromKey = draftKey ? localStorage.getItem(draftKey) : null
       const fromGlobal = localStorage.getItem("s7_admin_course_draft")
@@ -282,7 +274,6 @@ export default function Page() {
             videoMediaId: l.videoMediaId || undefined,
             slideMediaIds: l.slideMediaIds || [],
             presentationMediaId: l.presentationMediaId || undefined,
-            // uploaded URLs used for publishing
             videoUrl: l.videoUrl || undefined,
             presentationUrl: l.presentationUrl || undefined,
             slideUrls: l.slideUrls || [],
@@ -292,7 +283,6 @@ export default function Page() {
       }
     } catch {}
 
-    // Ensure media uploaded if only local media IDs exist
     const uploadById = async (mediaId: string): Promise<string> => {
       const rec = await getFile(mediaId)
       if (!rec) throw new Error("Файл не найден")
@@ -349,7 +339,7 @@ export default function Page() {
     }
 
     try {
-      // 1) Send to backend (source of truth)
+      let created: any = null
       try {
         const payload = {
           title: title.trim(),
@@ -359,13 +349,11 @@ export default function Page() {
           isFree: free,
           isPublished: true,
           modules: finalModules.map((m, mi) => ({
-            // do NOT send id to let DB generate unique cuid
-            ...( (m as any).remoteId ? { id: (m as any).remoteId } : {} ),
+            ...( (typeof (m as any).remoteId === 'string' && (m as any).remoteId) ? { id: (m as any).remoteId as string } : {} ),
             title: (m as any).title || `Модуль ${mi + 1}`,
             orderIndex: mi,
             lessons: (m as any).lessons?.map((l: any, li: number) => ({
-              // do NOT send id to avoid PK collisions
-              ...( (l as any).remoteId ? { id: (l as any).remoteId } : {} ),
+              ...( (typeof (l as any).remoteId === 'string' && (l as any).remoteId) ? { id: (l as any).remoteId as string } : {} ),
               title: l.title || `Урок ${li + 1}`,
               duration: l.time || l.duration || undefined,
               orderIndex: li,
@@ -380,16 +368,14 @@ export default function Page() {
             })) || [],
           })),
         }
-        const created = await apiFetch<any>(
-          editId ? `/api/admin/courses/${encodeURIComponent(editId)}` : "/api/admin/courses",
+        created = await apiFetch<any>(
+          editId ? `/api/admin/courses/${encodeURIComponent(editId)}?sync=ids` : "/api/admin/courses",
           { method: editId ? "PUT" : "POST", body: JSON.stringify(payload) }
         )
-        // After creation, post lesson-level questions from draft (if any)
         try {
           const draftRaw = draftKey ? localStorage.getItem(draftKey) : localStorage.getItem("s7_admin_course_draft")
           const draft = draftRaw ? JSON.parse(draftRaw) : null
           if (created?.id && draft && Array.isArray(draft.modules)) {
-            // Build order-indexed maps from created object
             const createdModules = (created.modules || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
             for (let mi = 0; mi < draft.modules.length; mi++) {
               const dMod = draft.modules[mi]
@@ -422,33 +408,69 @@ export default function Page() {
             }
           }
         } catch {}
+        try {
+          const draftRaw = draftKey ? localStorage.getItem(draftKey) : localStorage.getItem("s7_admin_course_draft")
+          const draft = draftRaw ? JSON.parse(draftRaw) : null
+          if (created?.id && draft && Array.isArray(draft.modules)) {
+            const createdModules = (created.modules || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+            for (let mi = 0; mi < draft.modules.length; mi++) {
+              const dMod = draft.modules[mi]
+              const cMod = createdModules[mi]
+              if (!dMod || !cMod) continue
+              dMod.remoteId = cMod.id
+              const createdLessons = (cMod.lessons || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+              const dLessons: any[] = Array.isArray(dMod.lessons) ? dMod.lessons : []
+              for (let li = 0; li < dLessons.length; li++) {
+                const dLesson = dLessons[li]
+                const cLesson = createdLessons[li]
+                if (!dLesson || !cLesson) continue
+                dLesson.remoteId = cLesson.id
+              }
+            }
+            localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
+            if (draftKey) localStorage.setItem(draftKey, JSON.stringify(draft))
+          }
+        } catch {}
       } catch (e: any) {
-        // If backend save fails, continue with legacy local storage as fallback
         console.warn("Backend create course failed:", e?.message)
       }
 
-      // 2) Legacy local storage for backward compatibility
-      // Update legacy admin storage for the Admin UI cards
       const raw = localStorage.getItem("s7_admin_courses")
       const list = raw ? JSON.parse(raw) : []
+      const courseForCards = created?.id
+        ? {
+            id: created.id,
+            title: created.title,
+            difficulty: created.difficulty,
+            author,
+            price: free ? 0 : price,
+            modules: (created.modules || []).map((m: any) => ({ id: m.id, title: m.title, lessons: (m.lessons || []).map((l: any) => ({ id: l.id, title: l.title })) })),
+            published: true,
+          }
+        : newCourse
       if (editId) {
         const idx = list.findIndex((c: any) => c.id === editId)
-        if (idx !== -1) list[idx] = newCourse
-        else list.push(newCourse)
+        if (idx !== -1) list[idx] = courseForCards
+        else list.push(courseForCards)
       } else {
-        // Replace if same slug exists
-        const idx = list.findIndex((c: any) => c.id === newCourse.id)
-        if (idx !== -1) list[idx] = newCourse
-        else list.push(newCourse)
+        const idx = list.findIndex((c: any) => c.id === courseForCards.id)
+        if (idx !== -1) list[idx] = courseForCards
+        else list.push(courseForCards)
       }
       localStorage.setItem("s7_admin_courses", JSON.stringify(list))
 
-      // Also sync to S7DB for consumption in the app
+      try {
+        const fresh = await apiFetch<any[]>("/api/admin/courses")
+        if (Array.isArray(fresh)) {
+          localStorage.setItem("s7_admin_courses", JSON.stringify(fresh))
+        }
+      } catch {}
+
       try {
         const db = listCourses()
-        const i = db.findIndex((c) => c.id === newCourse.id)
-        if (i >= 0) db[i] = newCourse as any
-        else db.push(newCourse as any)
+        const i = db.findIndex((c) => c.id === courseForCards.id)
+        if (i >= 0) db[i] = courseForCards as any
+        else db.push(courseForCards as any)
         saveCourses(db as any)
       } catch {}
 
@@ -464,7 +486,7 @@ export default function Page() {
       <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
 
       <div className="max-w-2xl space-y-5">
-        {/* Title Card */}
+        
         <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-5 text-white relative">
           <input
             value={title}
@@ -508,7 +530,7 @@ export default function Page() {
             )}
           </div>
 
-        {/* Danger Zone: Delete when editing */}
+        
         {isEdit && (
           <div className="pt-2">
             <button
@@ -538,7 +560,7 @@ export default function Page() {
         )}
         </div>
 
-        {/* Modules */}
+        
         {modules.map((m) => (
           <div
             key={m.id}
@@ -590,7 +612,7 @@ export default function Page() {
           <LogIn className="w-5 h-5 text-[#a0a0b0]" />
         </button>
 
-        {/* Draft + Publish */}
+        
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -628,7 +650,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Price toggle */}
+        
         <div className="flex items-center gap-3">
           <span className="text-white/70">Цена</span>
           <div className="rounded-full border border-[#2a2a35] p-1 flex items-center bg-[#0f0f14]">

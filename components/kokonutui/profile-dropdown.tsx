@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
@@ -80,7 +80,7 @@ export default function ProfileDropdown({
                         </div>
                         {menuItems.length > 0 && (
                           <div className="space-y-1">
-                            {/* reserved for future items */}
+                            
                           </div>
                         )}
 

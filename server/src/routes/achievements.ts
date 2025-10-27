@@ -1,11 +1,10 @@
-import { Router, type Request, type Response } from "express"
+﻿import { Router, type Request, type Response } from "express"
 import { prisma } from "../db"
 import { requireAuth } from "../middleware/auth"
 import type { AuthenticatedRequest } from "../types"
 
 export const router = Router()
 
-// Get achievements for the current user
 router.get("/mine", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const list = await prisma.userAchievement.findMany({
     where: { userId: req.user!.id },

@@ -1,8 +1,7 @@
-"use client"
+﻿"use client"
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react"
 import { apiFetch, clearTokens, getTokens, setTokens } from "@/lib/api"
 
-// Keep a minimal User shape compatible with existing UI
 export type Role = "user" | "admin"
 export interface User {
   id: string
@@ -11,7 +10,6 @@ export interface User {
   role: Role
   level?: number
   xp?: number
-  // optional profile extras used across UI
   institution?: string
   primaryRole?: string
   age?: number
@@ -33,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Restore session from tokens and fetch current user
     const tokens = getTokens()
     if (!tokens) { setLoading(false); return }
     apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number }>("/auth/me")
@@ -50,7 +47,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const registerFn = async (email: string, password: string, remember = true) => {
-    // Backend handles hashing and role; use email as fallback fullName
     const body = { email, password, fullName: email }
     const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number } }>(
       "/auth/register",
@@ -101,7 +97,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       )
       setUser({ ...user, fullName: updated.fullName ?? user.fullName })
     } catch {
-      // keep silent for now; UI already shows toast on caller side
     }
   }
 

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { apiFetch } from "@/lib/api"
@@ -27,7 +27,6 @@ export default function TeamMembersAdminPage() {
 
   useEffect(() => {
     if (teamId) load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId])
 
   const updateMember = async (membershipId: string, updates: Partial<{ role: string; status: string }>) => {

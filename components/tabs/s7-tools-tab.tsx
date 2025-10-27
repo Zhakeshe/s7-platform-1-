@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { ExternalLink, Plus, Phone, MessageCircle, Mail } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
@@ -48,7 +48,7 @@ export default function S7ToolsTab() {
       <div className="mb-8">
         <h2 className="text-white text-xl mb-6">Соревнования и события</h2>
 
-        {/* Events Grid */}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {events.map((ev, index) => (
             <div
@@ -70,7 +70,7 @@ export default function S7ToolsTab() {
           ))}
         </div>
 
-        {/* Add Event Section */}
+        
         <div className="mt-12 pt-8 border-t border-[#636370]/20 animate-slide-up" style={{ animationDelay: "600ms" }}>
           <p className="text-[#a0a0b0] mb-4">Проводишь мероприятие и ищешь участников? Опубликуй его:</p>
           <button onClick={() => setOpen(true)} aria-label="Добавить мероприятие" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
@@ -78,7 +78,7 @@ export default function S7ToolsTab() {
           </button>
         </div>
 
-        {/* Contact Section */}
+        
         <div className="mt-8 animate-slide-up" style={{ animationDelay: "700ms" }}>
           <p className="text-[#a0a0b0] mb-4">Вопросы? Свяжись с нами:</p>
           <div className="flex gap-4">
@@ -95,7 +95,7 @@ export default function S7ToolsTab() {
         </div>
       </div>
 
-      {/* Modal: Create Event (portal to body for true centering) */}
+      
       {open && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000]">
           <div className="w-[min(92vw,640px)] bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white shadow-xl">

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { ArrowLeft, BadgeInfo, LogIn, ShoppingCart, CheckCircle, ShieldAlert, Copy } from "lucide-react"
@@ -12,7 +12,6 @@ export interface CourseLesson {
   id: number
   title: string
   time?: string
-  // Optional rich fields (may be present for published courses from S7DB)
   videoName?: string
   videoMediaId?: string
   slides?: string[]
@@ -20,11 +19,8 @@ export interface CourseLesson {
   presentationFileName?: string
   presentationMediaId?: string
   content?: string
-  // Server media (published)
   videoUrl?: string
   presentationUrl?: string
-  // In DB this can be Json of objects: [{ url: string, title?: string }]
-  // We keep it as any to avoid strict coupling
   serverSlides?: any
 }
 
@@ -62,7 +58,6 @@ export default function CourseDetailsTab({
 
   const isFree = !course?.price || course.price === 0
 
-  // Derive access from backend endpoint
   useEffect(() => {
     let ignore = false
     if (!course?.id) return
@@ -70,7 +65,6 @@ export default function CourseDetailsTab({
       .then((data) => {
         if (ignore) return
         setCanAccess(isFree ? true : Boolean(data.hasAccess))
-        // Replace local prop with authoritative data (contains lesson media URLs when есть доступ)
         if (data && data.modules) setFullCourse({
           id: data.id,
           title: data.title,
@@ -148,7 +142,7 @@ export default function CourseDetailsTab({
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
-      {/* Breadcrumb */}
+      
       <div className="mb-6 flex items-center gap-2 text-white">
         <button
           onClick={onBack}
@@ -161,9 +155,9 @@ export default function CourseDetailsTab({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-        {/* Left: Course summary and modules */}
+        
         <section className="space-y-6">
-          {/* Summary card */}
+          
           <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -184,7 +178,7 @@ export default function CourseDetailsTab({
               </div>
             </div>
             
-            {/* Purchase Button */}
+            
             {!isFree && !canAccess && (
               <button
                 onClick={handlePurchase}
@@ -205,7 +199,7 @@ export default function CourseDetailsTab({
             )}
           </div>
 
-          {/* Modules list */}
+          
           <div className="space-y-3">
             {viewCourse.modules.map((mod, modIdx) => (
               <button
@@ -232,7 +226,7 @@ export default function CourseDetailsTab({
           </div>
         </section>
 
-        {/* Right: Lessons of active module */}
+        
         <aside className="space-y-4">
           <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 text-white">
             <div className="rounded-full bg-[#1b1b22] px-4 py-2 text-white/80 inline-block">
@@ -264,7 +258,7 @@ export default function CourseDetailsTab({
         </aside>
       </div>
 
-      {/* Payment Modal */}
+      
       {showPayment && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
           <div className="w-full max-w-md bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up">

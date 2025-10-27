@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Image, Upload, Trash, Bold, Italic, Heading2, List } from "lucide-react"
@@ -16,16 +16,15 @@ interface DraftLesson {
   time?: string
   slides?: string[]
   videoName?: string
+  remoteId?: string
   content?: string
   presentationFileName?: string
   videoMediaId?: string
   slideMediaIds?: string[]
   presentationMediaId?: string
-  // uploaded URLs (server-visible)
   videoUrl?: string
   presentationUrl?: string
   slideUrls?: string[]
-  // quiz (saved to backend on publish)
   quizQuestion?: string
   quizOptions?: string[]
   quizCorrectIndex?: number
@@ -35,6 +34,7 @@ interface DraftLesson {
 interface DraftModule {
   id: number
   title: string
+  remoteId?: string
   lessons: DraftLesson[]
 }
 
@@ -99,7 +99,6 @@ export default function Page() {
     setHydrated(true)
   }, [draftKey])
 
-  // Ensure draft id in URL to prevent losing edits when accessed directly
   useEffect(() => {
     const d = search.get("draft")
     if (!d && typeof window !== 'undefined') {
@@ -111,10 +110,8 @@ export default function Page() {
     }
   }, [search, moduleId, lessonId, router])
 
-  // Ensure draft skeleton exists for this module/lesson so inputs are editable
   useEffect(() => {
     if (!hydrated || !moduleId || !lessonId) return
-    // if course not loaded yet, create minimal skeleton once hydrated
     if (course == null) {
       const draft: DraftCourse = {
         title: "",
@@ -127,7 +124,6 @@ export default function Page() {
       writeDraftBy(draftKey, draft)
       return
     }
-    // add missing module/lesson if needed
     const mod = course.modules.find((m) => m.id === moduleId)
     if (!mod) {
       const next: DraftCourse = {
@@ -165,7 +161,6 @@ export default function Page() {
     writeDraftBy(draftKey, next)
   }
 
-  // Build local previews from IndexedDB media ids
   useEffect(() => {
     let alive = true
     ;(async () => {
@@ -186,7 +181,6 @@ export default function Page() {
     return () => { alive = false }
   }, [lesson?.videoMediaId, lesson?.slideMediaIds, lesson?.presentationMediaId])
 
-  // Helper: upload a local media by its id to server and return absolute URL
   const uploadById = async (mediaId: string): Promise<string> => {
     const rec = await getFile(mediaId)
     if (!rec) throw new Error("Файл не найден")
@@ -263,7 +257,6 @@ export default function Page() {
     if (id) try { await deleteFile(id) } catch {}
   }
 
-  // Upload buttons
   const uploadVideoToServer = async () => {
     if (!lesson?.videoMediaId) return
     try {
@@ -312,7 +305,7 @@ export default function Page() {
       <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
 
       <div className="max-w-6xl space-y-5">
-        {/* Lesson pill */}
+        
         <div className="flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white">
           <div className="flex items-center gap-3 w-full">
             <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">{lesson?.id ?? 1}</span>
@@ -332,7 +325,7 @@ export default function Page() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-          {/* Left: video drop area */}
+          
           <section>
             <div className="rounded-3xl border-2 border-[#2a2a35] p-3">
               <div className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[320px] flex items-center justify-center text-white overflow-hidden p-4">
@@ -362,7 +355,7 @@ export default function Page() {
             </div>
           </section>
 
-          {/* Right: slides */}
+          
           <aside className="space-y-3">
             <button
               onClick={() => slideInput.current?.click()}
@@ -373,7 +366,7 @@ export default function Page() {
                 <span>Добавить слайд</span>
               </div>
             </button>
-            {/* Second add button when no slides yet (to match mock) */}
+            
             {!(lesson?.slides && lesson.slides.length > 0) && (
               <button
                 onClick={() => slideInput.current?.click()}
@@ -402,7 +395,7 @@ export default function Page() {
               </div>
             )}
 
-            {/* Presentation upload */}
+            
             <button
               onClick={() => presentationInput.current?.click()}
               className="w-full inline-flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors"
@@ -423,7 +416,7 @@ export default function Page() {
               className="hidden"
             />
 
-            {/* Render list of added slides */}
+            
             {(lesson?.slides || []).map((name, idx) => (
               <div
                 key={`${name}-${idx}`}
@@ -443,7 +436,7 @@ export default function Page() {
               </div>
             ))}
 
-            {/* Show selected presentation */}
+            
             {lesson?.presentationFileName && (
               <div className="w-full inline-flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white animate-slide-up">
                 <div className="inline-flex items-center gap-2">
@@ -468,7 +461,7 @@ export default function Page() {
           </aside>
         </div>
 
-        {/* Lesson text content */}
+        
         <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-3 animate-slide-up">
           <div className="flex items-center justify-between">
             <div className="text-white/90 font-medium">Текст урока (Markdown)</div>
@@ -493,7 +486,7 @@ export default function Page() {
           </div>
         </section>
       </div>
-      {/* Quiz Editor */}
+      
       <div className="mt-6 bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-3 animate-slide-up">
         <div className="text-white/90 font-medium">Вопрос по уроку (опционально)</div>
         <input
@@ -553,7 +546,7 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Actions */}
+      
       <div className="flex justify-end gap-3 pt-2">
         <button onClick={() => saveLessonDraft(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-4 py-2 text-white/90">Сохранить</button>
         <button onClick={() => saveLessonDraft(true)} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] px-4 py-2 text-black font-medium">Сохранить и выйти</button>

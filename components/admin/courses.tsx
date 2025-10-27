@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
@@ -82,7 +82,6 @@ export default function AdminCourses() {
   useEffect(() => {
     apiFetch<AdminCourse[]>("/api/admin/courses")
       .then((list) => {
-        // Always trust backend. Even if it's empty, show empty.
         if (Array.isArray(list)) setCourses(list)
         else setCourses([])
       })
@@ -101,7 +100,7 @@ export default function AdminCourses() {
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <h2 className="text-white text-xl font-medium mb-6">Курсы</h2>
-      {/* Filters */}
+      
       <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 text-white mb-6">
         <div className="flex flex-col md:flex-row md:items-center gap-3">
           <div className="flex items-center gap-2">

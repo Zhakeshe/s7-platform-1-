@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { User as UserIcon, Trophy, ExternalLink, Plus } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth/auth-context"
@@ -19,11 +19,9 @@ export default function ProfileTab() {
     if (user) {
       setFullName(user.fullName || "")
       setInstitution((user as any).institution || "")
-      // TODO: achievements from backend later; keep as is for now
     }
   }, [user])
 
-  // Load my achievements
   useEffect(() => {
     reloadAchievements().catch(() => {})
   }, [])
@@ -43,14 +41,12 @@ export default function ProfileTab() {
     }
   }
 
-  // Load my competition submissions
   useEffect(() => {
     apiFetch<Array<{ id: string; title: string; description?: string; placement?: string; venue?: string; eventDate?: string; status: "pending" | "approved" | "rejected"; imageUrl?: string }>>("/submissions/competitions/mine")
       .then(setSubs)
       .catch(() => setSubs([]))
   }, [])
 
-  // Load my teams
   useEffect(() => {
     apiFetch<Array<{ id: string; role: string; status: string; joinedAt: string; team: { id: string; name: string; description?: string } }>>('/teams/mine')
       .then(setMyTeams)
@@ -69,7 +65,7 @@ export default function ProfileTab() {
   return (
     <div className="flex-1 p-4 md:p-8 animate-slide-up">
       <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
-        {/* Profile Header */}
+        
         <div
           className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
           style={{ animationDelay: "100ms" }}
@@ -110,7 +106,7 @@ export default function ProfileTab() {
           </div>
         </div>
 
-        {/* Onboarding if fullName is empty */}
+        
         {!user?.fullName && (
           <div className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20">
             <h3 className="text-white text-lg font-medium mb-4">Заполните профиль</h3>
@@ -140,7 +136,7 @@ export default function ProfileTab() {
           </div>
         )}
 
-        {/* Level Progress */}
+        
         <div
           className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
           style={{ animationDelay: "200ms" }}
@@ -165,7 +161,7 @@ export default function ProfileTab() {
           </div>
         </div>
 
-        {/* Achievements */}
+        
         <div
           className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
           style={{ animationDelay: "300ms" }}
@@ -198,7 +194,7 @@ export default function ProfileTab() {
           )}
         </div>
 
-        {/* My Teams */}
+        
         <div className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up" style={{ animationDelay: "350ms" }}>
           <h3 className="text-white text-lg font-medium mb-4">Мои команды</h3>
           {myTeams.length === 0 ? (
@@ -224,7 +220,7 @@ export default function ProfileTab() {
           )}
         </div>
 
-        {/* Completed Courses */}
+        
         <div
           className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
           style={{ animationDelay: "400ms" }}
@@ -239,7 +235,7 @@ export default function ProfileTab() {
           </div>
         </div>
 
-        {/* Competition submissions */}
+        
         <div className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up" style={{ animationDelay: "500ms" }}>
           <h3 className="text-white text-lg font-medium mb-4">Мои соревнования</h3>
           {subs.length > 0 ? (
@@ -272,7 +268,7 @@ export default function ProfileTab() {
           </div>
         </div>
 
-        {/* Modal: create competition submission */}
+        
         {openAdd && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
             <div className="w-full max-w-lg bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white animate-slide-up">

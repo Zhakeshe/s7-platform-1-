@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express"
+﻿import { Router, type Request, type Response } from "express"
 import { z } from "zod"
 import { prisma } from "../db"
 import { optionalAuth, requireAuth } from "../middleware/auth"
@@ -15,7 +15,6 @@ const eventSchema = z.object({
   imageUrl: z.string().url().optional(),
 })
 
-// Public feed: only published events
 router.get("/", async (req: Request, res: Response) => {
   const category = (req.query.category as string | undefined)?.trim()
   const where: any = { status: "published" }
@@ -29,7 +28,6 @@ router.get("/", async (req: Request, res: Response) => {
   res.json(events)
 })
 
-// Public: get by id (only published, creators/admins may use admin endpoints)
 router.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params
   const event = await (prisma as any).event.findUnique({ where: { id } })
@@ -37,13 +35,11 @@ router.get("/:id", async (req: Request, res: Response) => {
   res.json(event)
 })
 
-// User proposals: list my events
 router.get("/mine/list", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const list = await prisma.event.findMany({ where: { createdById: req.user!.id }, orderBy: { createdAt: "desc" } })
   res.json(list)
 })
 
-// Create event proposal (pending)
 router.post("/", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const parsed = eventSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
@@ -63,7 +59,6 @@ router.post("/", requireAuth, async (req: AuthenticatedRequest, res: Response) =
   res.status(201).json(created)
 })
 
-// Register current user for an event/masterclass
 router.post("/:id/register", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params
   const event = await prisma.event.findUnique({ where: { id } })
@@ -77,7 +72,6 @@ router.post("/:id/register", requireAuth, async (req: AuthenticatedRequest, res:
   res.status(201).json({ status: reg.status })
 })
 
-// List my registrations
 router.get("/mine/registrations", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const regs = await (prisma as any).eventRegistration.findMany({ where: { userId: req.user!.id } })
   res.json(regs)

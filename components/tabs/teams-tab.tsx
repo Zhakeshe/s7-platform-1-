@@ -1,4 +1,4 @@
-import { ArrowUpRight, Plus, MessageCircle, Phone, Mail, Users, Shield } from "lucide-react"
+﻿import { ArrowUpRight, Plus, MessageCircle, Phone, Mail, Users, Shield } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
@@ -221,7 +221,6 @@ export default function TeamsTab() {
       .catch(() => setTeams([]))
   }, [refreshKey])
 
-  // Load my memberships to hide join and show status
   useEffect(() => {
     if (!user) { setMyMemberships({}); return }
     apiFetch<Array<{ id: string; role: string; status: string; team: { id: string } }>>('/teams/mine')
@@ -263,7 +262,7 @@ export default function TeamsTab() {
   }
   return (
     <main className="flex-1 p-8 overflow-y-auto animate-slide-up">
-      {/* Open Teams Section */}
+      
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6 animate-slide-up" style={{ animationDelay: "200ms" }}>
           <h2 className="text-white text-xl font-medium">Команды</h2>
@@ -297,7 +296,7 @@ export default function TeamsTab() {
                     <div>Нужные позиции: {t.metadata.positionsWanted.join(', ')}</div>
                   )}
 
-      {/* Manage Members Modal (captain) */}
+      
       {manageModal.open && createPortal(
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] animate-fade-in">
           <div className="w-[min(92vw,760px)] bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white shadow-xl animate-slide-up">
@@ -374,7 +373,7 @@ export default function TeamsTab() {
         )}
       </section>
 
-      {/* Team Search Section */}
+      
       <section className="mb-12">
         <div className="border-t border-[#636370]/20 pt-8 animate-slide-up" style={{ animationDelay: "500ms" }}>
           <h3 className="text-white text-lg font-medium mb-4">Ищете напарника себе в команду? Тогда добавляй свою команду:</h3>
@@ -389,14 +388,14 @@ export default function TeamsTab() {
         </div>
       </section>
 
-      {/* Create Team Modal */}
+      
       <CreateTeamModal 
         isOpen={isCreateModalOpen} 
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleTeamCreated}
       />
 
-      {/* Join Team Modal */}
+      
       {joinModal.open && createPortal(
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] animate-fade-in">
           <div className="w-[min(92vw,520px)] bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white shadow-xl animate-slide-up">

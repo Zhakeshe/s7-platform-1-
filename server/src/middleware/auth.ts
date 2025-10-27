@@ -1,4 +1,4 @@
-import { NextFunction, Response } from "express"
+﻿import { NextFunction, Response } from "express"
 import { verifyToken } from "../utils/jwt"
 import type { AuthenticatedRequest } from "../types"
 
@@ -30,7 +30,6 @@ export function optionalAuth(req: AuthenticatedRequest, _res: Response, next: Ne
     const payload = verifyToken(token)
     req.user = { id: payload.sub, role: payload.role }
   } catch (error) {
-    // ignore invalid token
   }
   return next()
 }

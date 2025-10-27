@@ -1,4 +1,4 @@
-import { ArrowUpRight, Search } from "lucide-react"
+﻿import { ArrowUpRight, Search } from "lucide-react"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
 import { useEffect, useRef, useState } from "react"
 import { apiFetch } from "@/lib/api"
@@ -32,7 +32,6 @@ export default function CoursesTab({
   const pageSize = 9
   const reqIdRef = useRef(0)
 
-  // Load continue list
   useEffect(() => {
     setLoadingContinue(true)
     apiFetch<any[]>("/courses/continue")
@@ -51,7 +50,6 @@ export default function CoursesTab({
       .finally(() => setLoadingContinue(false))
   }, [])
 
-  // Load recommended list with filters/search
   const loadRecommended = () => {
     const currentReq = ++reqIdRef.current
     setLoadingRecommended(true)
@@ -87,31 +85,25 @@ export default function CoursesTab({
 
   useEffect(() => {
     loadRecommended()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter])
 
-  // Load once on mount to avoid any delayed initial appearance
   useEffect(() => {
     loadRecommended()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => loadRecommended(), 300)
     return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search])
 
   useEffect(() => {
     const t = setTimeout(() => loadRecommended(), 200)
     return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [priceRange])
 
   return (
     <main className="flex-1 p-8 overflow-y-auto animate-slide-up">
-      {/* Continue section */}
+      
       <section className="mb-12">
         <h2 className="text-white text-xl font-medium mb-6">Продолжить</h2>
         {loadingContinue ? (
@@ -146,7 +138,7 @@ export default function CoursesTab({
         )}
       </section>
 
-      {/* Recommended section */}
+      
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-white text-xl font-medium">Рекомендованные курсы</h2>

@@ -1,4 +1,4 @@
-import { Router } from "express"
+﻿import { Router } from "express"
 import multer from "multer"
 import path from "path"
 import crypto from "crypto"
@@ -23,7 +23,6 @@ const storage = multer.diskStorage({
   },
 })
 
-// Whitelisted content types
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]) // add more if needed
 const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]) // mp4, webm, mov
 const DOC_TYPES = new Set([

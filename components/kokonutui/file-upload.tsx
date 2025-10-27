@@ -1,14 +1,4 @@
-"use client";
-
-/**
- * @author: @dorian_baffier
- * @description: File Upload
- * @version: 1.0.0
- * @date: 2025-06-26
- * @license: MIT
- * @website: https://kokonutui.com
- * @github: https://github.com/kokonut-labs/kokonutui
- */
+﻿"use client";
 
 import {
     useState,
@@ -35,7 +25,7 @@ interface FileUploadProps {
     maxFileSize?: number;
     currentFile?: File | null;
     onFileRemove?: () => void;
-    /** Duration in milliseconds for the upload simulation. Defaults to 2000ms (2s), 0 for no simulation */
+    
     uploadDelay?: number;
     validateFile?: (file: File) => FileError | null;
     className?: string;
@@ -435,10 +425,8 @@ export default function FileUpload({
         (selectedFile: File | null) => {
             if (!selectedFile) return;
 
-            // Reset error state
             setError(null);
 
-            // Validate file
             const sizeError = validateFileSize(selectedFile);
             if (sizeError) {
                 handleError(sizeError);

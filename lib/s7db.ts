@@ -1,6 +1,4 @@
-"use client"
-// S7DB: simple client-side storage adapter with typed helpers.
-// This provides a single place to swap to real API/Prisma later.
+﻿"use client"
 
 export type Role = "user" | "admin"
 
@@ -29,15 +27,12 @@ export interface Lesson {
   id: number
   title: string
   time?: string
-  // Backward-compatible filename fields
   videoName?: string
   slides?: string[]
   presentationFileName?: string
-  // New media storage fields (IndexedDB via s7media)
   videoMediaId?: string
   slideMediaIds?: string[]
   presentationMediaId?: string
-  // Rich text
   content?: string
 }
 export interface Module { id: number; title: string; lessons: Lesson[] }
@@ -57,7 +52,6 @@ export interface ByteSizeItem { id: string; title: string; tags: string[]; views
 
 const NS = "s7db.v1"
 
-// Generic helpers
 function getKey(name: string) { return `${NS}.${name}` }
 function read<T>(name: string, fallback: T): T {
   try {
@@ -71,7 +65,6 @@ function write<T>(name: string, value: T) {
   try { localStorage.setItem(getKey(name), JSON.stringify(value)) } catch {}
 }
 
-// Collections
 const C = {
   users: "users",
   session: "session",
@@ -87,14 +80,12 @@ const C = {
 export function now() { return Date.now() }
 export function uid(prefix = "id"): string { return `${prefix}_${Math.random().toString(36).slice(2)}_${Date.now()}` }
 
-// Password hashing (sha-256)
 export async function sha256(text: string) {
   const enc = new TextEncoder().encode(text)
   const buf = await crypto.subtle.digest("SHA-256", enc)
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("")
 }
 
-// Users & session
 export function listUsers(): User[] { return read<User[]>(C.users, []) }
 export function saveUsers(users: User[]) { write(C.users, users) }
 export function getUserByEmail(email: string): User | undefined { return listUsers().find(u => u.email.toLowerCase() === email.toLowerCase()) }
@@ -134,15 +125,12 @@ export function updateUserProfile(userId: string, patch: Partial<User>): User {
   return next
 }
 
-// Courses
 export function listCourses(): Course[] { return read<Course[]>(C.courses, []) }
 export function saveCourses(list: Course[]) { write(C.courses, list) }
 
-// Teams
 export function listTeams(): Team[] { return read<Team[]>(C.teams, []) }
 export function saveTeams(v: Team[]) { write(C.teams, v) }
 
-// Enrollments
 export function listEnrollments(): Enrollment[] { return read<Enrollment[]>(C.enrollments, []) }
 export function saveEnrollments(v: Enrollment[]) { write(C.enrollments, v) }
 export function isEnrolled(userId: string, courseId: string): boolean { return listEnrollments().some(e => e.userId === userId && e.courseId === courseId && e.status === "active") }
@@ -152,7 +140,6 @@ export function enrollUser(userId: string, courseId: string): Enrollment {
   return e
 }
 
-// Purchases
 export function listPurchases(): Purchase[] { return read<Purchase[]>(C.purchases, []) }
 export function savePurchases(v: Purchase[]) { write(C.purchases, v) }
 export function createPurchase(userId: string, courseId: string, amount: number): Purchase {
@@ -183,7 +170,6 @@ export function hasCourseAccess(userId: string, courseId: string): boolean {
   return isEnrolled(userId, courseId)
 }
 
-// Achievements
 export function listAchievements(): Achievement[] { return read<Achievement[]>(C.achievements, []) }
 export function saveAchievements(v: Achievement[]) { write(C.achievements, v) }
 export function awardAchievement(userId: string, text: string, issuedBy: string): Achievement {
@@ -192,10 +178,8 @@ export function awardAchievement(userId: string, text: string, issuedBy: string)
   return a
 }
 
-// Teams / Masterclasses / ByteSize (lists already created by UI elsewhere) — unify via S7DB keys if needed
 export function migrateAdminKeys() {
   try {
-    // Courses
     const legacyCourses = localStorage.getItem("s7_admin_courses")
     if (legacyCourses && !localStorage.getItem(getKey(C.courses))) {
       write(C.courses, JSON.parse(legacyCourses))

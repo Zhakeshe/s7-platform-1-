@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { LogIn, Plus } from "lucide-react"
@@ -9,11 +9,13 @@ interface DraftLesson {
   time?: string
   slides?: string[]
   videoName?: string
+  remoteId?: string
 }
 
 interface DraftModule {
   id: number
   title: string
+  remoteId?: string
   lessons: DraftLesson[]
 }
 
@@ -58,7 +60,6 @@ export default function Page() {
   const [course, setCourse] = useState<DraftCourse | null>(null)
   const [dragLessonId, setDragLessonId] = useState<number | null>(null)
 
-  // Ensure we always carry a draft id to avoid losing edits when navigating directly
   useEffect(() => {
     const d = search.get("draft")
     if (!d && typeof window !== 'undefined') {
@@ -126,7 +127,7 @@ export default function Page() {
       <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
 
       <div className="max-w-4xl space-y-6">
-        {/* Module header card */}
+        
         <div className="flex items-center justify-between bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white">
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 rounded-full bg-[#2a2a35] text-white/80 flex items-center justify-center text-xs">{module?.id ?? 1}.</span>
@@ -137,7 +138,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Lessons list */}
+        
         <div className="space-y-3">
           {(Array.isArray(module?.lessons) ? module!.lessons : []).map((l) => (
             <div
@@ -156,7 +157,7 @@ export default function Page() {
             </div>
           ))}
 
-          {/* Add lesson row */}
+          
           <button
             onClick={addLesson}
             className="w-full flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors"

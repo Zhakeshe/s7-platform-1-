@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from 'react'
 import { cn } from '@/lib/utils'
@@ -54,7 +54,6 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
     close()
   }
 
-  // Preset defaults
   const preset = state.options.preset
   const presetDefaults: Record<string, Partial<ConfirmOptions>> = {
     logout: {

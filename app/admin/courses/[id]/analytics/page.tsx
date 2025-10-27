@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
@@ -85,7 +85,7 @@ export default function CourseAnalyticsPage() {
 
       {!loading && (
         <div className="space-y-6">
-          {/* Summary cards */}
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white">
               <div className="text-white/60 text-xs">Покупок всего</div>
@@ -116,7 +116,7 @@ export default function CourseAnalyticsPage() {
             </div>
           </div>
 
-          {/* Quiz analytics */}
+          
           <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white">
             <div className="flex items-center justify-between mb-3">
               <div className="font-medium">Вопросы</div>
@@ -139,7 +139,7 @@ export default function CourseAnalyticsPage() {
             </div>
           </div>
 
-          {/* Answers table */}
+          
           <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white">
             <div className="font-medium mb-2">Ответы пользователей</div>
             <div className="overflow-x-auto">

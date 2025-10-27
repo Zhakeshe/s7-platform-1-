@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useState } from "react"
 import { ExternalLink, LogIn, Link2, ArrowLeft } from "lucide-react"
 
@@ -32,7 +32,7 @@ export default function EventsTab({
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
-      {/* Breadcrumb */}
+      
       {onBack && (
         <div className="mb-6 flex items-center gap-2 text-white">
           <button onClick={onBack} className="text-white/80 hover:text-white transition-colors flex items-center gap-2" aria-label="Назад к ивентам">
@@ -43,9 +43,9 @@ export default function EventsTab({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-        {/* Left side: Event summary and sections */}
+        
         <section className="space-y-6">
-          {/* Summary card */}
+          
           <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -60,7 +60,7 @@ export default function EventsTab({
             </div>
           </div>
 
-          {/* Sections list */}
+          
           <div className="space-y-3">
             <button
               onClick={() => setActiveSection("about")}
@@ -102,7 +102,7 @@ export default function EventsTab({
           </div>
         </section>
 
-        {/* Right side: Content */}
+        
         <aside className="space-y-4">
           {activeSection === "register" ? (
             <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 md:p-6 text-white">

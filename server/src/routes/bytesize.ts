@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express"
+﻿import { Router, type Request, type Response } from "express"
 import { prisma } from "../db"
 import { optionalAuth, requireAuth } from "../middleware/auth"
 import type { AuthenticatedRequest } from "../types"
@@ -20,11 +20,9 @@ function normalizeMediaUrl(u?: string | null): string | undefined {
   }
 }
 
-// In-memory view counters as fallback when DB column is missing
 const viewCounters = new Map<string, number>()
 const lastViewByIp: Map<string, number> = new Map()
 
-// Feed: latest first, include like count and likedByMe
 router.get("/", optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   const includeLiked = Boolean(req.user)
   const items = await (prisma as any).byteSizeItem.findMany({
@@ -61,7 +59,6 @@ router.get("/", optionalAuth, async (req: AuthenticatedRequest, res: Response) =
   )
 })
 
-// Toggle like
 router.post("/:id/like", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const id = req.params.id
   const existing = await (prisma as any).byteSizeLike.findUnique({ where: { itemId_userId: { itemId: id, userId: req.user!.id } } }).catch(
@@ -77,7 +74,6 @@ router.post("/:id/like", requireAuth, async (req: AuthenticatedRequest, res: Res
   res.json({ liked, likesCount: count })
 })
 
-// Track a view (public). Debounce per IP+item (~60s). If DB column 'views' exists, increment it; otherwise use memory fallback
 router.post("/:id/view", async (req: Request, res: Response) => {
   const id = req.params.id
   const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || (req.socket?.remoteAddress || "")

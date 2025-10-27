@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
@@ -38,7 +38,6 @@ export default function Page() {
 
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status])
 
   const approve = async (id: string) => {

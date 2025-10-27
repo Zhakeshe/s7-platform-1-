@@ -1,4 +1,4 @@
-import { Router, type Response, type Request } from "express"
+﻿import { Router, type Response, type Request } from "express"
 import path from "path"
 import { env } from "../env"
 import { z } from "zod"
@@ -6,7 +6,6 @@ import { prisma } from "../db"
 import { requireAdmin, requireAuth } from "../middleware/auth"
 import type { AuthenticatedRequest } from "../types"
 
-// Declare router early so it can be used by routes defined above/below
 export const router = Router()
 
 router.use(requireAuth, requireAdmin)
@@ -15,7 +14,6 @@ function normalizeMediaUrl(u?: string): string | undefined {
   try {
     if (!u) return undefined
     const s = String(u)
-    // Prefer /api/media to work with common nginx configs
     if (s.startsWith("/api/media/")) return s
     if (s.startsWith("/media/")) return s.replace("/media/", "/api/media/")
     const url = new URL(s)
@@ -52,7 +50,6 @@ const slideSchema = z.object({
   storagePath: z.string().optional(),
 })
 
-// Competitions CRUD (admin-only)
 const competitionSchema = z.object({
   id: z.string().optional(),
   teamId: z.string(),
@@ -69,7 +66,6 @@ router.get("/competitions", async (_req: AuthenticatedRequest, res: Response) =>
   res.json(list)
 })
 
-// ---- ByteSize admin ----
 const byteSizeSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
@@ -106,9 +102,7 @@ router.post("/bytesize", async (req: AuthenticatedRequest, res: Response) => {
 router.delete("/bytesize/:id", async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params
   try {
-    // try to remove likes first (FK safety)
     await (prisma as any).byteSizeLike.deleteMany({ where: { itemId: id } }).catch(() => null)
-    // delete media files if stored locally
     try {
       const item = await (prisma as any).byteSizeItem.findUnique({ where: { id } })
       const files: string[] = []
@@ -126,7 +120,6 @@ router.delete("/bytesize/:id", async (req: AuthenticatedRequest, res: Response) 
   }
 })
 
-// Revoke (delete) a specific user achievement (admin-only)
 router.delete("/user-achievements/:id", async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params
   try {
@@ -240,10 +233,6 @@ const teamSchema = z.object({
   }).optional(),
 })
 
-// router already declared above
-
-
-// Platform statistics for Admin Dashboard
 router.get("/stats", async (_req: AuthenticatedRequest, res: Response) => {
   const [totalUsers, totalCourses, pendingPayments, approvedPayments, revenueAgg] = await Promise.all([
     prisma.user.count(),
@@ -264,7 +253,6 @@ router.get("/stats", async (_req: AuthenticatedRequest, res: Response) => {
   })
 })
 
-// Payments management
 router.get("/purchases", async (req: AuthenticatedRequest, res: Response) => {
   const status = (req.query.status as string | undefined) as any
   const limit = Number(req.query.limit || 50)
@@ -314,7 +302,6 @@ router.post("/purchases/:id/reject", async (req: AuthenticatedRequest, res: Resp
   res.json(updated)
 })
 
-// User management (admin-only)
 const roleUpdateSchema = z.object({ role: z.enum(["ADMIN", "USER"]) })
 
 router.get("/users", async (_req: AuthenticatedRequest, res: Response) => {
@@ -327,7 +314,6 @@ router.get("/users", async (_req: AuthenticatedRequest, res: Response) => {
 
 const banSchema = z.object({ reason: z.string().optional() })
 
-// Ban user
 router.post("/users/:userId/ban", async (req: AuthenticatedRequest, res: Response) => {
   const { userId } = req.params
   const parsed = banSchema.safeParse(req.body)
@@ -340,7 +326,6 @@ router.post("/users/:userId/ban", async (req: AuthenticatedRequest, res: Respons
   }
 })
 
-// Unban user
 router.post("/users/:userId/unban", async (req: AuthenticatedRequest, res: Response) => {
   const { userId } = req.params
   try {
@@ -383,7 +368,6 @@ router.post("/users/:userId/demote", async (req: AuthenticatedRequest, res: Resp
   }
 })
 
-// Overview for a specific user: participations, purchases, achievements
 router.get("/users/:userId/overview", async (req: AuthenticatedRequest, res: Response) => {
   const { userId } = req.params
   const user = await prisma.user.findUnique({
@@ -404,7 +388,6 @@ router.get("/users/:userId/overview", async (req: AuthenticatedRequest, res: Res
   res.json({ user, purchases, registrations, achievements: userAchievements, competitionSubmissions: submissions })
 })
 
-// Achievements across all users
 router.get("/achievements/users", async (_req: AuthenticatedRequest, res: Response) => {
   const list = await prisma.userAchievement.findMany({
     orderBy: { earnedAt: "desc" },
@@ -416,14 +399,12 @@ router.get("/achievements/users", async (_req: AuthenticatedRequest, res: Respon
   res.json(list)
 })
 
-// Award a simple ad-hoc achievement to a user (admin-only)
 const awardSchema = z.object({ text: z.string().min(1) })
 
 router.post("/users/:userId/achievements", async (req: AuthenticatedRequest, res: Response) => {
   const { userId } = req.params
   const parsed = awardSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
-  // Create a minimal achievement and link it to the user
   try {
     const achievement = await prisma.achievement.create({
       data: {
@@ -445,7 +426,6 @@ router.post("/users/:userId/achievements", async (req: AuthenticatedRequest, res
   }
 })
 
-// Enroll user to a course (admin-only)
 const enrollSchema = z.object({ courseId: z.string().min(1) })
 
 router.post("/users/:userId/enrollments", async (req: AuthenticatedRequest, res: Response) => {
@@ -453,7 +433,6 @@ router.post("/users/:userId/enrollments", async (req: AuthenticatedRequest, res:
   const parsed = enrollSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
   try {
-    // ensure course exists
     const course = await prisma.course.findUnique({ where: { id: parsed.data.courseId } })
     if (!course) return res.status(404).json({ error: "Course not found" })
 
@@ -547,6 +526,31 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
 
   const existingModulesById = new Map(existing.modules.map((m) => [m.id, m]))
   const ops: any[] = []
+  let nextModuleOrder = existing.modules.length
+  const syncParam = String((req.query as any)?.sync || "").toLowerCase()
+  const syncIds = syncParam === "ids" || syncParam === "true"
+
+  const existingModulesByOrder = new Map<number, any>(
+    (existing.modules || []).map((m) => [Number(m.orderIndex), m])
+  )
+  const newModulesToCreateCount = (data.modules || []).reduce((acc, m) => acc + ((m.id && existingModulesById.has(m.id)) ? 0 : 1), 0)
+
+  const keepModuleIds = new Set<string>()
+  if (syncIds) {
+    for (let moduleIndex = 0; moduleIndex < data.modules.length; moduleIndex++) {
+      const module = data.modules[moduleIndex]
+      if (module.id && existingModulesById.has(module.id)) keepModuleIds.add(module.id)
+      else {
+        const targetOrder = module.orderIndex ?? moduleIndex
+        const same = existingModulesByOrder.get(Number(targetOrder))
+        if (same) keepModuleIds.add(same.id)
+      }
+    }
+  }
+  const modulesToDeleteIds = syncIds
+    ? (existing.modules || []).filter((m) => !keepModuleIds.has(m.id)).map((m) => m.id)
+    : []
+  const finalTotalModules = (existing.modules.length - modulesToDeleteIds.length) + newModulesToCreateCount
 
   ops.push(
     prisma.course.update({
@@ -560,7 +564,7 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
         isPublished: data.isPublished,
         coverImageUrl: data.coverImageUrl,
         estimatedHours: data.estimatedHours,
-        totalModules: existing.modules.length + data.modules.filter((m) => !m.id).length,
+        totalModules: finalTotalModules,
       },
     })
   )
@@ -603,25 +607,30 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
             })
           )
         } else {
-          // Fallback: if draft lost lesson id, update existing lesson with the same orderIndex instead of creating
           const targetOrder = lesson.orderIndex ?? lessonIndex
           const sameOrder = (prevModule.lessons || []).find((l) => Number(l.orderIndex) === Number(targetOrder))
           if (sameOrder) {
             ops.push(
-              prisma.lesson.update({
-                where: { id: sameOrder.id },
+              prisma.lesson.updateMany({
+                where: { moduleId: prevModule.id, orderIndex: { gte: targetOrder } },
+                data: { orderIndex: { increment: 1 } },
+              })
+            )
+            ops.push(
+              prisma.lesson.create({
                 data: {
+                  moduleId: prevModule.id,
                   title: lesson.title,
                   content: typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content,
                   duration: typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration,
                   orderIndex: targetOrder,
-                  isFreePreview: lesson.isFreePreview ?? sameOrder.isFreePreview ?? false,
-                  videoUrl: normalizeMediaUrl(lesson.videoUrl) || (sameOrder.videoUrl as any),
-                  videoStoragePath: lesson.videoStoragePath ?? (sameOrder.videoStoragePath as any),
-                  presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || (sameOrder.presentationUrl as any),
-                  presentationStoragePath: lesson.presentationStoragePath ?? (sameOrder.presentationStoragePath as any),
-                  slides: lesson.slides !== undefined ? normalizeSlides(lesson.slides) : (sameOrder.slides as any),
-                  contentType: lesson.contentType !== undefined ? lesson.contentType : (sameOrder.contentType ?? "text"),
+                  isFreePreview: lesson.isFreePreview ?? false,
+                  videoUrl: normalizeMediaUrl(lesson.videoUrl) || (lesson.videoUrl as any),
+                  videoStoragePath: lesson.videoStoragePath,
+                  presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || (lesson.presentationUrl as any),
+                  presentationStoragePath: lesson.presentationStoragePath,
+                  slides: normalizeSlides(lesson.slides) ?? [],
+                  contentType: lesson.contentType,
                 },
               })
             )
@@ -648,13 +657,51 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
         }
       }
     } else {
+      const targetModuleOrder = module.orderIndex ?? moduleIndex
+      const sameModule = (existing.modules || []).find((m) => Number(m.orderIndex) === Number(targetModuleOrder))
+      if (sameModule) {
+        ops.push(
+          prisma.courseModule.updateMany({
+            where: { courseId, orderIndex: { gte: targetModuleOrder } },
+            data: { orderIndex: { increment: 1 } },
+          })
+        )
+        ops.push(
+          prisma.courseModule.create({
+            data: {
+              courseId,
+              title: module.title,
+              description: module.description,
+              orderIndex: targetModuleOrder,
+              lessons: {
+                create: (module.lessons || []).map((lesson, lessonIndex) => ({
+                  ...(lesson.id ? { id: lesson.id } : {}),
+                  title: lesson.title,
+                  content: typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content,
+                  duration: typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration,
+                  orderIndex: lesson.orderIndex ?? lessonIndex,
+                  isFreePreview: lesson.isFreePreview ?? false,
+                  videoUrl: normalizeMediaUrl(lesson.videoUrl) || lesson.videoUrl,
+                  videoStoragePath: lesson.videoStoragePath,
+                  presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || lesson.presentationUrl,
+                  presentationStoragePath: lesson.presentationStoragePath,
+                  slides: normalizeSlides(lesson.slides) ?? [],
+                  contentType: lesson.contentType,
+                })),
+              },
+            },
+          })
+        )
+        continue
+      }
+
       ops.push(
         prisma.courseModule.create({
           data: {
             courseId,
             title: module.title,
             description: module.description,
-            orderIndex: Math.max(module.orderIndex ?? moduleIndex, existing.modules.length),
+            orderIndex: nextModuleOrder++,
             lessons: {
               create: (module.lessons || []).map((lesson, lessonIndex) => ({
                 ...(lesson.id ? { id: lesson.id } : {}),
@@ -674,6 +721,37 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
           },
         })
       )
+    }
+  }
+
+  if (syncIds) {
+    if (modulesToDeleteIds.length > 0) {
+      ops.push(prisma.courseModule.deleteMany({ where: { id: { in: modulesToDeleteIds } } }))
+    }
+
+    for (let moduleIndex = 0; moduleIndex < data.modules.length; moduleIndex++) {
+      const module = data.modules[moduleIndex]
+      const prevModule = module.id
+        ? existingModulesById.get(module.id)
+        : existingModulesByOrder.get(Number(module.orderIndex ?? moduleIndex))
+      if (!prevModule) continue
+      const keepLessonIds = new Set<string>()
+      const prevLessons = prevModule.lessons || []
+      for (let lessonIndex = 0; lessonIndex < (module.lessons || []).length; lessonIndex++) {
+        const lesson = module.lessons[lessonIndex]
+        if (lesson.id) keepLessonIds.add(lesson.id)
+        else {
+          const targetOrder = lesson.orderIndex ?? lessonIndex
+          const same = prevLessons.find((l: any) => Number(l.orderIndex) === Number(targetOrder))
+          if (same) keepLessonIds.add(same.id)
+        }
+      }
+      const lessonsToDelete = prevLessons
+        .filter((l: any) => !keepLessonIds.has(l.id))
+        .map((l: any) => l.id)
+      if (lessonsToDelete.length > 0) {
+        ops.push(prisma.lesson.deleteMany({ where: { id: { in: lessonsToDelete } } }))
+      }
     }
   }
 
@@ -763,7 +841,6 @@ router.delete("/teams/:teamId", async (req: AuthenticatedRequest, res: Response)
   res.json({ success: true })
 })
 
-// Team members with registration statuses
 router.get("/teams/:teamId/members", async (req: AuthenticatedRequest, res: Response) => {
   const { teamId } = req.params
   const status = (req.query.status as string | undefined) || undefined
@@ -777,7 +854,6 @@ router.get("/teams/:teamId/members", async (req: AuthenticatedRequest, res: Resp
   res.json(members)
 })
 
-// Update team member role/status
 const memberUpdateSchema = z.object({
   role: z.string().optional(),
   status: z.string().optional(),
@@ -793,13 +869,11 @@ router.put("/teams/:teamId/members/:membershipId", async (req: AuthenticatedRequ
   res.json(updated)
 })
 
-// ---- Events moderation ----
 router.get("/events", async (_req: AuthenticatedRequest, res: Response) => {
   const events = await (prisma as any).event.findMany({ orderBy: { createdAt: "desc" } })
   res.json(events)
 })
 
-// List registrations for a specific event
 router.get("/events/:eventId/registrations", async (req: AuthenticatedRequest, res: Response) => {
   const { eventId } = req.params
   const regs = await (prisma as any).eventRegistration.findMany({
@@ -810,7 +884,6 @@ router.get("/events/:eventId/registrations", async (req: AuthenticatedRequest, r
   res.json(regs)
 })
 
-// Approve or reject a registration
 router.post("/events/:eventId/registrations/:regId/approve", async (req: AuthenticatedRequest, res: Response) => {
   const { regId } = req.params
   const updated = await (prisma as any).eventRegistration.update({ where: { id: regId }, data: { status: "approved" } }).catch(() => null)
@@ -851,7 +924,6 @@ router.put("/events/:eventId", async (req: AuthenticatedRequest, res: Response) 
   }
 })
 
-// Create event as admin
 router.post("/events", async (req: AuthenticatedRequest, res: Response) => {
   const data = req.body as any
   const created = await (prisma as any).event.create({
@@ -888,7 +960,6 @@ router.post("/events/:eventId/reject", async (req: AuthenticatedRequest, res: Re
   res.json(ev)
 })
 
-// Delete event (admin)
 router.delete("/events/:eventId", async (req: AuthenticatedRequest, res: Response) => {
   const { eventId } = req.params
   await (prisma as any).eventRegistration.deleteMany({ where: { eventId } }).catch(() => null)
@@ -896,13 +967,11 @@ router.delete("/events/:eventId", async (req: AuthenticatedRequest, res: Respons
   res.json({ success: true })
 })
 
-// Bulk delete all events (admin)
 router.delete("/events", async (_req: AuthenticatedRequest, res: Response) => {
   const result = await (prisma as any).event.deleteMany({})
   res.json({ success: true, deleted: result.count ?? undefined })
 })
 
-// ---- Competition submissions moderation ----
 router.get("/competition-submissions", async (req: AuthenticatedRequest, res: Response) => {
   const status = (req.query.status as string | undefined) as any
   const where = status ? { status } : {}

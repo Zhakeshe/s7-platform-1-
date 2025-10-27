@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import Link from "next/link"
 import { Plus, User, Clock, CheckCircle } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -78,13 +78,13 @@ export default function AdminHome() {
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
-      {/* Welcome Section */}
+      
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white mb-2">Добро пожаловать, {user?.fullName || user?.email}</h1>
         <p className="text-white/60">Обзор платформы S7 Robotics</p>
       </div>
 
-      {/* Stats Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
         <Card loading={loading}>
           {!loading && (
@@ -135,7 +135,7 @@ export default function AdminHome() {
         </Card>
       </div>
 
-      {/* Management Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card add href="/admin/courses/new">
           <div className="text-lg font-semibold">Курсы</div>
@@ -165,7 +165,7 @@ export default function AdminHome() {
         </Card>
       </div>
 
-      {/* Quick Actions Section */}
+      
       {pendingPayments.length > 0 && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold text-white mb-4">Ожидающие платежи</h2>

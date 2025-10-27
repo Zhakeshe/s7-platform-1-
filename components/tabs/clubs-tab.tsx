@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
 import { Plus, Calendar, MapPin, Users, Check, X, Clock } from "lucide-react"
@@ -114,7 +114,7 @@ export default function ClubsTab() {
             {c.description && (
               <div className="text-white/70 text-sm">{c.description}</div>
             )}
-            {/* Mentors */}
+            
             <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3">
               <div className="text-sm font-medium mb-2">Менторы</div>
               <div className="flex gap-2">
@@ -152,7 +152,6 @@ export default function ClubsTab() {
                       <button onClick={()=>{
                         setExpandedClassId(isOpen ? null : cl.id)
                         if (!isOpen) {
-                          // preload sessions for next 14 days
                           void (async ()=>{
                             setLoadingSessions((p)=>({...p, [cl.id]: true}))
                             try {
@@ -190,7 +189,7 @@ export default function ClubsTab() {
                     </div>
                     {isOpen && (
                       <div className="space-y-4">
-                        {/* Enroll by email */}
+                        
                         <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3">
                           <div className="text-sm font-medium mb-2">Добавить ученика по email</div>
                           <div className="flex gap-2">
@@ -268,7 +267,7 @@ export default function ClubsTab() {
                             ))}
                           </div>
                         </div>
-                          {/* Enrolled list with remove */}
+                          
                           <div className="mt-3">
                             <div className="text-sm font-medium mb-2">Участники</div>
                             {(enrolled.length===0) && <div className="text-white/60 text-sm">Пока нет</div>}
@@ -284,7 +283,7 @@ export default function ClubsTab() {
                           </div>
                         </div>
 
-                        {/* Schedule item add */}
+                        
                         <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3">
                           <div className="text-sm font-medium mb-2">Добавить слот расписания</div>
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
@@ -317,7 +316,7 @@ export default function ClubsTab() {
                           </div>
                         </div>
 
-                        {/* Session generate */}
+                        
                         <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3">
                           <div className="text-sm font-medium mb-2">Сгенерировать занятия</div>
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm items-center">
@@ -344,7 +343,7 @@ export default function ClubsTab() {
                           </div>
                         </div>
 
-                        {/* Sessions & attendance */}
+                        
                         <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3 space-y-2">
                           <div className="text-sm font-medium">Ближайшие занятия</div>
                           {loadingSessions[cl.id] && <div className="text-white/60 text-sm">Загрузка...</div>}
@@ -394,7 +393,6 @@ export default function ClubsTab() {
                                       const marks = Object.entries(d).map(([studentId, v])=>({ studentId, status: (v as any).status, feedback: (v as any).feedback || undefined }))
                                       if (marks.length === 0) return
                                       try { await apiFetch(`/api/clubs/sessions/${s.id}/attendance`, { method: "POST", body: JSON.stringify({ marks }) }); toast({ title: "Отметки отправлены" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось отправить", variant: "destructive" as any }) }
-                                      // after submit clear draft for this session
                                       setAttendanceDraft(prev=>{ const n = { ...prev }; delete n[key]; return n })
                                     }} className="rounded-full bg-[#00a3ff] hover:bg-[#0088cc] px-4 py-2 text-black font-medium">Отправить отметки</button>
                                   </div>
@@ -404,7 +402,7 @@ export default function ClubsTab() {
                           })}
                         </div>
 
-                        {/* Danger zone: delete class */}
+                        
                         <div className="bg-[#140f0f] border border-[#432424] rounded-xl p-3">
                           <div className="text-sm font-medium mb-2">Опасная зона</div>
                           <button onClick={async()=>{ try{ await apiFetch(`/clubs/classes/${cl.id}`, { method: 'DELETE' }); toast({ title: "Класс удалён" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось удалить", variant: "destructive" as any }) } await load() }} className="text-xs rounded-full bg-[#a33] hover:bg-[#c44] px-3 py-2 text-white">Удалить класс</button>
@@ -415,7 +413,7 @@ export default function ClubsTab() {
                 )
               })}
             </div>
-            {/* Create class */}
+            
             <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3">
               <div className="text-sm font-medium mb-2">Создать класс</div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm items-center">

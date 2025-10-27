@@ -1,4 +1,4 @@
-import { Router, type Response } from "express"
+﻿import { Router, type Response } from "express"
 import { z } from "zod"
 import { prisma } from "../db"
 import { requireAuth } from "../middleware/auth"
@@ -6,7 +6,6 @@ import type { AuthenticatedRequest } from "../types"
 
 export const router = Router()
 
-// Temporary alias until Prisma client is regenerated on host with new models
 const db = prisma as any
 
 const log = (...a: any[]) => console.log("[clubs]", ...a)
@@ -132,7 +131,6 @@ router.post("/:clubId/mentors-by-email", async (req: AuthenticatedRequest, res: 
 
 const enrollSchema = z.object({ userId: z.string().min(1) })
 
-// Update class
 const classUpdateSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
@@ -153,7 +151,6 @@ router.patch("/classes/:classId", async (req: AuthenticatedRequest, res: Respons
   log("class.update", { id: classId })
 })
 
-// Delete class
 router.delete("/classes/:classId", async (req: AuthenticatedRequest, res: Response) => {
   const { classId } = req.params
   const cls = await db.clubClass.findUnique({ where: { id: classId }, include: { club: true } })
@@ -364,7 +361,6 @@ router.post("/classes/:classId/enroll-by-email", async (req: AuthenticatedReques
   res.status(201).json(e)
 })
 
-// Remove student from class
 router.delete("/classes/:classId/enroll/:userId", async (req: AuthenticatedRequest, res: Response) => {
   const { classId, userId } = req.params
   const cls = await db.clubClass.findUnique({ where: { id: classId }, include: { club: true } })
@@ -402,7 +398,6 @@ router.post("/classes/:classId/schedule", async (req: AuthenticatedRequest, res:
   log("schedule.create", { id: s.id, classId })
 })
 
-// Delete schedule item
 router.delete("/schedule/:scheduleItemId", async (req: AuthenticatedRequest, res: Response) => {
   const { scheduleItemId } = req.params
   const si = await db.scheduleItem.findUnique({ where: { id: scheduleItemId }, include: { class: { include: { club: true } } } })

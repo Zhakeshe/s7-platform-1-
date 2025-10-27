@@ -1,11 +1,10 @@
-import { Router, type Request, type Response } from "express"
+﻿import { Router, type Request, type Response } from "express"
 import { prisma } from "../db"
 import { requireAuth } from "../middleware/auth"
 import type { AuthenticatedRequest } from "../types"
 
 export const router = Router()
 
-// List teams with members count
 router.get("/", async (_req: Request, res: Response) => {
   const teams = await prisma.team.findMany({
     orderBy: { createdAt: "desc" },
@@ -28,7 +27,6 @@ router.get("/", async (_req: Request, res: Response) => {
   )
 })
 
-// Create team
 router.post("/", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const {
     name,
@@ -58,19 +56,16 @@ router.post("/", requireAuth, async (req: AuthenticatedRequest, res: Response) =
       })(),
     },
   })
-  // auto-add captain to membership
   await prisma.teamMembership.create({ data: { teamId: team.id, userId: req.user!.id, role: "captain", status: "active" } })
   res.status(201).json(team)
 })
 
-// Request to join team (pending)
 router.post("/:teamId/join", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { teamId } = req.params
   const { telegram, whatsapp } = (req.body || {}) as { telegram?: string; whatsapp?: string }
   const team = await prisma.team.findUnique({ where: { id: teamId } })
   if (!team) return res.status(404).json({ error: "Team not found" })
 
-  // Upsert user's contact info into profile so captain/admins can see it
   try {
     const profile = await prisma.userProfile.findUnique({ where: { userId: req.user!.id } })
     const social: any = (() => {
@@ -94,7 +89,6 @@ router.post("/:teamId/join", requireAuth, async (req: AuthenticatedRequest, res:
   res.status(201).json({ status: membership.status })
 })
 
-// List my team memberships
 router.get("/mine", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const list = await prisma.teamMembership.findMany({
     where: { userId: req.user!.id },
@@ -104,7 +98,6 @@ router.get("/mine", requireAuth, async (req: AuthenticatedRequest, res: Response
   res.json(list.map((m) => ({ id: m.id, role: m.role, status: m.status, joinedAt: m.joinedAt, team: { id: m.teamId, name: (m as any).team?.name, description: (m as any).team?.description } })))
 })
 
-// Captain-only: list members of my team with contacts
 router.get("/:teamId/members", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { teamId } = req.params
   const team = await prisma.team.findUnique({ where: { id: teamId }, select: { captainId: true } })
@@ -134,7 +127,6 @@ router.get("/:teamId/members", requireAuth, async (req: AuthenticatedRequest, re
   )
 })
 
-// Captain-only: update member role/status
 router.put("/:teamId/members/:membershipId", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { teamId, membershipId } = req.params
   const team = await prisma.team.findUnique({ where: { id: teamId }, select: { captainId: true } })

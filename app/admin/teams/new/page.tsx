@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useState } from "react"
 import { ArrowUpRight } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -27,7 +27,6 @@ export default function Page() {
 
   useEffect(() => {
     if (!editId) return
-    // Load team for edit (fetch from admin list and find by id)
     apiFetch<any[]>("/api/admin/teams")
       .then((list) => {
         const t = (list || []).find((x) => x.id === editId)
@@ -54,7 +53,6 @@ export default function Page() {
       .catch(() => {})
   }, [editId])
 
-  // Restore draft if creating new
   useEffect(() => {
     if (editId) return
     try {
@@ -119,7 +117,7 @@ export default function Page() {
           />
         </div>
 
-        {/* Contacts & details */}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input value={city} onChange={(e)=>setCity(e.target.value)} placeholder="Город" className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white outline-none" />
           <input value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="Телефон" className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white outline-none" />
@@ -127,7 +125,7 @@ export default function Page() {
           <input value={mentorName} onChange={(e)=>setMentorName(e.target.value)} placeholder="Имя ментора" className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white outline-none md:col-span-2" />
         </div>
 
-        {/* Positions wanted */}
+        
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-4 text-white">
           <div className="text-white/80 mb-2">Какие позиции нужны</div>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -140,7 +138,7 @@ export default function Page() {
           <input value={customPositions} onChange={(e)=>setCustomPositions(e.target.value)} placeholder="Другая должность (через запятую)" className="w-full bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white outline-none" />
         </div>
 
-        {/* Competitions */}
+        
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-4 text-white">
           <div className="text-white/80 mb-2">Соревнования команды</div>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -153,7 +151,7 @@ export default function Page() {
           <input value={customCompetitions} onChange={(e)=>setCustomCompetitions(e.target.value)} placeholder="Другие (через запятую)" className="w-full bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white outline-none" />
         </div>
 
-        {/* Description */}
+        
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white">
           <textarea
             value={description}

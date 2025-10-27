@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useState } from "react"
 import { Search, ExternalLink } from "lucide-react"
 
@@ -65,7 +65,7 @@ export default function RecommendedCoursesTab() {
 
   return (
     <div className="flex-1 p-4 md:p-8 animate-slide-up">
-      {/* Filter Tabs */}
+      
       <div className="flex space-x-2 mb-8 overflow-x-auto">
         {[
           { id: "all", label: "Все" },
@@ -87,7 +87,7 @@ export default function RecommendedCoursesTab() {
         ))}
       </div>
 
-      {/* Search Bar */}
+      
       <div className="mt-4 md:mt-0 mb-6">
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#a0a0b0] w-4 h-4" />
@@ -99,7 +99,7 @@ export default function RecommendedCoursesTab() {
         </div>
       </div>
 
-      {/* Courses Grid */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course, index) => (
           <div
@@ -107,19 +107,19 @@ export default function RecommendedCoursesTab() {
             className="bg-[#16161c] rounded-lg border border-[#636370]/20 overflow-hidden hover:border-[#636370]/40 transition-all duration-300 cursor-pointer group animate-slide-up"
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            {/* Course Image */}
+            
             <div className="relative h-32 bg-gradient-to-br from-[#636370]/20 to-[#636370]/5">
               <img src={course.image || "/placeholder.svg"} alt={course.title} className="w-full h-full object-cover" />
               <div className="absolute top-3 right-3">
                 <ExternalLink className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              {/* Difficulty Badge */}
+              
               <div className="absolute bottom-3 left-3">
                 <span className={`${course.difficultyColor} text-white text-xs px-2 py-1 rounded-full font-medium`}>
                   {course.difficulty}
                 </span>
               </div>
-              {/* Popular/New Badge */}
+              
               {course.popular && (
                 <div className="absolute top-3 left-3">
                   <span className="bg-[#00a3ff] text-white text-xs px-2 py-1 rounded-full font-medium">Популярное</span>
@@ -132,7 +132,7 @@ export default function RecommendedCoursesTab() {
               )}
             </div>
 
-            {/* Course Info */}
+            
             <div className="p-4">
               <h3 className="text-white font-medium text-lg mb-2 group-hover:text-[#00a3ff] transition-colors">
                 {course.title}
@@ -147,7 +147,7 @@ export default function RecommendedCoursesTab() {
         ))}
       </div>
 
-      {/* Empty State */}
+      
       {filteredCourses.length === 0 && (
         <div className="text-center py-12 animate-slide-up">
           <div className="text-[#a0a0b0] text-lg mb-2">Курсов не найдено</div>

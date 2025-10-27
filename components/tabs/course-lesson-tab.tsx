@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Info, Play, Image, Lock, FileText } from "lucide-react"
 import type { CourseDetails } from "@/components/tabs/course-details-tab"
@@ -50,7 +50,6 @@ export default function CourseLessonTab({
     ;(async () => {
       if (!course?.id) { setCanAccess(false); return }
       try {
-        // Ask server for authoritative access flag
         const data = await apiFetch<any>(`/courses/${course.id}`)
         if (alive) setCanAccess(Boolean(data?.isFree || data?.hasAccess))
       } catch {
@@ -81,19 +80,16 @@ export default function CourseLessonTab({
   const modIndex = course.modules.findIndex((m) => String(m.id) === String((mod as any)?.id))
   const lessonIndex = mod.lessons.findIndex((l) => String(l.id) === String((lesson as any)?.id))
 
-  // Resolve media URLs: prefer server URLs (published), fallback to local IndexedDB IDs
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [slideUrls, setSlideUrls] = useState<(string | null)[]>([])
   const [presUrl, setPresUrl] = useState<string | null>(null)
   const [lessonContent, setLessonContent] = useState<string>(lesson?.content || "")
-  // Lesson quiz state
   const [lessonQuiz, setLessonQuiz] = useState<Array<any>>([])
   const [loadingQuiz, setLoadingQuiz] = useState(false)
 
   useEffect(() => {
     let alive = true
     ;(async () => {
-      // Video
       if ((lesson as any)?.videoUrl) {
         setVideoUrl(resolveMediaUrl((lesson as any).videoUrl))
       } else if (lesson?.videoMediaId) {
@@ -103,7 +99,6 @@ export default function CourseLessonTab({
         setVideoUrl(null)
       }
 
-      // Slides (server -> local fallback)
       const serverSlides = (lesson as any)?.serverSlides || (lesson as any)?.slides
       if (Array.isArray(serverSlides) && serverSlides.length) {
         const urls = serverSlides
@@ -118,7 +113,6 @@ export default function CourseLessonTab({
         setSlideUrls([])
       }
 
-      // Presentation
       if ((lesson as any)?.presentationUrl) {
         setPresUrl(resolveMediaUrl((lesson as any).presentationUrl))
       } else if (lesson?.presentationMediaId) {
@@ -131,7 +125,6 @@ export default function CourseLessonTab({
     return () => { alive = false }
   }, [lesson?.videoMediaId, lesson?.slideMediaIds, lesson?.presentationMediaId, (lesson as any)?.videoUrl, (lesson as any)?.presentationUrl, (lesson as any)?.serverSlides, (lesson as any)?.slides])
 
-  // Also ask backend for the specific lesson to ensure media URLs (works even if course prop lacks full media fields)
   useEffect(() => {
     let ignore = false
     if (!course?.id || !lesson?.id) return
@@ -139,7 +132,6 @@ export default function CourseLessonTab({
     apiFetch<any>(`/courses/${course.id}/lessons/${encodeURIComponent(lid)}`)
       .then((data) => {
         if (ignore || !data) return
-        // Successful fetch implies access for this lesson (or it is free preview)
         setCanAccess((prev) => prev || true)
         if (typeof data.content === 'string') setLessonContent(data.content)
         if (data.videoUrl) setVideoUrl(resolveMediaUrl(data.videoUrl))
@@ -152,11 +144,10 @@ export default function CourseLessonTab({
           setSlideUrls(urls)
         }
       })
-      .catch(() => { /* keep canAccess as is; 403 handled by overlay */ })
+      .catch(() => {  })
     return () => { ignore = true }
   }, [course?.id, (lesson as any)?.id])
 
-  // Load lesson-level quiz from backend
   useEffect(() => {
     if (!course?.id || moduleId == null || lessonId == null) { setLessonQuiz([]); return }
     setLoadingQuiz(true)
@@ -182,7 +173,7 @@ export default function CourseLessonTab({
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
-      {/* Breadcrumb */}
+      
       <div className="mb-6 flex items-center gap-2 text-white">
         <button
           onClick={onBack}
@@ -195,7 +186,7 @@ export default function CourseLessonTab({
       </div>
 
       <div className="space-y-4 relative">
-        {/* Module pill */}
+        
         <div className="rounded-full bg-[#1b1b22] px-4 py-2 text-white/80 inline-flex items-center gap-3">
           <span className="w-6 h-6 rounded-full bg-[#2a2a35] text-white/80 flex items-center justify-center text-xs">
             {(modIndex >= 0 ? modIndex : 0) + 1}
@@ -203,7 +194,7 @@ export default function CourseLessonTab({
           <span>{mod.title}</span>
         </div>
 
-        {/* Lesson pill */}
+        
         <div className="rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-2 text-white inline-flex items-center gap-3">
           <span className="w-7 h-7 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
             {(lessonIndex >= 0 ? lessonIndex : 0) + 1}
@@ -211,10 +202,10 @@ export default function CourseLessonTab({
           <span className="font-medium">{lesson.title}</span>
         </div>
 
-        {/* Content area */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
           <section className="space-y-6">
-            {/* Video */}
+            
             {videoUrl ? (
               <video
                 key={videoUrl}
@@ -237,7 +228,7 @@ export default function CourseLessonTab({
               </div>
             )}
 
-            {/* Text content */}
+            
             {(lessonContent && lessonContent.trim().length > 0) && (
               <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-2 animate-slide-up">
                 <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 bg-[#1b1b22] border border-[#2a2a35] text-white/70 text-xs">
@@ -250,7 +241,7 @@ export default function CourseLessonTab({
               </div>
             )}
 
-            {/* Lesson Quiz */}
+            
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 bg-[#0f2d3a] border border-[#174a5d] text-[#7ed8ff]">
                 <Info className="w-4 h-4" />
@@ -302,9 +293,9 @@ export default function CourseLessonTab({
             </div>
           </section>
 
-          {/* Right: Slides / Presentation */}
+          
           <aside className="space-y-3">
-            {/* Slides list */}
+            
             {slideUrls.length > 0 ? (
               slideUrls.map((url, idx) => (
                 <div key={idx} className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white flex items-center justify-between animate-slide-up">
@@ -326,7 +317,7 @@ export default function CourseLessonTab({
               </div>
             )}
 
-            {/* Presentation */}
+            
             {presUrl && (
               <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white flex items-center justify-between animate-slide-up">
                 <div className="inline-flex items-center gap-2">
@@ -339,7 +330,7 @@ export default function CourseLessonTab({
           </aside>
         </div>
 
-        {/* Locked overlay */}
+        
         {!canAccess && (
           <div className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center">
             <div className="text-center text-white space-y-3 p-6">
