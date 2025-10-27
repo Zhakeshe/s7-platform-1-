@@ -41,12 +41,10 @@ export default function TeamMembersAdminPage() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
-      <h1 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
-        Участники <span className="italic text-[var(--color-accent-warm)]">команды</span>
-      </h1>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+      <h1 className="text-white text-2xl font-bold mb-6">Участники команды</h1>
 
-      <div className="card">
+      <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4">
         {loading ? (
           <div className="text-white/70">Загрузка...</div>
         ) : members.length === 0 ? (
@@ -56,7 +54,7 @@ export default function TeamMembersAdminPage() {
             {members.map((m) => (
               <div key={m.id} className="py-3 flex items-center justify-between animate-slide-up">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
                     {(m.user.fullName || m.user.email || "?").charAt(0)}
                   </div>
                   <div>

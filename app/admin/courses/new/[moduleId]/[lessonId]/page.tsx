@@ -293,7 +293,7 @@ export default function Page() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="mb-4">
         <button
           onClick={() => { if (course) { try { writeDraftBy(draftKey, course) } catch {} } router.push(`/admin/courses/new/${moduleId}${qs}`) }}
@@ -308,7 +308,7 @@ export default function Page() {
         
         <div className="flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white">
           <div className="flex items-center gap-3 w-full">
-            <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">{lesson?.id ?? 1}</span>
+            <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">{lesson?.id ?? 1}</span>
             <input
               value={lesson?.title || ""}
               onChange={(e) => updateLesson({ title: e.target.value })}
@@ -348,7 +348,7 @@ export default function Page() {
                   <button onClick={() => fileInput.current?.click()} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Заменить</button>
                   <input ref={fileInput} type="file" accept="video/*" onChange={(e)=>{ const f=e.target.files?.[0]; if(f) onSelectVideo(f) }} className="hidden" />
                   <button onClick={uploadVideoToServer} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Загрузить на сервер</button>
-                  {lesson.videoUrl && <a href={lesson.videoUrl} target="_blank" className="text-xs text-[var(--color-accent-warm)] underline">Открыть URL</a>}
+                  {lesson.videoUrl && <a href={lesson.videoUrl} target="_blank" className="text-xs text-[#00a3ff] underline">Открыть URL</a>}
                   <button onClick={removeVideo} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm inline-flex items-center gap-1"><Trash className="w-4 h-4"/>Удалить</button>
                 </div>
               )}
@@ -455,7 +455,7 @@ export default function Page() {
               <div className="flex items-center justify-end gap-3">
                 <a href={presPreview} target="_blank" className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Открыть локально</a>
                 <button onClick={uploadPresentationToServer} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Загрузить на сервер</button>
-                {lesson?.presentationUrl && <a href={lesson.presentationUrl} target="_blank" className="text-xs text-[var(--color-accent-warm)] underline">URL</a>}
+                {lesson?.presentationUrl && <a href={lesson.presentationUrl} target="_blank" className="text-xs text-[#00a3ff] underline">URL</a>}
               </div>
             )}
           </aside>
@@ -549,7 +549,7 @@ export default function Page() {
       
       <div className="flex justify-end gap-3 pt-2">
         <button onClick={() => saveLessonDraft(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-4 py-2 text-white/90">Сохранить</button>
-        <button onClick={() => saveLessonDraft(true)} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] px-4 py-2 text-black font-medium">Сохранить и выйти</button>
+        <button onClick={() => saveLessonDraft(true)} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] px-4 py-2 text-black font-medium">Сохранить и выйти</button>
       </div>
     </main>
   )

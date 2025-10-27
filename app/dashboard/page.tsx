@@ -219,15 +219,15 @@ function DashboardInner() {
         }`}
       >
         
-        <header className="bg-surface-1 border-b border-1 px-4 md:px-8 py-4 md:py-6 flex items-center gap-4 animate-fade-in relative z-10">
+        <header className="bg-[#16161c] border-b border-[#636370]/20 px-4 md:px-8 py-4 md:py-6 flex items-center gap-4 animate-slide-up relative z-10">
           <div className="flex items-center">
-            <h1 className="text-white text-2xl md:text-3xl font-medium ml-12 md:ml-0">{getTabTitle(activeTab)}</h1>
+            <h1 className="text-white text-xl md:text-2xl font-medium ml-12 md:ml-0">{getTabTitle(activeTab)}</h1>
           </div>
           
           <div className="ml-auto flex items-center gap-4">
-            <div className="text-right font-mono">
-              <div className="text-white text-base font-medium">{currentDate}</div>
-              <div className="text-4 text-xs">2025</div>
+            <div className="text-right">
+              <div className="text-white text-lg md:text-xl font-medium">{currentDate}</div>
+              <div className="text-[#a0a0b0] text-sm">2025</div>
             </div>
             <ProfileDropdown
               data={{ name: user?.fullName || user?.email || "Профиль", email: user?.email || "", avatar: "/logo-s7.png", xp: user?.xp || 0 }}

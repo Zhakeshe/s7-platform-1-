@@ -77,7 +77,7 @@ export default function RecommendedCoursesTab() {
             onClick={() => setActiveFilter(filter.id)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap animate-slide-up ${
               activeFilter === filter.id
-                ? "bg-[var(--color-accent-warm)] text-white"
+                ? "bg-[#00a3ff] text-white"
                 : "bg-[#16161c] text-[#a0a0b0] hover:text-white hover:bg-[#636370]/10"
             }`}
             style={{ animationDelay: `${index * 100}ms` }}
@@ -94,7 +94,7 @@ export default function RecommendedCoursesTab() {
           <input
             type="text"
             placeholder="Поиск"
-            className="w-full bg-[#16161c] border border-[#636370]/20 rounded-lg pl-10 pr-4 py-2 text-white placeholder-[#a0a0b0] focus:outline-none focus:border-[var(--color-accent-warm)] transition-colors"
+            className="w-full bg-[#16161c] border border-[#636370]/20 rounded-lg pl-10 pr-4 py-2 text-white placeholder-[#a0a0b0] focus:outline-none focus:border-[#00a3ff] transition-colors"
           />
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function RecommendedCoursesTab() {
               
               {course.popular && (
                 <div className="absolute top-3 left-3">
-                  <span className="bg-[var(--color-accent-warm)] text-white text-xs px-2 py-1 rounded-full font-medium">Популярное</span>
+                  <span className="bg-[#00a3ff] text-white text-xs px-2 py-1 rounded-full font-medium">Популярное</span>
                 </div>
               )}
               {course.new && (
@@ -134,7 +134,7 @@ export default function RecommendedCoursesTab() {
 
             
             <div className="p-4">
-              <h3 className="text-white font-medium text-lg mb-2 group-hover:text-[var(--color-accent-warm)] transition-colors">
+              <h3 className="text-white font-medium text-lg mb-2 group-hover:text-[#00a3ff] transition-colors">
                 {course.title}
               </h3>
               <p className="text-[#a0a0b0] text-sm mb-3">Автор: {course.author}</p>

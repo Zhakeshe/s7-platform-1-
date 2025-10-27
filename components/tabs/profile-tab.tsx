@@ -63,17 +63,21 @@ export default function ProfileTab() {
     )
   }
   return (
-    <div className="flex-1 p-6 md:p-8 bg-dots-pattern relative z-10">
+    <div className="flex-1 p-4 md:p-8 animate-slide-up">
       <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
-        <div className="card animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+        
+        <div
+          className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20 animate-slide-up"
+          style={{ animationDelay: "100ms" }}
+        >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[var(--color-accent-warm)] to-[var(--color-accent-warm-hover)] rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#00a3ff] to-[#0080cc] rounded-full flex items-center justify-center">
               <UserIcon className="w-8 h-8 md:w-10 md:h-10 text-white" />
             </div>
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
                 <h2 className="text-white text-xl md:text-2xl font-medium">{user?.fullName || "Пользователь"}</h2>
-                <span className="chip bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)] w-fit">
+                <span className="bg-[#00a3ff] text-white px-3 py-1 rounded-full text-sm font-medium w-fit">
                   {user?.level ?? 1} Уровень
                 </span>
               </div>
@@ -125,7 +129,7 @@ export default function ProfileTab() {
                 updateProfile({ fullName: fullName.trim(), institution: institution.trim() })
                 toast({ title: "Профиль обновлён" })
               }}
-              className="mt-4 w-full md:w-auto rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium px-4 py-2"
+              className="mt-4 w-full md:w-auto rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium px-4 py-2"
             >
               Сохранить
             </button>
@@ -143,7 +147,7 @@ export default function ProfileTab() {
           </div>
           <div className="w-full bg-[#636370]/20 rounded-full h-2 mb-4">
             <div
-              className="bg-gradient-to-r from-[var(--color-accent-warm)] to-[var(--color-accent-warm-hover)] h-2 rounded-full"
+              className="bg-gradient-to-r from-[#00a3ff] to-[#0080cc] h-2 rounded-full"
               style={{ 
                 width: `${Math.min(((user?.xp || 0) % 1000) / 10, 100)}%` 
               }}
@@ -151,7 +155,7 @@ export default function ProfileTab() {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-[#a0a0b0]">Не знаешь как поднимать уровень?</span>
-            <button className="text-[var(--color-accent-warm)] hover:text-[var(--color-accent-warm-hover)] transition-colors duration-200 flex items-center gap-1">
+            <button className="text-[#00a3ff] hover:text-[#0080cc] transition-colors duration-200 flex items-center gap-1">
               Смотри гайд <ExternalLink className="w-4 h-4" />
             </button>
           </div>
@@ -169,10 +173,10 @@ export default function ProfileTab() {
           {achievements.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {achievements.map((a) => (
-                <div key={a.id} className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10 group hover:border-[var(--color-accent-warm)]/30 transition-all duration-200">
+                <div key={a.id} className="bg-[#0e0e12] rounded-lg p-4 border border-[#636370]/10 group hover:border-[#00a3ff]/30 transition-all duration-200">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-white font-medium">Достижение</h4>
-                    <ExternalLink className="w-4 h-4 text-[#a0a0b0] group-hover:text-[var(--color-accent-warm)] transition-colors duration-200" />
+                    <ExternalLink className="w-4 h-4 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200" />
                   </div>
                   <p className="text-[#a0a0b0] text-xs mb-2">{a.text}</p>
                   <div className="flex items-center gap-2">
@@ -258,7 +262,7 @@ export default function ProfileTab() {
 
           <div className="mt-6 pt-6 border-t border-[#636370]/20">
             <p className="text-[#a0a0b0] text-sm mb-4">Участвовал в соревновании? Отправь заявку — админ проверит и опубликует:</p>
-            <button onClick={() => setOpenAdd(true)} className="w-12 h-12 bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105">
+            <button onClick={() => setOpenAdd(true)} className="w-12 h-12 bg-[#00a3ff] hover:bg-[#0088cc] rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105">
               <Plus className="w-6 h-6 text-white" />
             </button>
           </div>
@@ -290,7 +294,7 @@ export default function ProfileTab() {
                   } catch(e:any) {
                     toast({ title:'Ошибка', description:e?.message||'Не удалось отправить', variant:'destructive' as any })
                   }
-                }} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-2">Отправить</button>
+                }} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Отправить</button>
               </div>
             </div>
           </div>

@@ -16,7 +16,7 @@ export default function SocialPanel() {
           aria-label={item.label}
           className="group w-12 h-12 rounded-full bg-[#16161c] text-white flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:bg-[#1f1f25] transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
         >
-          <i className={`bi ${item.icon} text-xl opacity-80 group-hover:opacity-100 group-hover:text-[var(--color-accent-warm)] transition-colors`}></i>
+          <i className={`bi ${item.icon} text-xl opacity-80 group-hover:opacity-100 group-hover:text-[#00a3ff] transition-colors`}></i>
           <span className="sr-only">{item.label}</span>
         </a>
       ))}

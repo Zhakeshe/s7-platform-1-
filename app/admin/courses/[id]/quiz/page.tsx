@@ -97,7 +97,7 @@ export default function CourseQuizAdminPage() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-white text-xl font-medium">Вопросы для курса</h2>
         <button onClick={() => router.push("/admin/courses")} className="text-white/70 hover:text-white">Назад</button>
@@ -141,7 +141,7 @@ export default function CourseQuizAdminPage() {
           </div>
         </div>
         <div className="flex justify-end">
-          <button onClick={create} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium px-4 py-2">Создать</button>
+          <button onClick={create} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium px-4 py-2">Создать</button>
         </div>
       </div>
 

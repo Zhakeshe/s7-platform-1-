@@ -19,26 +19,25 @@ export default function Page() {
   }, [])
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+      
       <div className="flex items-center justify-between mb-6 gap-4 max-w-5xl">
-        <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white">
-          Пользо<span className="italic text-[var(--color-accent-warm)]">ватели</span>
-        </h2>
+        <h2 className="text-white text-xl font-medium">Пользователи</h2>
         <input
           placeholder="Поиск"
-          className="w-60 rounded-full bg-surface-2 border border-1 px-4 py-2 text-white/80 outline-none focus:border-[var(--color-border-hover-1)] transition-colors"
+          className="w-60 rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-2 text-white/80 outline-none focus:border-[#00a3ff]"
         />
       </div>
 
       <div className="space-y-3 max-w-3xl">
         {users.map((u) => (
-          <div key={u.id} className="flex items-center justify-between rounded-full card px-2 py-2 text-white">
+          <div key={u.id} className="flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-2 py-2 text-white">
             <Link href={`/admin/users/${u.id}`} className="flex items-center gap-3 flex-1 hover:opacity-90">
               <span className="inline-flex items-center justify-center rounded-full bg-[#1b1b22] border border-[#2a2a35] w-10 h-8 text-sm text-white/80">
                 {u.id.slice(-2)}
               </span>
               <span className="text-white font-medium">{u.fullName || u.email}</span>
-              <span className="text-xs rounded-full bg-[var(--color-accent-warm)] text-black px-2 py-0.5">XP: {u.xp ?? 0}</span>
+              <span className="text-xs rounded-full bg-[#00a3ff] text-black px-2 py-0.5">XP: {u.xp ?? 0}</span>
               {u.banned && (
                 <span className="text-xs rounded-full bg-[#ef4444]/20 text-[#ef4444] px-2 py-0.5">Забанен</span>
               )}

@@ -44,24 +44,23 @@ export default function S7ToolsTab() {
   }
 
   return (
-    <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto">
+    <div className="flex-1 p-8 animate-slide-up">
       <div className="mb-8">
-        <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6 animate-fade-in-up">
-          Соревнования и <span className="italic text-[var(--color-accent-warm)]">события</span>
-        </h2>
+        <h2 className="text-white text-xl mb-6">Соревнования и события</h2>
 
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {events.map((ev, index) => (
             <div
               key={ev.id}
-              className="card group hover:scale-[1.01] animate-fade-in-up"
+              className={`bg-[#16161c] border border-[#636370]/20 text-white rounded-lg p-6 hover:scale-102 transition-all duration-200 group animate-slide-up`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex items-start justify-between mb-4">
-                <h3 className={`text-lg font-medium group-hover:text-[var(--color-accent-warm)] transition-colors duration-200`}>{ev.title}</h3>
+                <h3 className={`text-lg font-medium group-hover:text-[#00a3ff] transition-colors duration-200`}>{ev.title}</h3>
                 {ev.url && (
                   <a href={ev.url} target="_blank" rel="noopener noreferrer" aria-label="Открыть ссылку" className="inline-flex">
-                    <ExternalLink className={`w-5 h-5 text-[#a0a0b0] group-hover:text-[var(--color-accent-warm)] transition-colors duration-200`} />
+                    <ExternalLink className={`w-5 h-5 text-[#a0a0b0] group-hover:text-[#00a3ff] transition-colors duration-200`} />
                   </a>
                 )}
               </div>
@@ -74,7 +73,7 @@ export default function S7ToolsTab() {
         
         <div className="mt-12 pt-8 border-t border-[#636370]/20 animate-slide-up" style={{ animationDelay: "600ms" }}>
           <p className="text-[#a0a0b0] mb-4">Проводишь мероприятие и ищешь участников? Опубликуй его:</p>
-          <button onClick={() => setOpen(true)} aria-label="Добавить мероприятие" className="w-12 h-12 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center hover:bg-[var(--color-accent-warm-hover)] transition-colors duration-200">
+          <button onClick={() => setOpen(true)} aria-label="Добавить мероприятие" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200">
             <Plus className="text-white w-6 h-6" />
           </button>
         </div>
@@ -83,13 +82,13 @@ export default function S7ToolsTab() {
         <div className="mt-8 animate-slide-up" style={{ animationDelay: "700ms" }}>
           <p className="text-[#a0a0b0] mb-4">Вопросы? Свяжись с нами:</p>
           <div className="flex gap-4">
-            <a href={linkFor("phone")} className="w-12 h-12 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center hover:bg-[var(--color-accent-warm-hover)] transition-colors duration-200" aria-label="Позвонить" title="Позвонить">
+            <a href={linkFor("phone")} className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200" aria-label="Позвонить" title="Позвонить">
               <Phone className="text-white w-5 h-5" />
             </a>
-            <a href={linkFor("telegram")} target="_blank" rel="noreferrer" className="w-12 h-12 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center hover:bg-[var(--color-accent-warm-hover)] transition-colors duration-200" aria-label="Telegram" title="Telegram">
+            <a href={linkFor("telegram")} target="_blank" rel="noreferrer" className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200" aria-label="Telegram" title="Telegram">
               <MessageCircle className="text-white w-5 h-5" />
             </a>
-            <a href={linkFor("email")} className="w-12 h-12 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center hover:bg-[var(--color-accent-warm-hover)] transition-colors duration-200" aria-label="Email" title="Email">
+            <a href={linkFor("email")} className="w-12 h-12 bg-[#00a3ff] rounded-full flex items-center justify-center hover:bg-[#0088cc] transition-colors duration-200" aria-label="Email" title="Email">
               <Mail className="text-white w-5 h-5" />
             </a>
           </div>
@@ -111,7 +110,7 @@ export default function S7ToolsTab() {
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={()=>setOpen(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={submitEvent} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-2">Отправить</button>
+              <button onClick={submitEvent} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Отправить</button>
             </div>
           </div>
         </div>,

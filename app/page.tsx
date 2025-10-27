@@ -64,7 +64,7 @@ export default function LoginPage() {
       </div>
 
       <div
-        className={`w-full max-w-sm bg-[var(--color-surface-1)] border border-dashed border-[var(--color-border-1)] rounded-2xl ${isLogin ? "p-6" : "p-7"} backdrop-blur-[1px] transition-all duration-500 ease-in-out hover:bg-[#141414] hover:border-[var(--color-border-hover-1)] animate-slide-up`}
+        className={`w-full max-w-sm bg-[#0b0b0b] border border-dashed border-[#1f1f1f] rounded-2xl ${isLogin ? "p-6" : "p-7"} backdrop-blur-[1px] transition-all duration-500 ease-in-out hover:bg-[#141414] hover:border-[#2a2a2a] animate-slide-up`}
         style={{ animationDelay: "400ms" }}
       >
         <h1 className={`text-white text-3xl font-medium text-center ${isLogin ? "mb-6" : "mb-7"} transition-all duration-300 tracking-tight`}>
@@ -80,6 +80,7 @@ export default function LoginPage() {
                   placeholder="Полное имя"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="bg-transparent h-auto py-2.5 border-0 border-b border-[#1f1f1f] rounded-none px-0 pb-3 text-white placeholder:text-[#a7a7a7] focus:border-[#2a2a2a] focus:ring-0 focus-visible:ring-0 transition-all duration-300 hover:border-[#2a2a2a]"
                 />
                 <i className="bi bi-person absolute right-0 top-1/2 -translate-y-1/2 text-lg text-[#a7a7a7] transition-colors duration-300"></i>
               </div>
@@ -89,6 +90,7 @@ export default function LoginPage() {
                   placeholder="Возраст"
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
+                  className="bg-transparent h-auto py-3 border-0 border-b border-[#1f1f1f] rounded-none px-0 pb-3 text-white placeholder:text-[#a7a7a7] focus:border-[#2a2a2a] focus:ring-0 focus-visible:ring-0 transition-all duration-300 hover:border-[#2a2a2a]"
                 />
                 <i className="bi bi-calendar absolute right-0 top-1/2 -translate-y-1/2 text-lg text-[#a7a7a7] transition-colors duration-300"></i>
               </div>
@@ -98,6 +100,7 @@ export default function LoginPage() {
                   placeholder="Учебное заведение"
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
+                  className="bg-transparent h-auto py-3 border-0 border-b border-[#1f1f1f] rounded-none px-0 pb-3 text-white placeholder:text-[#a7a7a7] focus:border-[#2a2a2a] focus:ring-0 focus-visible:ring-0 transition-all duration-300 hover:border-[#2a2a2a]"
                 />
                 <i className="bi bi-building absolute right-0 top-1/2 -translate-y-1/2 text-lg text-[#a7a7a7] transition-colors duration-300"></i>
               </div>
@@ -107,6 +110,7 @@ export default function LoginPage() {
                   placeholder="Роль (Студент, Учитель, Разработчик...)"
                   value={primaryRole}
                   onChange={(e) => setPrimaryRole(e.target.value)}
+                  className="bg-transparent h-auto py-3 border-0 border-b border-[#1f1f1f] rounded-none px-0 pb-3 text-white placeholder:text-[#a7a7a7] focus:border-[#2a2a2a] focus:ring-0 focus-visible:ring-0 transition-all duration-300 hover:border-[#2a2a2a]"
                 />
                 <i className="bi bi-person-badge absolute right-0 top-1/2 -translate-y-1/2 text-lg text-[#a7a7a7] transition-colors duration-300"></i>
               </div>
@@ -119,6 +123,7 @@ export default function LoginPage() {
                 placeholder="Почта"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="bg-transparent h-auto py-2.5 border-0 border-b border-[#1f1f1f] rounded-none px-0 pb-3 text-white placeholder:text-[#a7a7a7] focus:border-[#2a2a2a] focus:ring-0 focus-visible:ring-0 transition-all duration-300 hover:border-[#2a2a2a]"
               />
               <i className="bi bi-envelope absolute right-0 top-1/2 -translate-y-1/2 text-lg text-[#a7a7a7] transition-colors duration-300"></i>
             </div>
@@ -128,6 +133,7 @@ export default function LoginPage() {
                 placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="bg-transparent h-auto py-3 border-0 border-b border-[#1f1f1f] rounded-none px-0 pb-3 text-white placeholder:text-[#a7a7a7] focus:border-[#2a2a2a] focus:ring-0 focus-visible:ring-0 transition-all duration-300 hover:border-[#2a2a2a]"
               />
               <i className="bi bi-lock absolute right-0 top-1/2 -translate-y-1/2 text-lg text-[#a7a7a7] transition-colors duration-300"></i>
             </div>
@@ -135,7 +141,7 @@ export default function LoginPage() {
         </div>
         <Button
           onClick={isLogin ? handleLogin : handleRegister}
-          className={`w-full mt-8 transform hover:scale-102 active:scale-95 animate-slide-up`}
+          className={`w-full bg-[#0f0f0f] border border-[#1a1a1a] hover:bg-[#141414] hover:border-[#2a2a2a] text-white font-medium py-3 rounded-full ${isLogin ? "mt-8" : "mt-8"} transition-all duration-300 transform hover:scale-102 active:scale-95 animate-slide-up`}
           style={{ animationDelay: "900ms" }}
         >
           {isLogin ? "Войти" : "Зарегистрироваться"}

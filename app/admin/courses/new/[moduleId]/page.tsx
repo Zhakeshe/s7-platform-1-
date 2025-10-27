@@ -115,21 +115,20 @@ export default function Page() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="mb-4">
         <button
           onClick={() => { if (course) { try { writeDraftBy(draftKey, course) } catch {} } router.push(`/admin/courses/new${qs}`) }}
-          className="btn"
+          className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
         >
           Назад
         </button>
       </div>
-      <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
-        Создать <span className="italic text-[var(--color-accent-warm)]">курс</span>
-      </h2>
+      <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
 
       <div className="max-w-4xl space-y-6">
-        <div className="flex items-center justify-between card">
+        
+        <div className="flex items-center justify-between bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white">
           <div className="flex items-center gap-3">
             <span className="w-7 h-7 rounded-full bg-[#2a2a35] text-white/80 flex items-center justify-center text-xs">{module?.id ?? 1}.</span>
             <span className="font-medium">{module?.title ?? `Модуль ${moduleId}`}</span>
@@ -151,7 +150,7 @@ export default function Page() {
               className="w-full flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors animate-slide-up"
             >
               <button onClick={() => openLesson(l.id)} className="flex items-center gap-3 flex-1 text-left">
-                <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">{l.id}</span>
+                <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">{l.id}</span>
                 <span className="text-white/80">{l.title || "Название урока"}</span>
               </button>
               <span className="text-white/60 text-sm">{l.time || "Время курса"}</span>
@@ -164,7 +163,7 @@ export default function Page() {
             className="w-full flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors"
           >
             <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
+              <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
                 <Plus className="w-4 h-4" />
               </span>
               <span className="text-white/80">Добавить урок</span>

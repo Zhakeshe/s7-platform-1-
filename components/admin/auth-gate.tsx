@@ -31,7 +31,7 @@ export default function AdminAuthGate({ children }: { children: React.ReactNode 
           <div className="text-sm text-white/70">У вас нет прав администратора</div>
           <button
             onClick={() => router.push("/dashboard")}
-            className="w-full rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-2 transition-colors"
+            className="w-full rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2 transition-colors"
           >
             Вернуться к панели управления
           </button>

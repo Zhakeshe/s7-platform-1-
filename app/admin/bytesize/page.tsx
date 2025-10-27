@@ -9,7 +9,7 @@ import { useConfirm } from "@/components/ui/confirm"
 function BSCard({ id, title, tag, views, openHref, onDelete }: { id?: string; title: string; tag: string; views: number; openHref?: string; onDelete?: (id: string) => void }) {
   return (
     <div
-      className="card text-white min-h-[170px] relative animate-fade-in-up cursor-pointer"
+      className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white min-h-[170px] relative animate-slide-up cursor-pointer"
       onClick={() => { if (openHref) window.open(openHref, '_blank') }}
       role={openHref ? 'button' : undefined}
       tabIndex={openHref ? 0 : -1}
@@ -34,7 +34,7 @@ function BSCard({ id, title, tag, views, openHref, onDelete }: { id?: string; ti
         </div>
       </div>
       <div className="text-xl font-semibold mb-6">{title}</div>
-      <span className="inline-block bg-[var(--color-accent-warm)] text-white text-xs font-medium px-3 py-1 rounded-full">
+      <span className="inline-block bg-[#00a3ff] text-white text-xs font-medium px-3 py-1 rounded-full">
         {tag}
       </span>
     </div>
@@ -75,12 +75,8 @@ export default function Page() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white">
-          Byte<span className="italic text-[var(--color-accent-warm)]">Size</span>
-        </h2>
-      </div>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+      <h2 className="text-white text-xl font-medium mb-6">Byte Size</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
         <Link href="/admin/bytesize/new" className="block">
           <BSCard title="Добавить" tag="Robotics" views={0} />

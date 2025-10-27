@@ -112,12 +112,12 @@ export default function ByteSizeTab() {
   }
 
   if (loading) {
-    return <div className="flex-1 p-8 text-white/70 bg-dots-pattern">Загрузка...</div>
+    return <div className="flex-1 p-8 text-white/70">Загрузка...</div>
   }
 
   if (items.length === 0) {
     return (
-      <div className="flex-1 overflow-y-hidden relative bg-black bg-dots-pattern">
+      <div className="flex-1 p-8">
         <div className="text-center text-white/70 bg-[#16161c] border border-[#636370]/20 rounded-2xl p-10">
           Пока нет видео
         </div>
@@ -163,7 +163,7 @@ export default function ByteSizeTab() {
                     className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 text-xs text-white/90 hover:text-white transition-colors"
                   >
                     <span className="text-[10px] leading-none">Перейти к<br/>курсу</span>
-                    <div className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] flex items-center justify-center transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-[#00a3ff] hover:bg-[#0099ee] flex items-center justify-center transition-colors">
                       <ArrowUpRight className="w-4 h-4 text-black" />
                     </div>
                   </button>

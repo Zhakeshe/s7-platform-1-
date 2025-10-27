@@ -104,7 +104,7 @@ export default function Page() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <h2 className="text-white text-xl font-medium mb-6">{isEdit ? "Редактировать команду" : "Добавить команду"}</h2>
 
       <div className="max-w-3xl space-y-5">
@@ -130,7 +130,7 @@ export default function Page() {
           <div className="text-white/80 mb-2">Какие позиции нужны</div>
           <div className="flex flex-wrap gap-2 mb-3">
             {positionsList.map((p) => (
-              <button key={p} type="button" onClick={() => setPositionsWanted((s)=>({ ...s, [p]: !s[p] }))} className={`text-xs font-medium px-3 py-1 rounded-full border ${positionsWanted[p] ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}>
+              <button key={p} type="button" onClick={() => setPositionsWanted((s)=>({ ...s, [p]: !s[p] }))} className={`text-xs font-medium px-3 py-1 rounded-full border ${positionsWanted[p] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}>
                 {p}
               </button>
             ))}
@@ -143,7 +143,7 @@ export default function Page() {
           <div className="text-white/80 mb-2">Соревнования команды</div>
           <div className="flex flex-wrap gap-2 mb-3">
             {competitionOptions.map((c) => (
-              <button key={c} type="button" onClick={() => setCompetitions((s)=>({ ...s, [c]: !s[c] }))} className={`text-xs font-medium px-3 py-1 rounded-full border ${competitions[c] ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}>
+              <button key={c} type="button" onClick={() => setCompetitions((s)=>({ ...s, [c]: !s[c] }))} className={`text-xs font-medium px-3 py-1 rounded-full border ${competitions[c] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}>
                 {c}
               </button>
             ))}
@@ -173,7 +173,7 @@ export default function Page() {
           </button>
           <button
             onClick={saveTeam}
-            className="rounded-2xl bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors"
+            className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors"
           >
             <span>{isEdit ? "Сохранить" : "Добавить"}</span>
             <ArrowUpRight className="w-5 h-5" />

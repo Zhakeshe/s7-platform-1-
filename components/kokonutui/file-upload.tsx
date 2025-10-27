@@ -528,11 +528,11 @@ export default function FileUpload({
                                     : "opacity-0"
                             )}
                         >
-                            <div className="absolute inset-x-0 top-0 h-[20%] bg-gradient-to-b from-[var(--color-accent-warm)]/10 to-transparent" />
-                            <div className="absolute inset-x-0 bottom-0 h-[20%] bg-gradient-to-t from-[var(--color-accent-warm)]/10 to-transparent" />
-                            <div className="absolute inset-y-0 left-0 w-[20%] bg-gradient-to-r from-[var(--color-accent-warm)]/10 to-transparent" />
-                            <div className="absolute inset-y-0 right-0 w-[20%] bg-gradient-to-l from-[var(--color-accent-warm)]/10 to-transparent" />
-                            <div className="absolute inset-[20%] bg-[var(--color-accent-warm)]/5 rounded-lg transition-all duration-300 animate-pulse" />
+                            <div className="absolute inset-x-0 top-0 h-[20%] bg-gradient-to-b from-[#00a3ff]/10 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 h-[20%] bg-gradient-to-t from-[#00a3ff]/10 to-transparent" />
+                            <div className="absolute inset-y-0 left-0 w-[20%] bg-gradient-to-r from-[#00a3ff]/10 to-transparent" />
+                            <div className="absolute inset-y-0 right-0 w-[20%] bg-gradient-to-l from-[#00a3ff]/10 to-transparent" />
+                            <div className="absolute inset-[20%] bg-[#00a3ff]/5 rounded-lg transition-all duration-300 animate-pulse" />
                         </div>
 
                         <div className="absolute -right-4 -top-4 h-8 w-8 bg-gradient-to-br from-blue-500/20 to-transparent blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -634,7 +634,7 @@ export default function FileUpload({
                                                         file?.size || 0
                                                     )}
                                                 </span>
-                                                <span className="font-medium text-[var(--color-accent-warm)]">
+                                                <span className="font-medium text-[#00a3ff]">
                                                     {Math.round(progress)}%
                                                 </span>
                                             </div>

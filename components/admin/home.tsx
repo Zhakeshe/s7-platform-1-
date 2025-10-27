@@ -30,7 +30,7 @@ interface AdminPurchase {
 
 function Card({ children, add, href, loading }: { children: React.ReactNode; add?: boolean; href?: string; loading?: boolean }) {
   return (
-    <div className="relative card text-white min-h-[120px]">
+    <div className="relative bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white min-h-[120px]">
       {loading ? (
         <div className="animate-pulse">
           <div className="h-4 bg-gray-600 rounded w-3/4 mb-2"></div>
@@ -41,11 +41,11 @@ function Card({ children, add, href, loading }: { children: React.ReactNode; add
       )}
       {add && !loading && (
         href ? (
-          <Link href={href} className="absolute bottom-4 right-4 w-9 h-9 rounded-lg bg-[var(--color-accent-warm)] text-black flex items-center justify-center shadow hover:bg-[var(--color-accent-warm-hover)]">
+          <Link href={href} className="absolute bottom-4 right-4 w-9 h-9 rounded-lg bg-[#00a3ff] text-black flex items-center justify-center shadow hover:bg-[#0088cc]">
             <Plus className="w-5 h-5" />
           </Link>
         ) : (
-          <button className="absolute bottom-4 right-4 w-9 h-9 rounded-lg bg-[var(--color-accent-warm)] text-black flex items-center justify-center shadow">
+          <button className="absolute bottom-4 right-4 w-9 h-9 rounded-lg bg-[#00a3ff] text-black flex items-center justify-center shadow">
             <Plus className="w-5 h-5" />
           </button>
         )
@@ -77,7 +77,7 @@ export default function AdminHome() {
   }, [])
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto animate-fade-in">
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white mb-2">Добро пожаловать, {user?.fullName || user?.email}</h1>
@@ -174,7 +174,7 @@ export default function AdminHome() {
               {pendingPayments.map((payment) => (
                 <div key={payment.id} className="flex items-center justify-between bg-[#0f0f14] rounded-lg p-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[var(--color-accent-warm)] rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <div className="w-10 h-10 bg-[#00a3ff] rounded-full flex items-center justify-center text-black font-bold text-sm">
                       {(payment.user.fullName || payment.user.email || '?').charAt(0)}
                     </div>
                     <div>
@@ -183,7 +183,7 @@ export default function AdminHome() {
                       <div className="text-white/60 text-sm">Курс {payment.course.title} — {Number(payment.amount).toLocaleString()} ₸</div>
                     </div>
                   </div>
-                  <div className="text-[var(--color-accent-warm)] text-sm">Ожидает подтверждения</div>
+                  <div className="text-[#00a3ff] text-sm">Ожидает подтверждения</div>
                 </div>
               ))}
             </div>
@@ -191,7 +191,7 @@ export default function AdminHome() {
               <div className="mt-4 text-center">
                 <Link 
                   href="/admin/payments"
-                  className="text-[var(--color-accent-warm)] hover:text-[var(--color-accent-warm-hover)] text-sm font-medium"
+                  className="text-[#00a3ff] hover:text-[#0088cc] text-sm font-medium"
                 >
                   Посмотреть все →
                 </Link>

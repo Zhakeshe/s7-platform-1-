@@ -74,7 +74,7 @@ export default function Page() {
             <button
               key={s}
               onClick={() => setStatus(s as any)}
-              className={`text-xs px-3 py-1 rounded-full border ${status===s? 'bg-[var(--color-accent-warm)] text-black border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+              className={`text-xs px-3 py-1 rounded-full border ${status===s? 'bg-[#00a3ff] text-black border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
             >
               {s === "all" ? "Все" : s === "pending" ? "На проверке" : s === "approved" ? "Одобрено" : "Отклонено"}
             </button>

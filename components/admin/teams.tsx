@@ -42,7 +42,7 @@ function TeamRow({ id, name, membersCount, onDeleted }: { id: string; name: stri
       </div>
       <div className="flex items-center gap-3 mb-1">
         <div className="text-white text-lg font-medium">{name}</div>
-        <span className="inline-block bg-[var(--color-accent-warm)] text-black text-xs font-medium px-3 py-1 rounded-full">Участников: {membersCount ?? 0}</span>
+        <span className="inline-block bg-[#00a3ff] text-black text-xs font-medium px-3 py-1 rounded-full">Участников: {membersCount ?? 0}</span>
       </div>
       <div className="mt-2">
         <Link href={`/admin/teams/${id}`} className="text-xs bg-[#2a2a35] text-white/80 rounded-full px-3 py-1 hover:bg-[#333344]">
@@ -84,7 +84,7 @@ export default function AdminTeams() {
       <div className="mb-4">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black">Создать команду</Button>
+            <Button className="bg-[#00a3ff] hover:bg-[#0088cc] text-black">Создать команду</Button>
           </DialogTrigger>
           <DialogContent className="bg-[#16161c] border border-[#2a2a35] text-white">
             <DialogHeader>
@@ -107,7 +107,7 @@ export default function AdminTeams() {
                       key={p}
                       type="button"
                       onClick={() => setPositionsWanted((s) => ({ ...s, [p]: !s[p] }))}
-                      className={`text-xs font-medium px-3 py-1 rounded-full border ${positionsWanted[p] ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                      className={`text-xs font-medium px-3 py-1 rounded-full border ${positionsWanted[p] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
                     >
                       {p}
                     </button>
@@ -124,7 +124,7 @@ export default function AdminTeams() {
                       key={c}
                       type="button"
                       onClick={() => setCompetitions((s) => ({ ...s, [c]: !s[c] }))}
-                      className={`text-xs font-medium px-3 py-1 rounded-full border ${competitions[c] ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                      className={`text-xs font-medium px-3 py-1 rounded-full border ${competitions[c] ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
                     >
                       {c}
                     </button>

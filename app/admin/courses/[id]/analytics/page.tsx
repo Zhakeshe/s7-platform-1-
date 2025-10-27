@@ -75,10 +75,7 @@ export default function CourseAnalyticsPage() {
   }, [questionFilter])
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
-      <h1 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
-        Аналитика <span className="italic text-[var(--color-accent-warm)]">курса</span>
-      </h1>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-white text-xl font-medium">Аналитика курса</h2>
         <button onClick={() => router.push('/admin/courses')} className="text-white/70 hover:text-white">Назад</button>
@@ -100,7 +97,7 @@ export default function CourseAnalyticsPage() {
             </div>
             <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white">
               <div className="text-white/60 text-xs">Доход</div>
-              <div className="text-2xl font-semibold text-[var(--color-accent-warm)]">{Number(summary?.revenue || 0).toLocaleString()} ₸</div>
+              <div className="text-2xl font-semibold text-[#00a3ff]">{Number(summary?.revenue || 0).toLocaleString()} ₸</div>
             </div>
           </div>
 

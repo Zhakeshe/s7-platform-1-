@@ -56,15 +56,13 @@ export default function AdminAchievementsPage() {
   }, [])
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
-      <h1 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
-        Достижения <span className="italic text-[var(--color-accent-warm)]">участников</span>
-      </h1>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+      <h1 className="text-white text-2xl font-bold mb-6">Достижения участников</h1>
 
       <div className="mb-4">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black">Выдать достижение</Button>
+            <Button className="bg-[#00a3ff] hover:bg-[#0088cc] text-black">Выдать достижение</Button>
           </DialogTrigger>
           <DialogContent className="bg-[#16161c] border border-[#2a2a35] text-white">
             <DialogHeader>
@@ -116,7 +114,7 @@ export default function AdminAchievementsPage() {
                     toast({ title: 'Ошибка', description: e?.message || 'Не удалось выдать', variant: 'destructive' as any })
                   } finally { setSaving(false) }
                 }}
-                className="bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black"
+                className="bg-[#00a3ff] hover:bg-[#0088cc] text-black"
               >
                 Сохранить
               </Button>
@@ -125,7 +123,7 @@ export default function AdminAchievementsPage() {
         </Dialog>
       </div>
 
-      
+      {/* User Achievements */}
       <section className="mb-10">
         <h2 className="text-white text-lg font-semibold mb-3">Значки и награды</h2>
         <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4">
@@ -138,7 +136,7 @@ export default function AdminAchievementsPage() {
               {rows.map((r) => (
                 <div key={r.id} className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
                       {(r.user.fullName || r.user.email || "?").charAt(0)}
                     </div>
                     <div>
@@ -156,6 +154,7 @@ export default function AdminAchievementsPage() {
                           await apiFetch(`/api/admin/user-achievements/${r.id}`, { method: 'DELETE' })
                           setRows((prev)=>prev.filter(x=>x.id!==r.id))
                         } catch(e:any) {
+                          // можно добавить тост при ошибке
                         }
                       }}
                       className="bg-[#ef4444] hover:bg-[#dc2626] text-white h-8 px-3"
@@ -170,7 +169,7 @@ export default function AdminAchievementsPage() {
         </div>
       </section>
 
-      
+      {/* Competition Winners */}
       <section>
         <h2 className="text-white text-lg font-semibold mb-3">Победители соревнований</h2>
         <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4">
@@ -183,7 +182,7 @@ export default function AdminAchievementsPage() {
               {winners.map((w) => (
                 <div key={w.id} className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
                       {(w.user.fullName || w.user.email || "?").charAt(0)}
                     </div>
                     <div>

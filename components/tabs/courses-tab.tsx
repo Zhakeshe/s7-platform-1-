@@ -102,11 +102,10 @@ export default function CoursesTab({
   }, [priceRange])
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 max-w-[1400px] mx-auto">
+    <main className="flex-1 p-8 overflow-y-auto animate-slide-up">
+      
       <section className="mb-12">
-        <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6 animate-fade-in-up">
-          Продолжить <span className="italic text-[var(--color-accent-warm)]">обучение</span>
-        </h2>
+        <h2 className="text-white text-xl font-medium mb-6">Продолжить</h2>
         {loadingContinue ? (
           <div className="text-white/70">Загрузка...</div>
         ) : continueCourses.length === 0 ? (
@@ -119,8 +118,8 @@ export default function CoursesTab({
                 onClick={() => onOpenCourse?.(c)}
                 role="link"
                 tabIndex={0}
-                className="card cursor-pointer group hover:scale-[1.01] animate-fade-in-up"
-                style={{ animationDelay: `${i * 100}ms` }}
+                className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 hover:border-[#636370]/40 transition-all duration-300 cursor-pointer group hover:scale-102 animate-slide-up"
+                style={{ animationDelay: `${200 + i * 50}ms` }}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -128,10 +127,10 @@ export default function CoursesTab({
                   </div>
                   <ArrowUpRight className="w-6 h-6 text-[#a0a0b0] group-hover:text-white transition-colors duration-300" />
                 </div>
-                <div className="font-mono text-xs text-3 space-y-1">
-                  <div>автор: {c.author}</div>
-                  <div>уроков: {(c.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0)}</div>
-                  <div>стоимость: {c.price && c.price > 0 ? `${c.price.toLocaleString()}₸` : "бесплатно"}</div>
+                <div className="text-[#a0a0b0] text-sm space-y-1">
+                  <div>Автор: {c.author}</div>
+                  <div>Уроков: {(c.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0)}</div>
+                  <div>Стоимость: {c.price && c.price > 0 ? `${c.price.toLocaleString()}₸` : "0₸"}</div>
                 </div>
               </div>
             ))}
@@ -141,17 +140,15 @@ export default function CoursesTab({
 
       
       <section>
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-          <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white">
-            Рекомендованные <span className="italic text-[var(--color-accent-warm)]">курсы</span>
-          </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-white text-xl font-medium">Рекомендованные курсы</h2>
           <div className="relative w-full max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a0a0b0] w-4 h-4" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Поиск"
-              className="w-full bg-surface-2 border border-1 rounded-[var(--radius-md)] pl-9 pr-3 py-2 text-white placeholder-[var(--color-text-4)] focus:outline-none focus:border-[var(--color-border-hover-1)] transition-colors"
+              className="w-full bg-[#16161c] border border-[#636370]/20 rounded-lg pl-9 pr-3 py-2 text-white placeholder-[#a0a0b0] focus:outline-none focus:border-[#00a3ff]"
             />
           </div>
         </div>
@@ -165,8 +162,8 @@ export default function CoursesTab({
             <button
               key={f.id}
               onClick={() => setFilter(f.id as any)}
-              className={`chip transition-all ${
-                filter === f.id ? "bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]" : "hover:bg-surface-2"
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                filter === f.id ? "bg-[#00a3ff] text-white" : "bg-[#16161c] text-[#a0a0b0] hover:text-white hover:bg-[#636370]/10"
               }`}
             >
               {f.label}
@@ -174,7 +171,7 @@ export default function CoursesTab({
           ))}
         </div>
 
-        <div className="card mb-6 max-w-md">
+        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-4 mb-6 max-w-md">
           <div className="text-white text-sm font-medium mb-2">Price Range</div>
           <div className="text-white/60 text-xs mb-3">Укажите бюджет ({priceRange[0].toLocaleString()}₸ – {priceRange[1].toLocaleString()}₸)</div>
           <div className="px-1 space-y-3">
@@ -229,8 +226,8 @@ export default function CoursesTab({
                 onClick={() => onOpenCourse?.(c)}
                 role="link"
                 tabIndex={0}
-                className="card cursor-pointer group hover:scale-[1.01] animate-fade-in-up"
-                style={{ animationDelay: `${i * 100}ms` }}
+                className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 hover:border-[#636370]/40 transition-all duration-300 cursor-pointer group hover:scale-102 animate-slide-up"
+                style={{ animationDelay: `${200 + i * 50}ms` }}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -238,10 +235,10 @@ export default function CoursesTab({
                   </div>
                   <ArrowUpRight className="w-6 h-6 text-[#a0a0b0] group-hover:text-white transition-colors duration-300" />
                 </div>
-                <div className="font-mono text-xs text-3 space-y-1">
-                  <div>автор: {c.author}</div>
-                  <div>уроков: {(c.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0)}</div>
-                  <div>стоимость: {c.price && c.price > 0 ? `${c.price.toLocaleString()}₸` : "бесплатно"}</div>
+                <div className="text-[#a0a0b0] text-sm space-y-1">
+                  <div>Автор: {c.author}</div>
+                  <div>Уроков: {(c.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0)}</div>
+                  <div>Стоимость: {c.price && c.price > 0 ? `${c.price.toLocaleString()}₸` : "0₸"}</div>
                 </div>
               </div>
             ))}

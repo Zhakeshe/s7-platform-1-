@@ -24,7 +24,7 @@ function MCItem({
   onView?: () => void
 }) {
   return (
-    <div className="card text-white relative animate-fade-in-up">
+    <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-6 text-white relative animate-slide-up">
       <div className="absolute top-4 right-4 text-white/70">
         <div className="flex items-center gap-2">
           <button onClick={onDelete} className="p-1 rounded hover:bg-[#2a2a35]" title="Удалить">
@@ -34,7 +34,7 @@ function MCItem({
         </div>
       </div>
       <div className="text-white text-lg font-medium mb-3">{title}</div>
-      <span className="inline-block bg-[var(--color-accent-warm)] text-white text-xs font-medium px-3 py-1 rounded-full mb-4">
+      <span className="inline-block bg-[#00a3ff] text-white text-xs font-medium px-3 py-1 rounded-full mb-4">
         {badge}
       </span>
       <div className="text-[#a0a0b0] text-sm space-y-1">

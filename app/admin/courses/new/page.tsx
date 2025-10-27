@@ -482,13 +482,12 @@ export default function Page() {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
-      <h2 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
-        Создать <span className="italic text-[var(--color-accent-warm)]">курс</span>
-      </h2>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
+      <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
 
       <div className="max-w-2xl space-y-5">
-        <div className="card relative">
+        
+        <div className="bg-[#16161c] border border-[#636370]/20 rounded-2xl p-5 text-white relative">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -518,7 +517,7 @@ export default function Page() {
                       key={lvl}
                       type="button"
                       onClick={() => setDifficulty(lvl)}
-                      className={`px-3 py-1 rounded-full text-xs border ${difficulty === lvl ? 'bg-[var(--color-accent-warm)] text-white border-[var(--color-accent-warm)]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                      className={`px-3 py-1 rounded-full text-xs border ${difficulty === lvl ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
                     >
                       {lvl}
                     </button>
@@ -644,7 +643,7 @@ export default function Page() {
           </button>
           <button
             onClick={publish}
-            className="rounded-2xl bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
+            className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
           >
             Опубликовать
             <ArrowUpRight className="w-5 h-5" />

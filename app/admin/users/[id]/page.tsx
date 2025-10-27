@@ -120,10 +120,7 @@ export default function Page({ params }: { params: { id: string } }) {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-dots-pattern relative z-10 animate-fade-in">
-      <h1 className="text-[48px] md:text-[56px] leading-tight tracking-tight font-medium text-white mb-6">
-        <span className="italic text-[var(--color-accent-warm)]">{name}</span>
-      </h1>
+    <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <div className="max-w-4xl space-y-4">
         
         <div className="flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-2 py-2 text-white">
@@ -141,7 +138,7 @@ export default function Page({ params }: { params: { id: string } }) {
           <div className="text-white/90 font-medium">Информация</div>
           <div className="text-white/80 text-sm">Роль: <span className="font-semibold">{role || "—"}</span></div>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={promote} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-2">Назначить админом</button>
+            <button onClick={promote} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Назначить админом</button>
             <button onClick={demote} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Снять админа</button>
           </div>
         </section>
@@ -149,7 +146,7 @@ export default function Page({ params }: { params: { id: string } }) {
         
         <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-4">
           <div className="text-white/90 font-medium">Достижения</div>
-          <button onClick={() => setAchOpen(true)} className="w-full rounded-2xl bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors">
+          <button onClick={() => setAchOpen(true)} className="w-full rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors">
             <span>Выдать достижение</span>
             <ArrowUpRight className="w-5 h-5" />
           </button>
@@ -158,7 +155,7 @@ export default function Page({ params }: { params: { id: string } }) {
         
         <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-4">
           <div className="text-white/90 font-medium">Курсы</div>
-          <button onClick={() => setCourseOpen(true)} className="w-full rounded-2xl bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors">
+          <button onClick={() => setCourseOpen(true)} className="w-full rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors">
             <span>Выдать курсы</span>
             <ArrowUpRight className="w-5 h-5" />
           </button>
@@ -221,7 +218,7 @@ export default function Page({ params }: { params: { id: string } }) {
             <textarea value={achText} onChange={(e) => setAchText(e.target.value)} rows={4} placeholder="Текст достижения" className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-3 text-white outline-none" />
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setAchOpen(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={issueAchievement} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-2">Выдать</button>
+              <button onClick={issueAchievement} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Выдать</button>
             </div>
           </div>
         </div>
@@ -240,7 +237,7 @@ export default function Page({ params }: { params: { id: string } }) {
             </select>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setCourseOpen(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={issueCourse} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[var(--color-accent-warm-hover)] text-black font-medium py-2">Выдать</button>
+              <button onClick={issueCourse} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Выдать</button>
             </div>
           </div>
         </div>
