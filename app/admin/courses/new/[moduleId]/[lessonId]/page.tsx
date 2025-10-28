@@ -117,7 +117,7 @@ export default function Page() {
         title: "",
         author: "",
         modules: [
-          { id: moduleId, title: `Модуль ${moduleId}` as any, lessons: [{ id: lessonId, title: "Название урока", time: "" }] },
+          { id: moduleId, title: `Модуль ${moduleId}`, lessons: [{ id: lessonId, title: "Название урока", time: "" }] },
         ],
       }
       setCourse(draft)
@@ -297,38 +297,38 @@ export default function Page() {
       <div className="mb-4">
         <button
           onClick={() => { if (course) { try { writeDraftBy(draftKey, course) } catch {} } router.push(`/admin/courses/new/${moduleId}${qs}`) }}
-          className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
+          className="inline-flex items-center gap-2 text-[var(--color-text-2)] hover:text-[var(--color-text-1)] px-3 py-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border-2)]"
         >
           Назад
         </button>
       </div>
-      <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
+      <h2 className="text-[var(--color-text-1)] text-xl font-medium mb-6">Создать курс</h2>
 
       <div className="max-w-6xl space-y-5">
         
-        <div className="flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white">
+        <div className="flex items-center justify-between rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border-2)] px-4 py-3 text-[var(--color-text-1)]">
           <div className="flex items-center gap-3 w-full">
-            <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">{lesson?.id ?? 1}</span>
+            <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">{lesson?.id ?? 1}</span>
             <input
               value={lesson?.title || ""}
               onChange={(e) => updateLesson({ title: e.target.value })}
               placeholder="Название урока"
-              className="flex-1 bg-transparent outline-none text-white/80"
+              className="flex-1 bg-transparent outline-none text-[var(--color-text-2)]"
             />
           </div>
           <input
             value={lesson?.time || ""}
             onChange={(e) => updateLesson({ time: e.target.value })}
             placeholder="Время курса"
-            className="w-32 text-right bg-transparent outline-none text-white/60"
+            className="w-32 text-right bg-transparent outline-none text-[var(--color-text-3)]"
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-          
+        
           <section>
-            <div className="rounded-3xl border-2 border-[#2a2a35] p-3">
-              <div className="rounded-2xl bg-[#0f0f14] border border-[#2a2a35] min-h-[320px] flex items-center justify-center text-white overflow-hidden p-4">
+            <div className="rounded-3xl border-2 border-[var(--color-border-2)] p-3">
+              <div className="rounded-2xl bg-[var(--color-surface-3)] border border-[var(--color-border-2)] min-h-[320px] flex items-center justify-center text-[var(--color-text-1)] overflow-hidden p-4">
                 {!lesson?.videoMediaId ? (
                   <FileUpload
                     className="w-full"
@@ -345,11 +345,11 @@ export default function Page() {
               </div>
               {lesson?.videoMediaId && (
                 <div className="flex items-center justify-end gap-3 mt-3">
-                  <button onClick={() => fileInput.current?.click()} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Заменить</button>
+                  <button onClick={() => fileInput.current?.click()} className="rounded-full bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] px-3 py-1 text-[var(--color-text-2)] text-sm">Заменить</button>
                   <input ref={fileInput} type="file" accept="video/*" onChange={(e)=>{ const f=e.target.files?.[0]; if(f) onSelectVideo(f) }} className="hidden" />
-                  <button onClick={uploadVideoToServer} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Загрузить на сервер</button>
-                  {lesson.videoUrl && <a href={lesson.videoUrl} target="_blank" className="text-xs text-[#00a3ff] underline">Открыть URL</a>}
-                  <button onClick={removeVideo} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm inline-flex items-center gap-1"><Trash className="w-4 h-4"/>Удалить</button>
+                  <button onClick={uploadVideoToServer} className="rounded-full bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] px-3 py-1 text-[var(--color-text-2)] text-sm">Загрузить на сервер</button>
+                  {lesson.videoUrl && <a href={lesson.videoUrl} target="_blank" className="text-xs text-[var(--color-accent-warm)] underline">Открыть URL</a>}
+                  <button onClick={removeVideo} className="rounded-full bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] px-3 py-1 text-[var(--color-text-2)] text-sm inline-flex items-center gap-1"><Trash className="w-4 h-4"/>Удалить</button>
                 </div>
               )}
             </div>
@@ -359,21 +359,21 @@ export default function Page() {
           <aside className="space-y-3">
             <button
               onClick={() => slideInput.current?.click()}
-              className="w-full inline-flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors"
+              className="w-full inline-flex items-center justify-between rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border-2)] px-4 py-3 text-[var(--color-text-1)] hover:bg-[#1a1a22] transition-colors"
             >
               <div className="inline-flex items-center gap-2">
-                <Image className="w-5 h-5 text-white/70" />
+                <Image className="w-5 h-5 text-[var(--color-text-2)]" />
                 <span>Добавить слайд</span>
               </div>
             </button>
-            
+          
             {!(lesson?.slides && lesson.slides.length > 0) && (
               <button
                 onClick={() => slideInput.current?.click()}
-                className="w-full inline-flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors"
+                className="w-full inline-flex items-center justify-between rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border-2)] px-4 py-3 text-[var(--color-text-1)] hover:bg-[#1a1a22] transition-colors"
               >
                 <div className="inline-flex items-center gap-2">
-                  <Image className="w-5 h-5 text-white/70" />
+                  <Image className="w-5 h-5 text-[var(--color-text-2)]" />
                   <span>Добавить слайд</span>
                 </div>
               </button>
@@ -390,18 +390,18 @@ export default function Page() {
             />
             {lesson?.slideMediaIds && lesson.slideMediaIds.length > 0 && (
               <div className="flex items-center justify-end gap-3 mt-2">
-                <button onClick={uploadSlidesToServer} className="rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm">Загрузить все слайды</button>
-                {Array.isArray(lesson.slideUrls) && lesson.slideUrls.length > 0 && <span className="text-xs text-white/60">Загружено: {lesson.slideUrls.length}</span>}
+                <button onClick={uploadSlidesToServer} className="rounded-full bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] px-3 py-1 text-[var(--color-text-2)] text-sm">Загрузить все слайды</button>
+                {Array.isArray(lesson.slideUrls) && lesson.slideUrls.length > 0 && <span className="text-xs text-[var(--color-text-3)]">Загружено: {lesson.slideUrls.length}</span>}
               </div>
             )}
 
-            
+          
             <button
               onClick={() => presentationInput.current?.click()}
-              className="w-full inline-flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors"
+              className="w-full inline-flex items-center justify-between rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border-2)] px-4 py-3 text-[var(--color-text-1)] hover:bg-[#1a1a22] transition-colors"
             >
               <div className="inline-flex items-center gap-2">
-                <Image className="w-5 h-5 text-white/70" />
+                <Image className="w-5 h-5 text-[var(--color-text-2)]" />
                 <span>Добавить презентацию</span>
               </div>
             </button>
@@ -416,19 +416,19 @@ export default function Page() {
               className="hidden"
             />
 
-            
+          
             {(lesson?.slides || []).map((name, idx) => (
               <div
                 key={`${name}-${idx}`}
-                className="w-full inline-flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white animate-slide-up"
+                className="w-full inline-flex items-center justify-between rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border-2)] px-4 py-3 text-[var(--color-text-1)] animate-slide-up"
               >
                 <div className="inline-flex items-center gap-2">
-                  <Image className="w-5 h-5 text-white/70" />
-                  <span className="text-white/80">{name}</span>
+                  <Image className="w-5 h-5 text-[var(--color-text-2)]" />
+                  <span className="text-[var(--color-text-2)]">{name}</span>
                 </div>
                 <button
                   onClick={() => removeSlideAt(idx)}
-                  className="rounded-full bg-[#2a2a35] hover:bg-[#333344] p-2 text-white/80 transition-colors"
+                  className="rounded-full bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] p-2 text-[var(--color-text-2)] transition-colors"
                   aria-label="Удалить слайд"
                 >
                   <Trash className="w-4 h-4" />
@@ -436,16 +436,16 @@ export default function Page() {
               </div>
             ))}
 
-            
+          
             {lesson?.presentationFileName && (
-              <div className="w-full inline-flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white animate-slide-up">
+              <div className="w-full inline-flex items-center justify-between rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border-2)] px-4 py-3 text-[var(--color-text-1)] animate-slide-up">
                 <div className="inline-flex items-center gap-2">
-                  <Image className="w-5 h-5 text-white/70" />
-                  <span className="text-white/80">Презентация: {lesson.presentationFileName}</span>
+                  <Image className="w-5 h-5 text-[var(--color-text-2)]" />
+                  <span className="text-[var(--color-text-2)]">Презентация: {lesson.presentationFileName}</span>
                 </div>
                 <button
                   onClick={removePresentation}
-                  className="rounded-full bg-[#2a2a35] hover:bg-[#333344] p-2 text-white/80 transition-colors"
+                  className="rounded-full bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] p-2 text-[var(--color-text-2)] transition-colors"
                 >
                   <Trash className="w-4 h-4" />
                 </button>
@@ -453,33 +453,33 @@ export default function Page() {
             )}
             {presPreview && (
               <div className="flex items-center justify-end gap-3">
-                <a href={presPreview} target="_blank" className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Открыть локально</a>
-                <button onClick={uploadPresentationToServer} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Загрузить на сервер</button>
-                {lesson?.presentationUrl && <a href={lesson.presentationUrl} target="_blank" className="text-xs text-[#00a3ff] underline">URL</a>}
+                <a href={presPreview} target="_blank" className="text-xs rounded-full bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] px-3 py-1">Открыть локально</a>
+                <button onClick={uploadPresentationToServer} className="text-xs rounded-full bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] px-3 py-1">Загрузить на сервер</button>
+                {lesson?.presentationUrl && <a href={lesson.presentationUrl} target="_blank" className="text-xs text-[var(--color-accent-warm)] underline">URL</a>}
               </div>
             )}
           </aside>
         </div>
 
-        
-        <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-3 animate-slide-up">
+      
+        <section className="bg-[var(--color-surface-2)] border border-[var(--color-border-2)] rounded-2xl p-4 text-[var(--color-text-1)] space-y-3 animate-slide-up">
           <div className="flex items-center justify-between">
-            <div className="text-white/90 font-medium">Текст урока (Markdown)</div>
+            <div className="text-[var(--color-text-2)] font-medium">Текст урока (Markdown)</div>
             <div className="inline-flex items-center gap-1">
-              <button title="Жирный" onClick={() => updateLesson({ content: (lesson?.content || "") + "**жирный**" })} className="p-2 rounded hover:bg-[#2a2a35]"><Bold className="w-4 h-4" /></button>
-              <button title="Курсив" onClick={() => updateLesson({ content: (lesson?.content || "") + " *курсив*" })} className="p-2 rounded hover:bg-[#2a2a35]"><Italic className="w-4 h-4" /></button>
-              <button title="Заголовок" onClick={() => updateLesson({ content: (lesson?.content || "") + "\n\n## Заголовок" })} className="p-2 rounded hover:bg-[#2a2a35]"><Heading2 className="w-4 h-4" /></button>
-              <button title="Список" onClick={() => updateLesson({ content: (lesson?.content || "") + "\n- пункт" })} className="p-2 rounded hover:bg-[#2a2a35]"><List className="w-4 h-4" /></button>
+              <button title="Жирный" onClick={() => updateLesson({ content: (lesson?.content || "") + "**жирный**" })} className="p-2 rounded hover:bg-[var(--color-border-2)]"><Bold className="w-4 h-4" /></button>
+              <button title="Курсив" onClick={() => updateLesson({ content: (lesson?.content || "") + " *курсив*" })} className="p-2 rounded hover:bg-[var(--color-border-2)]"><Italic className="w-4 h-4" /></button>
+              <button title="Заголовок" onClick={() => updateLesson({ content: (lesson?.content || "") + "\n\n## Заголовок" })} className="p-2 rounded hover:bg-[var(--color-border-2)]"><Heading2 className="w-4 h-4" /></button>
+              <button title="Список" onClick={() => updateLesson({ content: (lesson?.content || "") + "\n- пункт" })} className="p-2 rounded hover:bg-[var(--color-border-2)]"><List className="w-4 h-4" /></button>
             </div>
           </div>
           <textarea
             value={lesson?.content || ""}
             onChange={(e) => updateLesson({ content: e.target.value })}
             placeholder="Добавьте поясняющий текст, конспект, ссылки и т.д."
-            className="w-full min-h-[160px] bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-3 outline-none text-white/90"
+            className="w-full min-h-[160px] bg-[var(--color-surface-3)] border border-[var(--color-border-2)] rounded-lg p-3 outline-none text-[var(--color-text-2)]"
           />
-          <div className="bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-3 text-white/90">
-            <div className="text-white/60 text-xs mb-2">Предпросмотр</div>
+          <div className="bg-[var(--color-surface-3)] border border-[var(--color-border-2)] rounded-lg p-3 text-[var(--color-text-2)]">
+            <div className="text-[var(--color-text-3)] text-xs mb-2">Предпросмотр</div>
             <div className="prose prose-invert max-w-none">
               <ReactMarkdown>{lesson?.content || ""}</ReactMarkdown>
             </div>
@@ -487,13 +487,13 @@ export default function Page() {
         </section>
       </div>
       
-      <div className="mt-6 bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-3 animate-slide-up">
-        <div className="text-white/90 font-medium">Вопрос по уроку (опционально)</div>
+      <div className="mt-6 bg-[var(--color-surface-2)] border border-[var(--color-border-2)] rounded-2xl p-4 text-[var(--color-text-1)] space-y-3 animate-slide-up">
+        <div className="text-[var(--color-text-2)] font-medium">Вопрос по уроку (опционально)</div>
         <input
           value={lesson?.quizQuestion || ""}
           onChange={(e) => updateLesson({ quizQuestion: e.target.value })}
           placeholder="Текст вопроса"
-          className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-2 outline-none"
+          className="w-full bg-[var(--color-surface-3)] border border-[var(--color-border-2)] rounded-lg p-2 outline-none"
         />
         <div className="space-y-2">
           {(() => {
@@ -514,7 +514,7 @@ export default function Page() {
                     updateLesson({ quizOptions: arr })
                   }}
                   placeholder={`Вариант ${idx + 1}`}
-                  className="flex-1 bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-2 outline-none"
+                  className="flex-1 bg-[var(--color-surface-3)] border border-[var(--color-border-2)] rounded-lg p-2 outline-none"
                 />
               </div>
             ))
@@ -528,19 +528,19 @@ export default function Page() {
               if (opts.length >= 8) return
               updateLesson({ quizOptions: [...opts, ""] })
             }}
-            className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-3 py-1 text-white/80 text-sm"
+            className="rounded-lg bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] px-3 py-1 text-[var(--color-text-2)] text-sm"
           >
             Добавить вариант
           </button>
           <div className="flex items-center gap-2 ml-auto">
-            <span className="text-white/70 text-sm">XP за верный ответ</span>
+            <span className="text-[var(--color-text-3)] text-sm">XP за верный ответ</span>
             <input
               type="number"
               min={0}
               max={10000}
               value={typeof lesson?.quizXp === 'number' ? lesson.quizXp : 100}
               onChange={(e) => updateLesson({ quizXp: Number(e.target.value || 0) })}
-              className="w-24 bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-2 outline-none text-right"
+              className="w-24 bg-[var(--color-surface-3)] border border-[var(--color-border-2)] rounded-lg p-2 outline-none text-right"
             />
           </div>
         </div>
@@ -548,8 +548,8 @@ export default function Page() {
 
       
       <div className="flex justify-end gap-3 pt-2">
-        <button onClick={() => saveLessonDraft(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] px-4 py-2 text-white/90">Сохранить</button>
-        <button onClick={() => saveLessonDraft(true)} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] px-4 py-2 text-black font-medium">Сохранить и выйти</button>
+        <button onClick={() => saveLessonDraft(false)} className="rounded-lg bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] px-4 py-2 text-[var(--color-text-2)]">Сохранить</button>
+        <button onClick={() => saveLessonDraft(true)} className="rounded-lg bg-[var(--color-accent-warm)] hover:bg-[#0088cc] px-4 py-2 text-black font-medium">Сохранить и выйти</button>
       </div>
     </main>
   )

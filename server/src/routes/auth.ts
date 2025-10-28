@@ -5,6 +5,7 @@ import { hashPassword, verifyPassword } from "../utils/password"
 import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt"
 import { requireAuth } from "../middleware/auth"
 import type { AuthenticatedRequest } from "../types"
+import { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from "../utils/email"
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -20,11 +21,34 @@ const loginSchema = z.object({
   password: z.string().min(1),
 })
 
+const verifyEmailSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(7), // xxx-xxx format
+})
+
+const passwordResetRequestSchema = z.object({
+  email: z.string().email(),
+})
+
+const passwordResetSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(7), // xxx-xxx format
+  newPassword: z.string().min(8),
+})
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+})
+
 const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 })
 
 export const router = Router()
+
+// Store verification codes in memory (in production, use Redis or database)
+const verificationCodes = new Map<string, { code: string; expiresAt: Date; type: 'verification' | 'password-reset' }>()
 
 const DEV_AUTH = process.env.DEV_AUTH === "1"
 
@@ -136,6 +160,73 @@ router.post("/register", async (req: Request, res: Response) => {
   })
 })
 
+router.post("/send-verification", async (req: Request, res: Response) => {
+  const { email } = req.body as { email?: string }
+  
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" })
+  }
+
+  try {
+    // Check if user exists
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      return res.status(404).json({ error: "User not found" })
+    }
+
+    // Generate verification code
+    const code = generateVerificationCode()
+    
+    // Store code with expiration (5 minutes)
+    verificationCodes.set(email, {
+      code,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      type: 'verification'
+    })
+    
+    // Send email
+    await sendVerificationEmail(email, code)
+    
+    res.json({ success: true, message: "Verification code sent" })
+  } catch (error) {
+    console.error("Failed to send verification email:", error)
+    res.status(500).json({ error: "Failed to send verification email" })
+  }
+})
+
+router.post("/verify-email", async (req: Request, res: Response) => {
+  const parsed = verifyEmailSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  const { email, code } = parsed.data
+
+  try {
+    // Check if code exists and is valid
+    const stored = verificationCodes.get(email)
+    if (!stored || stored.type !== 'verification') {
+      return res.status(400).json({ error: "Verification code not found" })
+    }
+
+    // Check if code is expired
+    if (stored.expiresAt < new Date()) {
+      verificationCodes.delete(email)
+      return res.status(400).json({ error: "Verification code expired" })
+    }
+
+    // Check if code matches
+    if (stored.code !== code) {
+      return res.status(400).json({ error: "Invalid verification code" })
+    }
+
+    // Code is valid, remove it
+    verificationCodes.delete(email)
+
+    res.json({ success: true, message: "Email verified successfully" })
+  } catch (error) {
+    console.error("Failed to verify email:", error)
+    res.status(500).json({ error: "Failed to verify email" })
+  }
+})
+
 router.post("/login", async (req: Request, res: Response) => {
   const parsed = loginSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
@@ -162,28 +253,215 @@ router.post("/login", async (req: Request, res: Response) => {
   const valid = await verifyPassword(password, (user as any).passwordHash)
   if (!valid) return res.status(401).json({ error: "Invalid credentials" })
 
-  const accessToken = signAccessToken(user.id, user.role)
-  const refreshToken = signRefreshToken(user.id, user.role)
+  // Send verification email
+  try {
+    const code = generateVerificationCode()
+    
+    // Store code with expiration (5 minutes)
+    verificationCodes.set(email, {
+      code,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      type: 'verification'
+    })
+    
+    // Send email
+    await sendVerificationEmail(email, code)
+  } catch (error) {
+    console.error("Failed to send verification email:", error)
+    // Don't block login if email fails
+  }
 
-  await prisma.session.create({
-    data: {
-      userId: user.id,
-      refreshToken,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-    },
-  })
-
+  // Return response indicating email verification is required
   res.json({
-    accessToken,
-    refreshToken,
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      fullName: user.fullName,
-      xp: Number((user as any).experiencePoints || 0),
-    },
+    requiresEmailVerification: true,
+    email: user.email
   })
+})
+
+router.post("/login-verify", async (req: Request, res: Response) => {
+  const parsed = verifyEmailSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  const { email, code } = parsed.data
+
+  try {
+    // Check if code exists and is valid
+    const stored = verificationCodes.get(email)
+    if (!stored || stored.type !== 'verification') {
+      return res.status(400).json({ error: "Verification code not found" })
+    }
+
+    // Check if code is expired
+    if (stored.expiresAt < new Date()) {
+      verificationCodes.delete(email)
+      return res.status(400).json({ error: "Verification code expired" })
+    }
+
+    // Check if code matches
+    if (stored.code !== code) {
+      return res.status(400).json({ error: "Invalid verification code" })
+    }
+
+    // Code is valid, remove it
+    verificationCodes.delete(email)
+
+    // Proceed with login
+    const user = await (prisma as any).user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        fullName: true,
+        experiencePoints: true,
+        banned: true,
+        bannedReason: true,
+      } as any,
+    })
+    
+    if (!user) return res.status(401).json({ error: "Invalid credentials" })
+    if ((user as any).banned) {
+      const reason = (user as any).bannedReason || "Напишите в службу поддержки."
+      return res.status(403).json({ error: `Ваш аккаунт заблокирован. ${reason}` })
+    }
+
+    const accessToken = signAccessToken(user.id, user.role)
+    const refreshToken = signRefreshToken(user.id, user.role)
+
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        refreshToken,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      },
+    })
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        fullName: user.fullName,
+        xp: Number((user as any).experiencePoints || 0),
+      },
+    })
+  } catch (error) {
+    console.error("Failed to verify email:", error)
+    res.status(500).json({ error: "Failed to verify email" })
+  }
+})
+
+// Password reset request
+router.post("/forgot-password", async (req: Request, res: Response) => {
+  const parsed = passwordResetRequestSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  const { email } = parsed.data
+
+  try {
+    // Check if user exists
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return res.json({ success: true, message: "If email exists, reset code sent" })
+    }
+
+    // Generate reset code
+    const code = generateVerificationCode()
+    
+    // Store code with expiration (15 minutes)
+    verificationCodes.set(email, {
+      code,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      type: 'password-reset'
+    })
+    
+    // Send email
+    await sendPasswordResetEmail(email, code)
+    
+    res.json({ success: true, message: "If email exists, reset code sent" })
+  } catch (error) {
+    console.error("Failed to send password reset email:", error)
+    res.status(500).json({ error: "Failed to process password reset request" })
+  }
+})
+
+// Password reset
+router.post("/reset-password", async (req: Request, res: Response) => {
+  const parsed = passwordResetSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  const { email, code, newPassword } = parsed.data
+
+  try {
+    // Check if code exists and is valid
+    const stored = verificationCodes.get(email)
+    if (!stored || stored.type !== 'password-reset') {
+      return res.status(400).json({ error: "Reset code not found or expired" })
+    }
+
+    // Check if code is expired
+    if (stored.expiresAt < new Date()) {
+      verificationCodes.delete(email)
+      return res.status(400).json({ error: "Reset code expired" })
+    }
+
+    // Check if code matches
+    if (stored.code !== code) {
+      return res.status(400).json({ error: "Invalid reset code" })
+    }
+
+    // Code is valid, remove it
+    verificationCodes.delete(email)
+
+    // Update password
+    const passwordHash = await hashPassword(newPassword)
+    await prisma.user.update({
+      where: { email },
+      data: { passwordHash }
+    })
+
+    res.json({ success: true, message: "Password reset successfully" })
+  } catch (error) {
+    console.error("Failed to reset password:", error)
+    res.status(500).json({ error: "Failed to reset password" })
+  }
+})
+
+// Change password (authenticated users)
+router.post("/change-password", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: "Unauthorized" })
+  
+  const parsed = changePasswordSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
+  const { currentPassword, newPassword } = parsed.data
+
+  try {
+    // Get user with password hash
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { passwordHash: true }
+    })
+    
+    if (!user) return res.status(404).json({ error: "User not found" })
+    
+    // Verify current password
+    const valid = await verifyPassword(currentPassword, user.passwordHash)
+    if (!valid) return res.status(400).json({ error: "Current password is incorrect" })
+    
+    // Hash new password
+    const newPasswordHash = await hashPassword(newPassword)
+    
+    // Update password
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { passwordHash: newPasswordHash }
+    })
+    
+    res.json({ success: true, message: "Password changed successfully" })
+  } catch (error) {
+    console.error("Failed to change password:", error)
+    res.status(500).json({ error: "Failed to change password" })
+  }
 })
 
 router.post("/refresh", async (req: Request, res: Response) => {

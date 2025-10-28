@@ -8,6 +8,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   MEDIA_DIR: z.string().default("./media"),
   CORS_ORIGIN: z.string().optional(),
+  EMAIL_PASSWORD: z.string().optional(),
 })
 
 export const env = envSchema.parse({
@@ -17,4 +18,5 @@ export const env = envSchema.parse({
   NODE_ENV: process.env.NODE_ENV,
   MEDIA_DIR: process.env.MEDIA_DIR,
   CORS_ORIGIN: process.env.CORS_ORIGIN,
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
 })

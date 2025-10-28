@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth/auth-context"
 import { toast } from "@/hooks/use-toast"
+import { EmailVerification } from "@/components/auth/email-verification"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -19,6 +20,8 @@ export default function LoginPage() {
   const [institution, setInstitution] = useState("")
   const [age, setAge] = useState("")
   const [primaryRole, setPrimaryRole] = useState("")
+  const [requiresEmailVerification, setRequiresEmailVerification] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState("")
 
   useEffect(() => {
     if (!loading && user) {
@@ -28,9 +31,27 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      await login(email.trim(), password)
-      toast({ title: "Вход выполнен", description: "Добро пожаловать!" })
-      router.push("/dashboard")
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password })
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Ошибка входа")
+      }
+      
+      if (data.requiresEmailVerification) {
+        setRequiresEmailVerification(true)
+        setVerificationEmail(data.email)
+      } else {
+        // Direct login (for dev mode)
+        await login(email.trim(), password)
+        toast({ title: "Вход выполнен", description: "Добро пожаловать!" })
+        router.push("/dashboard")
+      }
     } catch (e: any) {
       toast({ title: "Ошибка входа", description: e?.message || "Проверьте почту и пароль", variant: "destructive" as any })
     }
@@ -55,6 +76,62 @@ export default function LoginPage() {
     } catch (e: any) {
       toast({ title: "Ошибка регистрации", description: e?.message || "Попробуйте другой e-mail", variant: "destructive" as any })
     }
+  }
+
+  const handleVerificationSuccess = async (data: any) => {
+    // Set tokens and user data
+    localStorage.setItem("accessToken", data.accessToken)
+    localStorage.setItem("refreshToken", data.refreshToken)
+    
+    // Redirect to dashboard
+    router.push("/dashboard")
+    router.refresh()
+  }
+
+  const handleBackToLogin = () => {
+    setRequiresEmailVerification(false)
+    setVerificationEmail("")
+  }
+
+  if (requiresEmailVerification) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 relative bg-dots-pattern">
+        <div className="mb-12 animate-slide-up" style={{ animationDelay: "200ms" }}>
+          <Image src="/logo-s7.png" alt="S7 Robotics Logo" width={80} height={80} className="mx-auto" />
+        </div>
+
+        <div
+          className="w-full max-w-sm bg-[#0b0b0b] border border-dashed border-[#1f1f1f] rounded-2xl p-7 backdrop-blur-[1px] transition-all duration-500 ease-in-out hover:bg-[#141414] hover:border-[#2a2a2a] animate-slide-up"
+          style={{ animationDelay: "400ms" }}
+        >
+          <EmailVerification 
+            email={verificationEmail} 
+            onVerified={handleVerificationSuccess}
+            onBack={handleBackToLogin}
+          />
+        </div>
+
+        <SocialPanel />
+        <div className="flex items-center space-x-2 mt-8 animate-slide-up" style={{ animationDelay: "1400ms" }}>
+          <i className="bi bi-exclamation-circle w-5 h-5 text-white"></i>
+          <span className="text-[#a7a7a7] text-sm">Пользовательские соглашения</span>
+        </div>
+        <div className="absolute bottom-6 right-6 text-right animate-slide-up" style={{ animationDelay: "1600ms" }}>
+          <div className="text-white font-medium">Обновление</div>
+          <div className="text-white text-2xl font-bold">1.0</div>
+          <div className="text-[#a7a7a7] text-sm">Новые плюшки</div>
+        </div>
+        <div
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 animate-slide-up"
+          style={{ animationDelay: "1800ms" }}
+        >
+          <div className="text-[#636370] text-xs text-center">
+            <div>Version 0.1</div>
+            <div>Все права защищены ОПТ "S7 Robotics"</div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -146,6 +223,17 @@ export default function LoginPage() {
         >
           {isLogin ? "Войти" : "Зарегистрироваться"}
         </Button>
+
+        {isLogin && (
+          <div className="text-center mt-3 animate-slide-up" style={{ animationDelay: "1000ms" }}>
+            <button
+              onClick={() => router.push("/forgot-password")}
+              className="text-[#a7a7a7] text-sm hover:text-white transition-all duration-300"
+            >
+              Забыли пароль?
+            </button>
+          </div>
+        )}
 
         <div className="text-center mt-6 animate-slide-up" style={{ animationDelay: "1000ms" }}>
           <button

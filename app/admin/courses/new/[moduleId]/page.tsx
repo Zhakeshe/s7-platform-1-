@@ -119,21 +119,21 @@ export default function Page() {
       <div className="mb-4">
         <button
           onClick={() => { if (course) { try { writeDraftBy(draftKey, course) } catch {} } router.push(`/admin/courses/new${qs}`) }}
-          className="inline-flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-lg bg-[#16161c] border border-[#2a2a35]"
+          className="inline-flex items-center gap-2 text-[var(--color-text-2)] hover:text-[var(--color-text-1)] px-3 py-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border-2)]"
         >
           Назад
         </button>
       </div>
-      <h2 className="text-white text-xl font-medium mb-6">Создать курс</h2>
+      <h2 className="text-[var(--color-text-1)] text-xl font-medium mb-6">Создать курс</h2>
 
       <div className="max-w-4xl space-y-6">
         
-        <div className="flex items-center justify-between bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white">
+        <div className="flex items-center justify-between bg-[var(--color-surface-2)] border border-[var(--color-border-2)] rounded-2xl px-4 py-3 text-[var(--color-text-1)]">
           <div className="flex items-center gap-3">
-            <span className="w-7 h-7 rounded-full bg-[#2a2a35] text-white/80 flex items-center justify-center text-xs">{module?.id ?? 1}.</span>
+            <span className="w-7 h-7 rounded-full bg-[var(--color-border-2)] text-[var(--color-text-2)] flex items-center justify-center text-xs">{module?.id ?? 1}.</span>
             <span className="font-medium">{module?.title ?? `Модуль ${moduleId}`}</span>
           </div>
-          <div className="rounded-lg border border-[#2a2a35] p-1 text-[#a0a0b0]">
+          <div className="rounded-lg border border-[var(--color-border-2)] p-1 text-[var(--color-text-4)]">
             <LogIn className="w-5 h-5" />
           </div>
         </div>
@@ -147,26 +147,26 @@ export default function Page() {
               onDragStart={() => setDragLessonId(l.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => { if (dragLessonId != null && dragLessonId !== l.id) reorderLessons(dragLessonId, l.id); setDragLessonId(null) }}
-              className="w-full flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors animate-slide-up"
+              className="w-full flex items-center justify-between rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border-2)] px-4 py-3 text-[var(--color-text-1)] hover:bg-[#1a1a22] transition-colors animate-slide-up"
             >
               <button onClick={() => openLesson(l.id)} className="flex items-center gap-3 flex-1 text-left">
-                <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">{l.id}</span>
-                <span className="text-white/80">{l.title || "Название урока"}</span>
+                <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">{l.id}</span>
+                <span className="text-[var(--color-text-2)]">{l.title || "Название урока"}</span>
               </button>
-              <span className="text-white/60 text-sm">{l.time || "Время курса"}</span>
+              <span className="text-[var(--color-text-3)] text-sm">{l.time || "Время курса"}</span>
             </div>
           ))}
 
           
           <button
             onClick={addLesson}
-            className="w-full flex items-center justify-between rounded-full bg-[#16161c] border border-[#2a2a35] px-4 py-3 text-white hover:bg-[#1a1a22] transition-colors"
+            className="w-full flex items-center justify-between rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border-2)] px-4 py-3 text-[var(--color-text-1)] hover:bg-[#1a1a22] transition-colors"
           >
             <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-[#00a3ff] text-black flex items-center justify-center font-semibold">
+              <span className="w-8 h-8 rounded-full bg-[var(--color-accent-warm)] text-black flex items-center justify-center font-semibold">
                 <Plus className="w-4 h-4" />
               </span>
-              <span className="text-white/80">Добавить урок</span>
+              <span className="text-[var(--color-text-2)]">Добавить урок</span>
             </div>
           </button>
         </div>

@@ -83,7 +83,13 @@ export default function Page() {
       const existing = existingRaw ? JSON.parse(existingRaw) : { modules: [] }
       const mergedModules = modules.map((m) => {
         const prev = (existing.modules || []).find((pm: any) => pm.id === m.id)
-        return { id: m.id, title: m.title, remoteId: prev?.remoteId, lessons: prev?.lessons || [] }
+        // Preserve remoteId and lessons from existing draft
+        return { 
+          id: m.id, 
+          title: m.title, 
+          remoteId: prev?.remoteId, 
+          lessons: prev?.lessons || [] 
+        }
       })
       const draft = {
         ...existing,
@@ -278,6 +284,10 @@ export default function Page() {
             presentationUrl: l.presentationUrl || undefined,
             slideUrls: l.slideUrls || [],
             remoteId: l.remoteId,
+            quizQuestion: l.quizQuestion || undefined,
+            quizOptions: l.quizOptions || undefined,
+            quizCorrectIndex: l.quizCorrectIndex !== undefined ? l.quizCorrectIndex : undefined,
+            quizXp: l.quizXp !== undefined ? l.quizXp : undefined,
           })),
         }))
       }
@@ -381,12 +391,16 @@ export default function Page() {
               const dMod = draft.modules[mi]
               const cMod = createdModules[mi]
               if (!dMod || !cMod) continue
+              dMod.remoteId = cMod.id
               const createdLessons = (cMod.lessons || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
               const dLessons: any[] = Array.isArray(dMod.lessons) ? dMod.lessons : []
               for (let li = 0; li < dLessons.length; li++) {
                 const dLesson = dLessons[li]
                 const cLesson = createdLessons[li]
                 if (!dLesson || !cLesson) continue
+                dLesson.remoteId = cLesson.id
+                
+                // Save quiz questions if they exist
                 const text = (dLesson.quizQuestion || "").trim()
                 const opts: string[] = Array.isArray(dLesson.quizOptions) ? dLesson.quizOptions.filter((s: any) => typeof s === 'string' && s.trim()).map((s: string) => s.trim()) : []
                 const correctIndex = typeof dLesson.quizCorrectIndex === 'number' ? dLesson.quizCorrectIndex : -1
@@ -404,27 +418,6 @@ export default function Page() {
                     }),
                   }).catch(() => null)
                 }
-              }
-            }
-          }
-        } catch {}
-        try {
-          const draftRaw = draftKey ? localStorage.getItem(draftKey) : localStorage.getItem("s7_admin_course_draft")
-          const draft = draftRaw ? JSON.parse(draftRaw) : null
-          if (created?.id && draft && Array.isArray(draft.modules)) {
-            const createdModules = (created.modules || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-            for (let mi = 0; mi < draft.modules.length; mi++) {
-              const dMod = draft.modules[mi]
-              const cMod = createdModules[mi]
-              if (!dMod || !cMod) continue
-              dMod.remoteId = cMod.id
-              const createdLessons = (cMod.lessons || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-              const dLessons: any[] = Array.isArray(dMod.lessons) ? dMod.lessons : []
-              for (let li = 0; li < dLessons.length; li++) {
-                const dLesson = dLessons[li]
-                const cLesson = createdLessons[li]
-                if (!dLesson || !cLesson) continue
-                dLesson.remoteId = cLesson.id
               }
             }
             localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
@@ -506,25 +499,25 @@ export default function Page() {
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
               placeholder="Имя автора"
-              className="bg-[#0f0f14] border border-[#2a2a35] text-white/80 text-xs rounded-full px-3 py-1 outline-none"
+              className="bg-[var(--color-surface-3)] border border-[var(--color-border-2)] text-[var(--color-text-2)] text-xs rounded-full px-3 py-1 outline-none"
             />
             {showFilters && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-[#0f0f14] border border-[#2a2a35] rounded-xl p-3 shadow-xl z-10">
-                <div className="text-white/80 text-xs mb-2">Сложность</div>
+              <div className="absolute top-full left-0 mt-2 w-72 bg-[var(--color-surface-3)] border border-[var(--color-border-2)] rounded-xl p-3 shadow-xl z-10">
+                <div className="text-[var(--color-text-2)] text-xs mb-2">Сложность</div>
                 <div className="flex items-center gap-2">
                   {( ["Легкий","Средний","Сложный"] as string[] ).map((lvl) => (
                     <button
                       key={lvl}
                       type="button"
                       onClick={() => setDifficulty(lvl)}
-                      className={`px-3 py-1 rounded-full text-xs border ${difficulty === lvl ? 'bg-[#00a3ff] text-white border-[#00a3ff]' : 'bg-transparent text-white/80 border-[#2a2a35]'}`}
+                      className={`px-3 py-1 rounded-full text-xs border ${difficulty === lvl ? 'bg-[var(--color-accent-warm)] text-black border-[var(--color-accent-warm)]' : 'bg-transparent text-[var(--color-text-2)] border-[var(--color-border-2)]'}`}
                     >
                       {lvl}
                     </button>
                   ))}
                 </div>
                 <div className="flex justify-end mt-3">
-                  <button onClick={()=>setShowFilters(false)} className="text-xs px-3 py-1 rounded-lg bg-[#2a2a35] hover:bg-[#333344] text-white/80">Готово</button>
+                  <button onClick={()=>setShowFilters(false)} className="text-xs px-3 py-1 rounded-lg bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] text-[var(--color-text-2)]">Готово</button>
                 </div>
               </div>
             )}
@@ -568,17 +561,17 @@ export default function Page() {
             onDragStart={() => setDragId(m.id)}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => { if (dragId != null && dragId !== m.id) reorderModules(dragId, m.id); setDragId(null) }}
-            className="flex items-center justify-between bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white animate-slide-up"
+            className="flex items-center justify-between bg-[var(--color-surface-2)] border border-[var(--color-border-2)] rounded-2xl px-4 py-3 text-[var(--color-text-1)] animate-slide-up"
           >
             <div className="flex items-center gap-3 w-full">
-              <span className="w-7 h-7 rounded-full bg-[#2a2a35] text-white/80 flex items-center justify-center text-xs">{m.id}.</span>
+              <span className="w-7 h-7 rounded-full bg-[var(--color-border-2)] text-[var(--color-text-2)] flex items-center justify-center text-xs">{m.id}.</span>
               {editingId === m.id ? (
                 <input
                   autoFocus
                   value={m.title}
                   onChange={(e) => renameModule(m.id, e.target.value)}
                   onBlur={() => setEditingId(null)}
-                  className="flex-1 bg-transparent outline-none border-b border-[#2a2a35]"
+                  className="flex-1 bg-transparent outline-none border-b border-[var(--color-border-2)]"
                 />
               ) : (
                 <button onClick={() => setEditingId(m.id)} className="text-left flex-1">
@@ -590,11 +583,11 @@ export default function Page() {
               <button
                 onClick={() => { saveDraftImmediate(); router.push(`/admin/courses/new/${m.id}${qs}`) }}
                 aria-label="Открыть уроки"
-                className="text-[#a0a0b0] hover:text-white"
+                className="text-[var(--color-text-4)] hover:text-[var(--color-text-1)]"
               >
                 <LogIn className="w-5 h-5" />
               </button>
-              <button onClick={() => removeModule(m.id)} aria-label="Удалить модуль" className="text-[#a0a0b0] hover:text-[#ef4444] transition-colors">
+              <button onClick={() => removeModule(m.id)} aria-label="Удалить модуль" className="text-[var(--color-text-4)] hover:text-[#ef4444] transition-colors">
                 <Trash className="w-5 h-5" />
               </button>
             </div>
@@ -603,13 +596,13 @@ export default function Page() {
 
         <button
           onClick={addModule}
-          className="flex items-center justify-between bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-3 text-white w-full hover:bg-[#1a1a22]"
+          className="flex items-center justify-between bg-[var(--color-surface-2)] border border-[var(--color-border-2)] rounded-2xl px-4 py-3 text-[var(--color-text-1)] w-full hover:bg-[#1a1a22]"
         >
           <div className="flex items-center gap-3">
-            <span className="w-7 h-7 rounded-full bg-[#2a2a35] text-white/80 flex items-center justify-center text-xs">x.</span>
+            <span className="w-7 h-7 rounded-full bg-[var(--color-border-2)] text-[var(--color-text-2)] flex items-center justify-center text-xs">x.</span>
             <span className="font-medium">Добавить модули</span>
           </div>
-          <LogIn className="w-5 h-5 text-[#a0a0b0]" />
+          <LogIn className="w-5 h-5 text-[var(--color-text-4)]" />
         </button>
 
         
@@ -637,13 +630,13 @@ export default function Page() {
                 toast({ title: 'Черновик сохранён' } as any)
               } catch {}
             }}
-            className="rounded-2xl bg-[#2a2a35] hover:bg-[#333344] text-white font-medium py-4 transition-colors"
+            className="rounded-2xl bg-[var(--color-border-2)] hover:bg-[var(--color-border-hover-1)] text-[var(--color-text-1)] font-medium py-4 transition-colors"
           >
             Сохранить черновик
           </button>
           <button
             onClick={publish}
-            className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
+            className="rounded-2xl bg-[var(--color-accent-warm)] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
           >
             Опубликовать
             <ArrowUpRight className="w-5 h-5" />
@@ -652,17 +645,17 @@ export default function Page() {
 
         
         <div className="flex items-center gap-3">
-          <span className="text-white/70">Цена</span>
-          <div className="rounded-full border border-[#2a2a35] p-1 flex items-center bg-[#0f0f14]">
+          <span className="text-[var(--color-text-3)]">Цена</span>
+          <div className="rounded-full border border-[var(--color-border-2)] p-1 flex items-center bg-[var(--color-surface-3)]">
             <button
               onClick={() => setFree(false)}
-              className={`px-4 py-1 rounded-full text-sm ${!free ? "bg-[#111118] text-white" : "text-white/70"}`}
+              className={`px-4 py-1 rounded-full text-sm ${!free ? "bg-[var(--color-surface-1)] text-[var(--color-text-1)]" : "text-[var(--color-text-3)]"}`}
             >
               Цена
             </button>
             <button
               onClick={() => setFree(true)}
-              className={`px-4 py-1 rounded-full text-sm ${free ? "bg-white text-black" : "text-white/70"}`}
+              className={`px-4 py-1 rounded-full text-sm ${free ? "bg-white text-black" : "text-[var(--color-text-3)]"}`}
             >
               Бесплатно
             </button>
@@ -674,7 +667,7 @@ export default function Page() {
             value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
             placeholder="Введите цену"
-            className="w-40 bg-[#0f0f14] border border-[#2a2a35] text-white rounded-lg px-3 py-2 outline-none"
+            className="w-40 bg-[var(--color-surface-3)] border border-[var(--color-border-2)] text-[var(--color-text-1)] rounded-lg px-3 py-2 outline-none"
           />
         )}
       </div>
