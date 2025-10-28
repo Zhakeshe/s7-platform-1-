@@ -4,8 +4,10 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth/auth-context"
 import { toast } from "@/hooks/use-toast"
 import { apiFetch } from "@/lib/api"
+import { useRouter } from "next/navigation"
 
 export default function ProfileTab() {
+  const router = useRouter()
   const { user, updateProfile, loading } = useAuth()
   const [fullName, setFullName] = useState("")
   const [institution, setInstitution] = useState("")
@@ -18,7 +20,8 @@ export default function ProfileTab() {
   useEffect(() => {
     if (user) {
       setFullName(user.fullName || "")
-      setInstitution((user as any).institution || "")
+      // Fix: Use educationalInstitution instead of institution
+      setInstitution((user as any).educationalInstitution || (user as any).institution || "")
     }
   }, [user])
 
@@ -86,7 +89,7 @@ export default function ProfileTab() {
                   <span className="text-white">Почта:</span> {user?.email || 'Не указано'}
                 </p>
                 <p>
-                  <span className="text-white">Учреждение:</span> {user?.institution || 'Не указано'}
+                  <span className="text-white">Учреждение:</span> {(user as any)?.educationalInstitution || (user as any)?.institution || 'Не указано'}
                 </p>
                 {user?.primaryRole && (
                   <p>
@@ -107,7 +110,7 @@ export default function ProfileTab() {
         </div>
 
         
-        {!user?.fullName && (
+        {(!user?.fullName || !(user as any)?.educationalInstitution) && (
           <div className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20">
             <h3 className="text-white text-lg font-medium mb-4">Заполните профиль</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -135,6 +138,17 @@ export default function ProfileTab() {
             </button>
           </div>
         )}
+
+        {/* Password Reset Section */}
+        <div className="bg-[#16161c] rounded-xl p-4 md:p-6 border border-[#636370]/20">
+          <h3 className="text-white text-lg font-medium mb-4">Безопасность</h3>
+          <button
+            onClick={() => router.push(`/forgot-password${user?.email ? `?email=${encodeURIComponent(user.email)}` : ''}`)}
+            className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] text-white px-4 py-2 transition-colors"
+          >
+            Сбросить пароль
+          </button>
+        </div>
 
         
         <div

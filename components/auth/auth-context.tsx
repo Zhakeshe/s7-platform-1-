@@ -10,7 +10,7 @@ export interface User {
   role: Role
   level?: number
   xp?: number
-  institution?: string
+  educationalInstitution?: string
   primaryRole?: string
   age?: number
 }
@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const tokens = getTokens()
     if (!tokens) { setLoading(false); return }
-    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number }>("/auth/me")
+    apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number; educationalInstitution?: string; primaryRole?: string; age?: number }>("/auth/me")
       .then((u) => setUser({
         id: u.id,
         email: u.email,
@@ -41,6 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: u.role === "ADMIN" ? "admin" : "user",
         level: 1,
         xp: typeof u.xp === 'number' ? u.xp : 0,
+        educationalInstitution: u.educationalInstitution,
+        primaryRole: u.primaryRole,
+        age: typeof u.age === 'number' ? u.age : undefined,
       }))
       .catch(() => setUser(null))
       .finally(() => setLoading(false))
@@ -48,22 +51,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const registerFn = async (email: string, password: string, remember = true) => {
     const body = { email, password, fullName: email }
-    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number } }>(
+    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number; educationalInstitution?: string; primaryRole?: string; age?: number } }>(
       "/auth/register",
       { method: "POST", body: JSON.stringify(body) }
     )
     setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
-    setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: typeof data.user.xp === 'number' ? data.user.xp : 0 })
+    setUser({ 
+      id: data.user.id, 
+      email: data.user.email, 
+      fullName: data.user.fullName, 
+      role: data.user.role === "ADMIN" ? "admin" : "user", 
+      level: 1, 
+      xp: typeof data.user.xp === 'number' ? data.user.xp : 0,
+      educationalInstitution: data.user.educationalInstitution,
+      primaryRole: data.user.primaryRole,
+      age: typeof data.user.age === 'number' ? data.user.age : undefined,
+    })
   }
 
   const loginFn = async (email: string, password: string, remember = true) => {
     const body = { email, password }
-    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number } }>(
+    const data = await apiFetch<{ accessToken: string; refreshToken: string; user: { id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; xp?: number; educationalInstitution?: string; primaryRole?: string; age?: number } }>(
       "/auth/login",
       { method: "POST", body: JSON.stringify(body) }
     )
     setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
-    setUser({ id: data.user.id, email: data.user.email, fullName: data.user.fullName, role: data.user.role === "ADMIN" ? "admin" : "user", level: 1, xp: typeof data.user.xp === 'number' ? data.user.xp : 0 })
+    setUser({ 
+      id: data.user.id, 
+      email: data.user.email, 
+      fullName: data.user.fullName, 
+      role: data.user.role === "ADMIN" ? "admin" : "user", 
+      level: 1, 
+      xp: typeof data.user.xp === 'number' ? data.user.xp : 0,
+      educationalInstitution: data.user.educationalInstitution,
+      primaryRole: data.user.primaryRole,
+      age: typeof data.user.age === 'number' ? data.user.age : undefined,
+    })
   }
 
   const logoutFn = async () => {
@@ -87,15 +110,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const body: any = {
         fullName: patch.fullName,
-        educationalInstitution: patch.institution,
+        educationalInstitution: patch.institution || patch.educationalInstitution,
         primaryRole: patch.primaryRole,
         age: typeof patch.age === 'number' ? patch.age : undefined,
       }
-      const updated = await apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string }>(
+      const updated = await apiFetch<{ id: string; email: string; role: "USER" | "ADMIN"; fullName?: string; educationalInstitution?: string; primaryRole?: string; age?: number }>(
         "/auth/me",
         { method: "PUT", body: JSON.stringify(body) }
       )
-      setUser({ ...user, fullName: updated.fullName ?? user.fullName })
+      setUser({ 
+        ...user, 
+        fullName: updated.fullName ?? user.fullName,
+        educationalInstitution: updated.educationalInstitution ?? user.educationalInstitution,
+        primaryRole: updated.primaryRole ?? user.primaryRole,
+        age: typeof updated.age === 'number' ? updated.age : user.age,
+      })
     } catch {
     }
   }

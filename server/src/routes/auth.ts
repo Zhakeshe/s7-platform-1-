@@ -23,7 +23,7 @@ const loginSchema = z.object({
 
 const verifyEmailSchema = z.object({
   email: z.string().email(),
-  code: z.string().length(7), // xxx-xxx format
+  code: z.string().length(6), // 6-digit format
 })
 
 const passwordResetRequestSchema = z.object({
@@ -32,7 +32,7 @@ const passwordResetRequestSchema = z.object({
 
 const passwordResetSchema = z.object({
   email: z.string().email(),
-  code: z.string().length(7), // xxx-xxx format
+  code: z.string().length(6), // 6-digit format
   newPassword: z.string().min(8),
 })
 
@@ -48,7 +48,7 @@ const refreshSchema = z.object({
 export const router = Router()
 
 // Store verification codes in memory (in production, use Redis or database)
-const verificationCodes = new Map<string, { code: string; expiresAt: Date; type: 'verification' | 'password-reset' }>()
+const verificationCodes = new Map<string, { code: string; expiresAt: Date; type: 'verification' | 'password-reset'; attempts: number }>()
 
 const DEV_AUTH = process.env.DEV_AUTH === "1"
 
@@ -116,12 +116,13 @@ router.post("/register", async (req: Request, res: Response) => {
   const isBootstrapAdmin = !anyAdmin
   const isSpecialAdmin = email.trim().toLowerCase() === "qynon@mail.ru"
 
+  // Create user but don't automatically log them in
   const user = await prisma.user.create({
     data: {
       email,
       passwordHash,
       fullName,
-      age,
+      age: age ? parseInt(age as any) : undefined,
       educationalInstitution,
       primaryRole,
       role: isBootstrapAdmin || isSpecialAdmin ? "ADMIN" : undefined,
@@ -136,27 +137,34 @@ router.post("/register", async (req: Request, res: Response) => {
     },
   })
 
-  const accessToken = signAccessToken(user.id, user.role)
-  const refreshToken = signRefreshToken(user.id, user.role)
+  // Check if there's already a recent code (rate limiting)
+  const existingCode = verificationCodes.get(email)
+  if (!existingCode || existingCode.expiresAt < new Date() || existingCode.type !== 'verification') {
+    // Send verification email
+    try {
+      const code = generateVerificationCode()
+      
+      // Store code with expiration (5 minutes) and attempt counter
+      verificationCodes.set(email, {
+        code,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+        type: 'verification',
+        attempts: 0
+      })
+      
+      // Send email
+      await sendVerificationEmail(email, code)
+    } catch (error) {
+      console.error("Failed to send verification email:", error)
+      // Don't block registration if email fails
+    }
+  }
 
-  await prisma.session.create({
-    data: {
-      userId: user.id,
-      refreshToken,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-    },
-  })
-
+  // Return response indicating email verification is required
   res.status(201).json({
-    accessToken,
-    refreshToken,
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      fullName: user.fullName,
-      xp: Number((user as any).experiencePoints || 0),
-    },
+    requiresEmailVerification: true,
+    email: user.email,
+    message: "Registration successful. Please check your email for verification code."
   })
 })
 
@@ -174,14 +182,25 @@ router.post("/send-verification", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User not found" })
     }
 
+    // Check if there's already a recent code (rate limiting)
+    const existing = verificationCodes.get(email)
+    if (existing && existing.expiresAt > new Date()) {
+      const timeLeft = Math.ceil((existing.expiresAt.getTime() - Date.now()) / 1000)
+      return res.status(429).json({ 
+        error: `Please wait ${timeLeft} seconds before requesting a new code`,
+        retryAfter: timeLeft
+      })
+    }
+
     // Generate verification code
     const code = generateVerificationCode()
     
-    // Store code with expiration (5 minutes)
+    // Store code with expiration (5 minutes) and attempt counter
     verificationCodes.set(email, {
       code,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      type: 'verification'
+      type: 'verification',
+      attempts: 0
     })
     
     // Send email
@@ -211,6 +230,16 @@ router.post("/verify-email", async (req: Request, res: Response) => {
       verificationCodes.delete(email)
       return res.status(400).json({ error: "Verification code expired" })
     }
+
+    // Check attempts (max 3 attempts)
+    if (stored.attempts >= 3) {
+      verificationCodes.delete(email)
+      return res.status(400).json({ error: "Too many failed attempts. Please request a new code." })
+    }
+
+    // Increment attempts
+    stored.attempts += 1
+    verificationCodes.set(email, stored)
 
     // Check if code matches
     if (stored.code !== code) {
@@ -253,22 +282,27 @@ router.post("/login", async (req: Request, res: Response) => {
   const valid = await verifyPassword(password, (user as any).passwordHash)
   if (!valid) return res.status(401).json({ error: "Invalid credentials" })
 
-  // Send verification email
-  try {
-    const code = generateVerificationCode()
-    
-    // Store code with expiration (5 minutes)
-    verificationCodes.set(email, {
-      code,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      type: 'verification'
-    })
-    
-    // Send email
-    await sendVerificationEmail(email, code)
-  } catch (error) {
-    console.error("Failed to send verification email:", error)
-    // Don't block login if email fails
+  // Check if there's already a recent code (rate limiting)
+  const existing = verificationCodes.get(email)
+  if (!existing || existing.expiresAt < new Date() || existing.type !== 'verification') {
+    // Send verification email
+    try {
+      const code = generateVerificationCode()
+      
+      // Store code with expiration (5 minutes) and attempt counter
+      verificationCodes.set(email, {
+        code,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+        type: 'verification',
+        attempts: 0
+      })
+      
+      // Send email
+      await sendVerificationEmail(email, code)
+    } catch (error) {
+      console.error("Failed to send verification email:", error)
+      // Don't block login if email fails
+    }
   }
 
   // Return response indicating email verification is required
@@ -296,6 +330,16 @@ router.post("/login-verify", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Verification code expired" })
     }
 
+    // Check attempts (max 3 attempts)
+    if (stored.attempts >= 3) {
+      verificationCodes.delete(email)
+      return res.status(400).json({ error: "Too many failed attempts. Please request a new code." })
+    }
+
+    // Increment attempts
+    stored.attempts += 1
+    verificationCodes.set(email, stored)
+
     // Check if code matches
     if (stored.code !== code) {
       return res.status(400).json({ error: "Invalid verification code" })
@@ -315,6 +359,9 @@ router.post("/login-verify", async (req: Request, res: Response) => {
         experiencePoints: true,
         banned: true,
         bannedReason: true,
+        educationalInstitution: true,
+        primaryRole: true,
+        age: true,
       } as any,
     })
     
@@ -344,6 +391,9 @@ router.post("/login-verify", async (req: Request, res: Response) => {
         role: user.role,
         fullName: user.fullName,
         xp: Number((user as any).experiencePoints || 0),
+        educationalInstitution: user.educationalInstitution,
+        primaryRole: user.primaryRole,
+        age: typeof user.age === 'number' ? user.age : undefined,
       },
     })
   } catch (error) {
@@ -352,7 +402,7 @@ router.post("/login-verify", async (req: Request, res: Response) => {
   }
 })
 
-// Password reset request
+// Password reset request with rate limiting
 router.post("/forgot-password", async (req: Request, res: Response) => {
   const parsed = passwordResetRequestSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
@@ -366,14 +416,25 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
       return res.json({ success: true, message: "If email exists, reset code sent" })
     }
 
+    // Check if there's already a recent code (rate limiting)
+    const existing = verificationCodes.get(email)
+    if (existing && existing.type === 'password-reset' && existing.expiresAt > new Date()) {
+      const timeLeft = Math.ceil((existing.expiresAt.getTime() - Date.now()) / 1000)
+      return res.status(429).json({ 
+        error: `Please wait ${timeLeft} seconds before requesting a new code`,
+        retryAfter: timeLeft
+      })
+    }
+
     // Generate reset code
     const code = generateVerificationCode()
     
-    // Store code with expiration (15 minutes)
+    // Store code with expiration (15 minutes) and attempt counter
     verificationCodes.set(email, {
       code,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-      type: 'password-reset'
+      type: 'password-reset',
+      attempts: 0
     })
     
     // Send email
@@ -386,7 +447,7 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
   }
 })
 
-// Password reset
+// Password reset with attempt limiting
 router.post("/reset-password", async (req: Request, res: Response) => {
   const parsed = passwordResetSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() })
@@ -404,6 +465,16 @@ router.post("/reset-password", async (req: Request, res: Response) => {
       verificationCodes.delete(email)
       return res.status(400).json({ error: "Reset code expired" })
     }
+
+    // Check attempts (max 3 attempts)
+    if (stored.attempts >= 3) {
+      verificationCodes.delete(email)
+      return res.status(400).json({ error: "Too many failed attempts. Please request a new code." })
+    }
+
+    // Increment attempts
+    stored.attempts += 1
+    verificationCodes.set(email, stored)
 
     // Check if code matches
     if (stored.code !== code) {

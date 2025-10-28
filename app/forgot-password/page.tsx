@@ -2,18 +2,37 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/otp-input"
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<"request" | "code" | "reset">("request")
   const [code, setCode] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [countdown, setCountdown] = useState(0)
+
+  // Pre-fill email from query parameter
+  useEffect(() => {
+    const emailParam = searchParams.get("email")
+    if (emailParam) {
+      setEmail(emailParam)
+    }
+  }, [searchParams])
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [countdown])
 
   const handleRequestReset = async () => {
     if (!email) {
@@ -45,6 +64,7 @@ export default function ForgotPasswordPage() {
       })
       
       setStep("code")
+      setCountdown(60) // 1 minute cooldown
     } catch (e: any) {
       toast({ 
         title: "Ошибка", 
@@ -57,10 +77,10 @@ export default function ForgotPasswordPage() {
   }
 
   const handleVerifyCode = async () => {
-    if (code.length !== 7) {
+    if (code.length !== 6) {
       toast({ 
         title: "Неверный код", 
-        description: "Код должен быть в формате xxx-xxx", 
+        description: "Код должен содержать 6 символов", 
         variant: "destructive" as any 
       })
       return
@@ -128,17 +148,6 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/[^0-9]/g, '')
-    
-    // Format as xxx-xxx
-    if (value.length > 3) {
-      value = value.substring(0, 3) + '-' + value.substring(3, 6)
-    }
-    
-    setCode(value)
-  }
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative bg-dots-pattern">
       <div className="mb-12 animate-slide-up" style={{ animationDelay: "200ms" }}>
@@ -195,19 +204,31 @@ export default function ForgotPasswordPage() {
 
             <div>
               <label className="block text-[#a7a7a7] text-sm mb-2">Код подтверждения</label>
-              <Input
-                type="text"
-                value={code}
-                onChange={handleCodeChange}
-                placeholder="123-456"
-                maxLength={7}
-                className="bg-transparent h-auto py-3 border-0 border-b border-[#1f1f1f] rounded-none px-0 pb-3 text-white placeholder:text-[#a7a7a7] focus:border-[#2a2a2a] focus:ring-0 focus-visible:ring-0 transition-all duration-300 hover:border-[#2a2a2a] text-center text-2xl tracking-widest"
-              />
+              <div className="flex justify-center">
+                <InputOTP
+                  maxLength={6}
+                  value={code}
+                  onChange={(value) => setCode(value)}
+                  containerClassName="flex gap-2"
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} className="h-12 w-12" />
+                    <InputOTPSlot index={1} className="h-12 w-12" />
+                    <InputOTPSlot index={2} className="h-12 w-12" />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} className="h-12 w-12" />
+                    <InputOTPSlot index={4} className="h-12 w-12" />
+                    <InputOTPSlot index={5} className="h-12 w-12" />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
             </div>
 
             <Button
               onClick={handleVerifyCode}
-              disabled={code.length !== 7}
+              disabled={code.length !== 6}
               className="w-full bg-[#0f0f0f] border border-[#1a1a1a] hover:bg-[#141414] hover:border-[#2a2a2a] text-white font-medium py-3 rounded-full transition-all duration-300 transform hover:scale-102 active:scale-95"
             >
               Подтвердить код
@@ -216,10 +237,11 @@ export default function ForgotPasswordPage() {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button
                 onClick={handleRequestReset}
+                disabled={countdown > 0 || loading}
                 variant="outline"
                 className="flex-1 border-[#1f1f1f] text-[#a7a7a7] hover:bg-[#141414] hover:border-[#2a2a2a] hover:text-white"
               >
-                Отправить заново
+                {countdown > 0 ? `Отправить заново (${countdown})` : "Отправить заново"}
               </Button>
               <Button
                 onClick={() => setStep("request")}

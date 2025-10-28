@@ -2,18 +2,19 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { toast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/otp-input"
 
-interface EmailVerificationProps {
+interface RegisterVerificationProps {
   email: string
   onVerified: (data: any) => void
   onBack: () => void
 }
 
-export function EmailVerification({ email, onVerified, onBack }: EmailVerificationProps) {
+export function RegisterVerification({ email, onVerified, onBack }: RegisterVerificationProps) {
+  const router = useRouter()
   const [code, setCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
@@ -30,7 +31,7 @@ export function EmailVerification({ email, onVerified, onBack }: EmailVerificati
 
     setLoading(true)
     try {
-      const data = await apiFetch<any>("/auth/login-verify", {
+      const data = await apiFetch<any>("/auth/register-verify", {
         method: "POST",
         body: JSON.stringify({ email, code })
       })
@@ -41,7 +42,7 @@ export function EmailVerification({ email, onVerified, onBack }: EmailVerificati
       
       toast({ 
         title: "Успешно", 
-        description: "Вы успешно вошли в систему" 
+        description: "Регистрация завершена успешно!" 
       })
       
       onVerified(data)

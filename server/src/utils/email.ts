@@ -11,13 +11,12 @@ const transporter = nodemailer.createTransport({
   }
 })
 
-// Generate a verification code in format xxx-xxx
+// Generate a verification code in format 6 digits
 export function generateVerificationCode(): string {
   const chars = '0123456789'
   let code = ''
   
   for (let i = 0; i < 6; i++) {
-    if (i === 3) code += '-'
     code += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   
