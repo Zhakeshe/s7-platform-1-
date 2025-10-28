@@ -2,14 +2,13 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/otp-input"
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<"request" | "code" | "reset">("request")
@@ -18,21 +17,13 @@ export default function ForgotPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [countdown, setCountdown] = useState(0)
 
-  // Pre-fill email from query parameter
-  useEffect(() => {
-    const emailParam = searchParams.get("email")
-    if (emailParam) {
-      setEmail(emailParam)
-    }
-  }, [searchParams])
-
   // Countdown timer for resend button
-  useEffect(() => {
+  useState(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
       return () => clearTimeout(timer)
     }
-  }, [countdown])
+  })
 
   const handleRequestReset = async () => {
     if (!email) {
