@@ -144,7 +144,10 @@ export default function CourseLessonTab({
           setSlideUrls(urls)
         }
       })
-      .catch(() => {  })
+      .catch((e) => {  
+        console.warn("Failed to load lesson data:", e)
+        // Не отображаем ошибку пользователю, просто логируем
+      })
     return () => { ignore = true }
   }, [course?.id, (lesson as any)?.id])
 

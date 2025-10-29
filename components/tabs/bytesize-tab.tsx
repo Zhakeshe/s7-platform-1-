@@ -77,7 +77,10 @@ export default function ByteSizeTab() {
           const video = videoRefs.current[id]
           if (!video) return
           if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-            video.play().catch(() => {})
+            video.play().catch((e) => {
+              console.warn("Failed to play video:", e)
+              // Не отображаем ошибку пользователю, просто логируем
+            })
             if (!viewedRef.current.has(id)) {
               viewedRef.current.add(id)
               fetch(`/bytesize/${id}/view`, { method: 'POST' }).catch(() => {})

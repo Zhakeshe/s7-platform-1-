@@ -82,7 +82,30 @@ export default function Page() {
         lastErr = e
       }
     }
+    // Отображаем ошибку пользователю
+    if (lastErr) {
+      toast({ title: "Ошибка загрузки", description: lastErr?.message || "Не удалось загрузить файл", variant: "destructive" as any })
+    }
     throw lastErr || new Error("Upload failed")
+  }
+
+  const publish = async () => {
+    const ok = await confirm({ 
+      title: 'Опубликовать Bytesize?', 
+      description: 'Вы уверены, что хотите опубликовать этот Bytesize? После публикации он станет доступен всем пользователям.',
+      confirmText: 'Опубликовать', 
+      cancelText: 'Отмена'
+    })
+    if (!ok) return
+    try {
+      const tags = Array.from(new Set([...(category||[]), ...(linkedCourseId ? [`__course:${linkedCourseId}`] : [])]))
+      await apiFetch("/api/admin/bytesize", { method: "POST", body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, videoUrl, coverImageUrl: coverUrl || undefined, tags }) })
+      toast({ title: "Bytesize опубликован" })
+      try { localStorage.removeItem('s7_admin_bytesize_draft') } catch {}
+      router.push("/admin/bytesize")
+    } catch(e:any) {
+      toast({ title: "Ошибка", description: e?.message || "Не удалось опубликовать", variant: "destructive" as any })
+    }
   }
 
   return (
@@ -104,13 +127,13 @@ export default function Page() {
                 uploadDelay={800}
                 onUploadSuccess={async (f)=>{
                   if (f.type && !ALLOWED_VIDEO_TYPES.includes(f.type)) {
-                    toast({ title: "РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С„РѕСЂРјР°С‚ РІРёРґРµРѕ", description: "Р Р°Р·СЂРµС€РµРЅС‹: MP4, WebM, MOV", variant: "destructive" as any })
+                    toast({ title: "Неподдерживаемый формат видео", description: "Разрешены: MP4, WebM, MOV", variant: "destructive" as any })
                     return
                   }
                   setUploading(true)
-                  try { const url = await uploadMedia(f); setVideoUrl(url); toast({ title: "Р’РёРґРµРѕ Р·Р°РіСЂСѓР¶РµРЅРѕ" }) } catch(e:any){ toast({ title: "РћС€РёР±РєР°", description: e?.message||"РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ", variant: "destructive" as any }) } finally { setUploading(false) }
+                  try { const url = await uploadMedia(f); setVideoUrl(url); toast({ title: "Видео загружено" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
                 }}
-                onUploadError={(err)=> toast({ title: "РћС€РёР±РєР°", description: err.message, variant: "destructive" as any })}
+                onUploadError={(err)=> toast({ title: "Ошибка", description: err.message, variant: "destructive" as any })}
               />
             )}
           </div>
@@ -119,7 +142,7 @@ export default function Page() {
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-4 text-white">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4" />
-            <div className="text-white/80">РџРµСЂРµС…РѕРґ Рє РєСѓСЂСЃСѓ (РїРѕ СЃРІР°Р№РїСѓ/РєРЅРѕРїРєРµ)</div>
+            <div className="text-white/80">Переход к курсу (по свайпу/копке)</div>
           </div>
           <Select value={linkedCourseId || "none"} onValueChange={(v)=> setLinkedCourseId(v==="none" ? null : v)}>
             <SelectTrigger className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2.5 text-white hover:border-[#00a3ff]/50 transition-all duration-200 focus:border-[#00a3ff] focus:ring-2 focus:ring-[#00a3ff]/20">
@@ -127,17 +150,17 @@ export default function Page() {
                 {linkedCourseId ? (
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-3.5 h-3.5 text-[#00a3ff]" />
-                    <span>{courses.find(c=>c.id===linkedCourseId)?.title || "РљСѓСЂСЃ РІС‹Р±СЂР°РЅ"}</span>
+                    <span>{courses.find(c=>c.id===linkedCourseId)?.title || "Курс выбран"}</span>
                   </div>
                 ) : (
-                  <span className="text-white/60">РќРёС‡РµРіРѕ вЂ” РїСЂРѕСЃС‚Рѕ РєРѕСЂРѕС‚РєРѕРµ РІРёРґРµРѕ</span>
+                  <span className="text-white/60">Ничего — просто короткое видео</span>
                 )}
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-[#16161c] border border-[#2a2a35] rounded-xl shadow-2xl overflow-hidden">
               <SelectItem value="none" className="text-white/80 hover:bg-[#2a2a35] hover:text-white cursor-pointer transition-colors rounded-lg mx-1 my-0.5">
                 <span className="flex items-center gap-2">
-                  <span className="text-white/60">РќРёС‡РµРіРѕ вЂ” РїСЂРѕСЃС‚Рѕ РєРѕСЂРѕС‚РєРѕРµ РІРёРґРµРѕ</span>
+                  <span className="text-white/60">Ничего — просто короткое видео</span>
                 </span>
               </SelectItem>
               {courses.length > 0 && <div className="h-px bg-[#2a2a35] my-1" />}
@@ -156,14 +179,14 @@ export default function Page() {
             <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={async (e)=>{
               const f = e.target.files?.[0]; if(!f) return;
               if (f.type && !ALLOWED_COVER_TYPES.includes(f.type)) {
-                toast({ title: "РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С„РѕСЂРјР°С‚ РѕР±Р»РѕР¶РєРё", description: "Р Р°Р·СЂРµС€РµРЅС‹: JPG, PNG, WEBP", variant: "destructive" as any });
+                toast({ title: "Неподдерживаемый формат обложки", description: "Разрешены: JPG, PNG, WEBP", variant: "destructive" as any });
                 return;
               }
               setUploading(true);
-              try { const url = await uploadMedia(f); setCoverUrl(url); toast({ title: "РћР±Р»РѕР¶РєР° Р·Р°РіСЂСѓР¶РµРЅР°" }); } catch(e:any){ toast({ title: "РћС€РёР±РєР°", description: e?.message||"РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ", variant: "destructive" as any }) } finally { setUploading(false) }
+              try { const url = await uploadMedia(f); setCoverUrl(url); toast({ title: "Обложка загружена" }); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить", variant: "destructive" as any }) } finally { setUploading(false) }
             }} />
             <button type="button" onClick={()=>coverInputRef.current?.click()} className="inline-flex items-center gap-2 px-3 py-2 bg-[#16161c] border border-[#2a2a35] rounded-lg text-white">
-              <Image className="w-4 h-4" /> РћР±Р»РѕР¶РєР°
+              <Image className="w-4 h-4" /> Обложка
             </button>
           </div>
         </div>
@@ -173,7 +196,7 @@ export default function Page() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="РќР°Р·РІР°РЅРёРµ РІРёРґРµРѕ"
+            placeholder="Название видео"
             className="w-full bg-transparent outline-none text-white"
           />
         </div>
@@ -183,14 +206,14 @@ export default function Page() {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="РћРїРёСЃР°РЅРёРµ (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ)"
+            placeholder="Описание (необязательно)"
             className="w-full bg-transparent outline-none text-white min-h-28"
           />
         </div>
 
         
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-2xl px-4 py-4 text-white">
-          <div className="text-white/80 mb-2">РљР°С‚РµРіРѕСЂРёРё</div>
+          <div className="text-white/80 mb-2">Категории</div>
           <div className="flex flex-wrap gap-2 mb-2">
             {presets.map((t) => {
               const active = category.includes(t)
@@ -217,8 +240,8 @@ export default function Page() {
             </div>
           )}
           <div className="flex items-center gap-2">
-            <input value={newTag} onChange={(e)=>setNewTag(e.target.value)} placeholder="РќРѕРІР°СЏ РєР°С‚РµРіРѕСЂРёСЏ" className="flex-1 bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
-            <button type="button" onClick={()=>{ const v = newTag.trim(); if(!v) return; if(!category.includes(v)) setCategory(prev=>[...prev, v]); setNewTag('') }} className="px-3 py-2 rounded-lg bg-[#2a2a35] hover:bg-[#333344]">Р”РѕР±Р°РІРёС‚СЊ</button>
+            <input value={newTag} onChange={(e)=>setNewTag(e.target.value)} placeholder="Новая категория" className="flex-1 bg-[#0f0f14] border border-[#2a2a35] rounded-lg px-3 py-2 outline-none" />
+            <button type="button" onClick={()=>{ const v = newTag.trim(); if(!v) return; if(!category.includes(v)) setCategory(prev=>[...prev, v]); setNewTag('') }} className="px-3 py-2 rounded-lg bg-[#2a2a35] hover:bg-[#333344]">Добавить</button>
           </div>
         </div>
 
@@ -229,30 +252,18 @@ export default function Page() {
               type="button"
               onClick={() => {
                 try { localStorage.setItem('s7_admin_bytesize_draft', JSON.stringify({ title, description, category, videoUrl, coverUrl, linkedCourseId })) } catch {}
-                toast({ title: 'Р§РµСЂРЅРѕРІРёРє СЃРѕС…СЂР°РЅС‘РЅ' })
+                toast({ title: 'Черновик сохранен' })
               }}
               className="rounded-2xl bg-[#2a2a35] hover:bg-[#333344] text-white font-medium py-4 transition-colors"
             >
-              РЎРѕС…СЂР°РЅРёС‚СЊ С‡РµСЂРЅРѕРІРёРє
+              Сохранить черновик
             </button>
             <button
               disabled={uploading || !videoUrl || !title.trim()}
-              onClick={async () => {
-                const ok = await confirm({ title: 'РћРїСѓР±Р»РёРєРѕРІР°С‚СЊ РІРёРґРµРѕ?', confirmText: 'РћРїСѓР±Р»РёРєРѕРІР°С‚СЊ', cancelText: 'РћС‚РјРµРЅР°' })
-                if (!ok) return
-                try {
-                  const tags = Array.from(new Set([...(category||[]), ...(linkedCourseId ? [`__course:${linkedCourseId}`] : [])]))
-                  await apiFetch("/api/admin/bytesize", { method: "POST", body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, videoUrl, coverImageUrl: coverUrl || undefined, tags }) })
-                  toast({ title: "Р’РёРґРµРѕ РѕРїСѓР±Р»РёРєРѕРІР°РЅРѕ" })
-                  try { localStorage.removeItem('s7_admin_bytesize_draft') } catch {}
-                  router.push("/admin/bytesize")
-                } catch(e:any) {
-                  toast({ title: "РћС€РёР±РєР°", description: e?.message || "РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСѓР±Р»РёРєРѕРІР°С‚СЊ", variant: "destructive" as any })
-                }
-              }}
+              onClick={publish}
               className="rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] disabled:opacity-60 text-black font-medium py-4 flex items-center justify-center gap-2 transition-colors"
             >
-              РћРїСѓР±Р»РёРєРѕРІР°С‚СЊ
+              Опубликовать
               <ArrowUpRight className="w-5 h-5" />
             </button>
           </div>

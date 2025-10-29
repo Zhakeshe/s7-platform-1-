@@ -30,16 +30,13 @@ export default function ProfileTab() {
   }, [])
 
   const reloadAchievements = async () => {
+    if (!user?.id) return
     try {
-      const list = await apiFetch<Array<{ id: string; earnedAt: string; achievement: { title: string; description?: string } }>>("/achievements/mine")
-      setAchievements(
-        (list || []).map((ua) => ({
-          id: ua.id,
-          text: ua.achievement?.description || ua.achievement?.title || "Достижение",
-          createdAt: ua.earnedAt ? new Date(ua.earnedAt).getTime() : Date.now(),
-        }))
-      )
-    } catch {
+      const list = await apiFetch<any[]>(`/achievements/users?userId=${user.id}`)
+      setAchievements(list || [])
+    } catch (e: any) {
+      console.warn("Failed to load achievements:", e?.message)
+      // Не отображаем ошибку пользователю, но логируем в консоль
       setAchievements([])
     }
   }

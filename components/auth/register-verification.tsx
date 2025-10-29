@@ -31,7 +31,7 @@ export function RegisterVerification({ email, onVerified, onBack }: RegisterVeri
 
     setLoading(true)
     try {
-      const data = await apiFetch<any>("/auth/register-verify", {
+      const data = await apiFetch<any>("/auth/verify-email", {
         method: "POST",
         body: JSON.stringify({ email, code })
       })

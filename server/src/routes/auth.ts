@@ -50,6 +50,16 @@ export const router = Router()
 // Store verification codes in memory (in production, use Redis or database)
 const verificationCodes = new Map<string, { code: string; expiresAt: Date; type: 'verification' | 'password-reset'; attempts: number }>()
 
+// Очистка истекших кодов каждые 10 минут
+setInterval(() => {
+  const now = new Date()
+  for (const [email, data] of verificationCodes.entries()) {
+    if (data.expiresAt < now) {
+      verificationCodes.delete(email)
+    }
+  }
+}, 10 * 60 * 1000)
+
 const DEV_AUTH = process.env.DEV_AUTH === "1"
 
 if (DEV_AUTH) {
@@ -249,6 +259,12 @@ router.post("/verify-email", async (req: Request, res: Response) => {
     // Code is valid, remove it
     verificationCodes.delete(email)
 
+    // Mark user's email as verified
+    await prisma.user.update({
+      where: { email },
+      data: { emailVerified: true }
+    })
+
     res.json({ success: true, message: "Email verified successfully" })
   } catch (error) {
     console.error("Failed to verify email:", error)
@@ -272,6 +288,7 @@ router.post("/login", async (req: Request, res: Response) => {
       experiencePoints: true,
       banned: true,
       bannedReason: true,
+      emailVerified: true,
     } as any,
   })
   if (!user) return res.status(401).json({ error: "Invalid credentials" })
@@ -282,9 +299,8 @@ router.post("/login", async (req: Request, res: Response) => {
   const valid = await verifyPassword(password, (user as any).passwordHash)
   if (!valid) return res.status(401).json({ error: "Invalid credentials" })
 
-  // Check if there's already a recent code (rate limiting)
-  const existing = verificationCodes.get(email)
-  if (!existing || existing.expiresAt < new Date() || existing.type !== 'verification') {
+  // Check if email is verified, if not send verification
+  if (!user.emailVerified) {
     // Send verification email
     try {
       const code = generateVerificationCode()
@@ -303,12 +319,36 @@ router.post("/login", async (req: Request, res: Response) => {
       console.error("Failed to send verification email:", error)
       // Don't block login if email fails
     }
+    
+    // Return response indicating email verification is required
+    return res.json({
+      requiresEmailVerification: true,
+      email: user.email
+    })
   }
 
-  // Return response indicating email verification is required
+  // Proceed with login for verified users
+  const accessToken = signAccessToken(user.id, user.role)
+  const refreshToken = signRefreshToken(user.id, user.role)
+
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      refreshToken,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+    },
+  })
+
   res.json({
-    requiresEmailVerification: true,
-    email: user.email
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      fullName: user.fullName,
+      xp: Number((user as any).experiencePoints || 0),
+    },
   })
 })
 
@@ -347,6 +387,12 @@ router.post("/login-verify", async (req: Request, res: Response) => {
 
     // Code is valid, remove it
     verificationCodes.delete(email)
+
+    // Mark user's email as verified
+    await prisma.user.update({
+      where: { email },
+      data: { emailVerified: true }
+    })
 
     // Proceed with login
     const user = await (prisma as any).user.findUnique({

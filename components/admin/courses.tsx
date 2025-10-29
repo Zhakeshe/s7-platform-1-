@@ -46,14 +46,20 @@ function CourseCard({ id, title, level, price, lessonsCount, onDeleted }: { id: 
         </Link>
         <button
           onClick={async () => {
-            const ok = await confirm({ title: 'Удалить курс?', confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
+            const ok = await confirm({ 
+              title: 'Удалить курс?', 
+              description: 'Вы уверены, что хотите удалить этот курс? Все модули, уроки и данные пользователей, связанные с этим курсом, будут безвозвратно удалены. Это действие невозможно отменить.',
+              confirmText: 'Удалить', 
+              cancelText: 'Отмена',
+              variant: 'danger' 
+            })
             if (!ok) return
             try {
               await apiFetch(`/api/admin/courses/${id}`, { method: 'DELETE' })
-              toast({ title: 'Курс удалён' } as any)
+              toast({ title: 'Курс удалён', description: 'Курс успешно удалён.' } as any)
               onDeleted(id)
             } catch (e: any) {
-              toast({ title: 'Ошибка', description: e?.message || 'Не удалось удалить', variant: 'destructive' as any })
+              toast({ title: 'Ошибка', description: e?.message || 'Не удалось удалить курс. Попробуйте позже.', variant: 'destructive' as any })
             }
           }}
           className="text-xs bg-[#ef4444] text-white rounded-full px-3 py-1 hover:bg-[#dc2626]"
@@ -168,3 +174,5 @@ export default function AdminCourses() {
     </main>
   )
 }
+
+

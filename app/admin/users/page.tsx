@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
 import { useConfirm } from "@/components/ui/confirm"
+import { toast } from "@/hooks/use-toast"
 
 type Role = "USER" | "ADMIN"
 interface User { id: string; email: string; fullName?: string; role: Role; xp?: number; banned?: boolean; bannedReason?: string }
@@ -11,6 +12,8 @@ interface User { id: string; email: string; fullName?: string; role: Role; xp?: 
 export default function Page() {
   const confirm = useConfirm()
   const [users, setUsers] = useState<User[]>([])
+  const [awardingId, setAwardingId] = useState<string | null>(null)
+  const [awardText, setAwardText] = useState("")
 
   useEffect(() => {
     apiFetch<User[]>("/api/admin/users")
@@ -69,6 +72,28 @@ export default function Page() {
                   Разбанить
                 </button>
               )}
+              <button
+                onClick={async () => {
+                  const ok = await confirm({ 
+                    title: 'Выдать достижение?', 
+                    description: 'Вы уверены, что хотите выдать этому пользователю достижение? Это действие добавит достижение в его профиль.',
+                    confirmText: 'Выдать', 
+                    cancelText: 'Отмена'
+                  })
+                  if (!ok) return
+                  try {
+                    await apiFetch(`/api/admin/users/${u.id}/achievements`, { method: "POST", body: JSON.stringify({ text: awardText }) })
+                    toast({ title: 'Достижение выдано', description: 'Достижение успешно добавлено в профиль пользователя.' } as any)
+                    setAwardText("")
+                    setAwardingId(null)
+                  } catch (e: any) {
+                    toast({ title: 'Ошибка', description: e?.message || 'Не удалось выдать достижение. Попробуйте позже.', variant: 'destructive' as any })
+                  }
+                }}
+                className="text-xs bg-[#22c55e] text-black rounded-full px-3 py-1 hover:bg-[#16a34a]"
+              >
+                Выдать
+              </button>
               <ArrowUpRight className="w-5 h-5 text-[#a0a0b0]" />
             </div>
           </div>

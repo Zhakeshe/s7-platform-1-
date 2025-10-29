@@ -251,13 +251,25 @@ export default function TeamsTab() {
   }
 
   const updateMember = async (membershipId: string, patch: Partial<{ role: string; status: string }>) => {
-    if (!manageModal.teamId) return
+    if (!manageModal.teamId) return;
+    
     try {
-      await apiFetch(`/teams/${manageModal.teamId}/members/${membershipId}`, { method: 'PUT', body: JSON.stringify(patch) })
-      setManageMembers((prev) => prev.map((m) => (m.id === membershipId ? { ...m, ...patch } as any : m)))
-      toast({ title: 'Сохранено' })
+      await apiFetch(`/api/admin/teams/${manageModal.teamId}/members/${membershipId}`, {
+        method: "PUT",
+        body: JSON.stringify(patch),
+      })
+      toast({ title: "Участник обновлен", description: "Информация об участнике успешно обновлена" } as any)
+      
+      // Reload members list
+      try {
+        const list = await apiFetch<Array<{ id: string; role: string; status: string; joinedAt: string; user: { id: string; email?: string; fullName?: string; phone?: string; telegram?: string; whatsapp?: string } }>>(`/teams/${manageModal.teamId}/members`)
+        setManageMembers(list || [])
+      } catch { 
+        // Silent fail but log to console
+        console.warn("Failed to reload members list")
+      }
     } catch (e: any) {
-      toast({ title: 'Ошибка', description: e?.message || 'Не удалось сохранить', variant: 'destructive' as any })
+      toast({ title: "Ошибка", description: e?.message || "Не удалось обновить участника", variant: "destructive" as any })
     }
   }
   return (

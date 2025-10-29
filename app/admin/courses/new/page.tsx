@@ -101,7 +101,29 @@ export default function Page() {
       }
       localStorage.setItem(draftKey, JSON.stringify(draft))
       localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
-    } catch {}
+      
+      // Очистка старых черновиков (более 7 дней)
+      const cleanupThreshold = Date.now() - (7 * 24 * 60 * 60 * 1000)
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('s7_admin_course_draft_')) {
+          try {
+            const item = localStorage.getItem(key)
+            if (item) {
+              const data = JSON.parse(item)
+              if (data.lastUpdated && new Date(data.lastUpdated).getTime() < cleanupThreshold) {
+                localStorage.removeItem(key)
+              }
+            }
+          } catch (e) {
+            // Игнорируем ошибки парсинга
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to save draft:", e)
+      toast({ title: "Ошибка сохранения", description: "Не удалось сохранить черновик", variant: "destructive" as any })
+    }
   }
 
   useEffect(() => {
@@ -221,6 +243,33 @@ export default function Page() {
     } catch {}
   }, [title, author, difficulty, modules, free, price, hydrated, draftKey])
 
+  useEffect(() => {
+    // Очистка старых черновиков при загрузке страницы
+    try {
+      const cleanupThreshold = Date.now() - (7 * 24 * 60 * 60 * 1000) // 7 дней
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('s7_admin_course_draft_')) {
+          try {
+            const item = localStorage.getItem(key)
+            if (item) {
+              const data = JSON.parse(item)
+              // Если у черновика нет даты обновления или она старше 7 дней, удаляем его
+              if (!data.lastUpdated || new Date(data.lastUpdated).getTime() < cleanupThreshold) {
+                localStorage.removeItem(key)
+              }
+            }
+          } catch (e) {
+            // Игнорируем ошибки парсинга и удаляем проблемный ключ
+            localStorage.removeItem(key || '')
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to cleanup old drafts:", e)
+    }
+  }, [])
+
   const addModule = () => {
     const nextId = modules.length ? Math.max(...modules.map((m) => m.id)) + 1 : 1
     setModules([...modules, { id: nextId, title: `Модуль ${nextId}` }])
@@ -231,10 +280,18 @@ export default function Page() {
   }
 
   const removeModule = async (id: number) => {
-    const ok = await confirm({ title: `Удалить модуль ${id}?`, confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
+    const ok = await confirm({ 
+      title: `Удалить модуль?`, 
+      description: `Вы уверены, что хотите удалить этот модуль? Все уроки в этом модуле также будут удалены. Это действие невозможно отменить.`,
+      confirmText: 'Удалить', 
+      cancelText: 'Отмена',
+      variant: 'danger' 
+    })
     if (!ok) return
     setModules((prev) => prev.filter((m) => m.id !== id))
-    try { toast({ title: 'Модуль удалён' } as any) } catch {}
+    try { 
+      toast({ title: 'Модуль удалён', description: 'Модуль успешно удалён из курса.' } as any) 
+    } catch {}
   }
 
   const reorderModules = (fromId: number, toId: number) => {
@@ -250,7 +307,12 @@ export default function Page() {
   }
 
   const publish = async () => {
-    const ok = await confirm({ title: 'Опубликовать курс?', confirmText: 'Опубликовать', cancelText: 'Отмена' })
+    const ok = await confirm({ 
+      title: 'Опубликовать курс?', 
+      description: 'Вы уверены, что хотите опубликовать этот курс? После публикации он станет доступен всем пользователям.',
+      confirmText: 'Опубликовать', 
+      cancelText: 'Отмена' 
+    })
     if (!ok) return
     let finalModules = modules.map((m) => ({ id: m.id, title: m.title, lessons: [] as any[] }))
     try {
@@ -322,21 +384,39 @@ export default function Page() {
       for (const m of finalModules as any[]) {
         for (const l of (m.lessons || []) as any[]) {
           if (!l.videoUrl && l.videoMediaId) {
-            try { l.videoUrl = await uploadById(l.videoMediaId) } catch (e:any) { console.warn("Video upload failed", e?.message) }
+            try { 
+              l.videoUrl = await uploadById(l.videoMediaId) 
+            } catch (e:any) { 
+              console.warn("Video upload failed", e?.message)
+              toast({ title: "Ошибка загрузки видео", description: e?.message || "Не удалось загрузить видео", variant: "destructive" as any })
+            }
           }
           if ((!Array.isArray(l.slideUrls) || l.slideUrls.length === 0) && Array.isArray(l.slideMediaIds) && l.slideMediaIds.length > 0) {
             const urls: string[] = []
             for (const id of l.slideMediaIds) {
-              try { const u = await uploadById(id); if (u) urls.push(u) } catch {}
+              try { 
+                const u = await uploadById(id)
+                if (u) urls.push(u) 
+              } catch (e:any) {
+                console.warn("Slide upload failed", e?.message)
+                toast({ title: "Ошибка загрузки слайда", description: e?.message || "Не удалось загрузить слайд", variant: "destructive" as any })
+              }
             }
             l.slideUrls = urls
           }
           if (!l.presentationUrl && l.presentationMediaId) {
-            try { l.presentationUrl = await uploadById(l.presentationMediaId) } catch {}
+            try { 
+              l.presentationUrl = await uploadById(l.presentationMediaId) 
+            } catch (e:any) {
+              console.warn("Presentation upload failed", e?.message)
+              toast({ title: "Ошибка загрузки презентации", description: e?.message || "Не удалось загрузить презентацию", variant: "destructive" as any })
+            }
           }
         }
       }
-    } catch {}
+    } catch (e: any) {
+      toast({ title: "Ошибка загрузки файлов", description: e?.message || "Не удалось загрузить медиа файлы", variant: "destructive" as any })
+    }
 
     const newCourse = {
       id: editId || title.toLowerCase().replace(/\s+/g, "-"),
@@ -383,20 +463,29 @@ export default function Page() {
           { method: editId ? "PUT" : "POST", body: JSON.stringify(payload) }
         )
         try {
+          // Update the draft with the new remote IDs from the backend
           const draftRaw = draftKey ? localStorage.getItem(draftKey) : localStorage.getItem("s7_admin_course_draft")
           const draft = draftRaw ? JSON.parse(draftRaw) : null
           if (created?.id && draft && Array.isArray(draft.modules)) {
+            // Update course ID
+            draft.courseId = created.id
+            
+            // Update module and lesson IDs based on orderIndex to ensure proper mapping
             const createdModules = (created.modules || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
             for (let mi = 0; mi < draft.modules.length; mi++) {
               const dMod = draft.modules[mi]
-              const cMod = createdModules[mi]
+              // Find the corresponding created module by orderIndex
+              const cMod = createdModules.find((m: any) => m.orderIndex === mi)
               if (!dMod || !cMod) continue
               dMod.remoteId = cMod.id
+              
+              // Update lesson IDs based on orderIndex
               const createdLessons = (cMod.lessons || []).slice().sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
               const dLessons: any[] = Array.isArray(dMod.lessons) ? dMod.lessons : []
               for (let li = 0; li < dLessons.length; li++) {
                 const dLesson = dLessons[li]
-                const cLesson = createdLessons[li]
+                // Find the corresponding created lesson by orderIndex
+                const cLesson = createdLessons.find((l: any) => l.orderIndex === li)
                 if (!dLesson || !cLesson) continue
                 dLesson.remoteId = cLesson.id
                 
@@ -406,26 +495,35 @@ export default function Page() {
                 const correctIndex = typeof dLesson.quizCorrectIndex === 'number' ? dLesson.quizCorrectIndex : -1
                 const xpReward = typeof dLesson.quizXp === 'number' ? dLesson.quizXp : 100
                 if (text && opts.length >= 2 && correctIndex >= 0 && correctIndex < opts.length) {
-                  await apiFetch(`/courses/${created.id}/questions`, {
-                    method: "POST",
-                    body: JSON.stringify({
-                      text,
-                      options: opts,
-                      correctIndex,
-                      xpReward,
-                      moduleId: cMod.id,
-                      lessonId: cLesson.id,
-                    }),
-                  }).catch(() => null)
+                  try {
+                    await apiFetch(`/api/admin/courses/${created.id}/questions`, {
+                      method: "POST",
+                      body: JSON.stringify({
+                        text,
+                        options: opts,
+                        correctIndex,
+                        xpReward,
+                        moduleId: cMod.id,
+                        lessonId: cLesson.id,
+                      }),
+                    })
+                    toast({ title: "Вопрос сохранен", description: "Вопрос успешно добавлен к уроку" } as any)
+                  } catch (e: any) {
+                    console.error("Failed to save question:", e)
+                    toast({ title: "Ошибка сохранения вопроса", description: e?.message || "Не удалось сохранить вопрос", variant: "destructive" as any })
+                  }
                 }
               }
             }
             localStorage.setItem("s7_admin_course_draft", JSON.stringify(draft))
             if (draftKey) localStorage.setItem(draftKey, JSON.stringify(draft))
           }
-        } catch {}
+        } catch (e) {
+          console.error("Failed to update draft with remote IDs:", e)
+        }
       } catch (e: any) {
         console.warn("Backend create course failed:", e?.message)
+        throw e
       }
 
       const raw = localStorage.getItem("s7_admin_courses")

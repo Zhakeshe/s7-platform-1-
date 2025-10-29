@@ -22,14 +22,20 @@ interface TeamItem { id: string; name: string; description?: string; membersCoun
 function TeamRow({ id, name, membersCount, onDeleted }: { id: string; name: string; membersCount?: number; onDeleted: (id: string) => void }) {
   const confirm = useConfirm()
   const remove = async () => {
-    const ok = await confirm({ title: 'Удалить команду?', confirmText: 'Удалить', cancelText: 'Отмена', variant: 'danger' })
+    const ok = await confirm({ 
+      title: 'Удалить команду?', 
+      description: 'Вы уверены, что хотите удалить эту команду? Все участники будут исключены, а данные команды будут безвозвратно удалены. Это действие невозможно отменить.',
+      confirmText: 'Удалить', 
+      cancelText: 'Отмена',
+      variant: 'danger' 
+    })
     if (!ok) return
     try {
       await apiFetch(`/api/admin/teams/${id}`, { method: "DELETE" })
-      toast({ title: "Удалено" })
+      toast({ title: "Команда удалена", description: "Команда успешно удалена." } as any)
       onDeleted(id)
     } catch (e: any) {
-      toast({ title: "Ошибка", description: e?.message || "Не удалось удалить", variant: "destructive" as any })
+      toast({ title: "Ошибка", description: e?.message || "Не удалось удалить команду. Попробуйте позже.", variant: "destructive" as any })
     }
   }
   return (
@@ -192,3 +198,5 @@ export default function AdminTeams() {
     </main>
   )
 }
+
+

@@ -241,7 +241,15 @@ export default function ClubsTab() {
                                 <div className="flex items-center justify-between text-sm">
                                   <div>{a.title}{a.dueAt?` — до ${new Date(a.dueAt).toLocaleDateString()}`:""}</div>
                                   <div className="flex gap-2">
-                                    <button onClick={async()=>{ try{ const list = await apiFetch<any[]>(`/api/clubs/assignments/${a.id}/submissions`); setSubs(prev=>({ ...prev, [a.id]: list })); } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить ответы", variant: "destructive" as any }) } }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Проверить</button>
+                                    <button onClick={async()=>{ 
+                                      try{ 
+                                        const list = await apiFetch<any[]>(`/api/clubs/assignments/${a.id}/submissions`); 
+                                        setSubs(prev=>({ ...prev, [a.id]: list })); 
+                                        toast({ title: "Ответы загружены", description: "Ответы студентов успешно загружены" } as any)
+                                      } catch(e:any){ 
+                                        toast({ title: "Ошибка", description: e?.message||"Не удалось загрузить ответы", variant: "destructive" as any }) 
+                                      } 
+                                    }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Проверить</button>
                                     <button onClick={async()=>{ const mine = mySub[a.id]||{}; const payload={ answerText: (mine.answerText||"").trim()||undefined, attachmentUrl: (mine.attachmentUrl||"").trim()||undefined }; try{ await apiFetch(`/api/clubs/assignments/${a.id}/submissions`, { method: 'POST', body: JSON.stringify(payload) }); toast({ title: "Ответ отправлен" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось отправить", variant: "destructive" as any }) } }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Отправить ответ</button>
                                     <button onClick={async()=>{ try{ await apiFetch(`/api/clubs/assignments/${a.id}`, { method: 'DELETE' }); toast({ title: "Задание удалено" }) } catch(e:any){ toast({ title: "Ошибка", description: e?.message||"Не удалось удалить", variant: "destructive" as any }) } const list = await apiFetch<any[]>(`/api/clubs/classes/${cl.id}/assignments`); setAssignments(prev=>({ ...prev, [cl.id]: list })); }} className="text-xs rounded-full bg-[#2a2a35] hover:bg-[#333344] px-3 py-1">Удалить</button>
                                   </div>

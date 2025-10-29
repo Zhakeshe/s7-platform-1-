@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { Check, X, RefreshCw } from "lucide-react"
 import { apiFetch } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
+import { useConfirm } from "@/components/ui/confirm"
 
 type ServerPurchase = {
   id: string
@@ -81,11 +82,48 @@ export default function Page() {
             <div className="flex items-center gap-2">
               {p.status === "pending" ? (
                 <>
-                  <button onClick={() => approve(p.id)} className="rounded-full bg-[#22c55e] text-black px-3 py-2 inline-flex items-center gap-1">
-                    <Check className="w-4 h-4" /> Подтвердить
+                  <button
+                    onClick={async () => {
+                      const ok = await confirm({ 
+                        title: 'Одобрить платеж?', 
+                        description: 'Вы уверены, что хотите одобрить этот платеж? Это действие подтвердит оплату и предоставит пользователю доступ к курсу.',
+                        confirmText: 'Одобрить', 
+                        cancelText: 'Отмена'
+                      })
+                      if (!ok) return
+                      try {
+                        await apiFetch(`/api/admin/purchases/${p.id}/approve`, { method: "POST" })
+                        toast({ title: 'Платеж одобрен', description: 'Платеж успешно одобрен. Пользователь получил доступ к курсу.' } as any)
+                        setPurchases((prev) => prev.map((x) => (x.id === p.id ? { ...x, status: "approved" } : x)))
+                      } catch (e: any) {
+                        toast({ title: 'Ошибка', description: e?.message || 'Не удалось одобрить платеж. Попробуйте позже.', variant: 'destructive' as any })
+                      }
+                    }}
+                    className="text-xs bg-[#22c55e] text-black rounded-full px-3 py-1 hover:bg-[#16a34a]"
+                  >
+                    Одобрить
                   </button>
-                  <button onClick={() => reject(p.id)} className="rounded-full bg-[#ef4444] text-white px-3 py-2 inline-flex items-center gap-1">
-                    <X className="w-4 h-4" /> Отклонить
+                  <button
+                    onClick={async () => {
+                      const ok = await confirm({ 
+                        title: 'Отклонить платеж?', 
+                        description: 'Вы уверены, что хотите отклонить этот платеж? Пользователь не получит доступ к курсу.',
+                        confirmText: 'Отклонить', 
+                        cancelText: 'Отмена',
+                        variant: 'danger'
+                      })
+                      if (!ok) return
+                      try {
+                        await apiFetch(`/api/admin/purchases/${p.id}/reject`, { method: "POST" })
+                        toast({ title: 'Платеж отклонен', description: 'Платеж успешно отклонен.' } as any)
+                        setPurchases((prev) => prev.map((x) => (x.id === p.id ? { ...x, status: "rejected" } : x)))
+                      } catch (e: any) {
+                        toast({ title: 'Ошибка', description: e?.message || 'Не удалось отклонить платеж. Попробуйте позже.', variant: 'destructive' as any })
+                      }
+                    }}
+                    className="text-xs bg-[#ef4444] text-white rounded-full px-3 py-1 hover:bg-[#dc2626]"
+                  >
+                    Отклонить
                   </button>
                 </>
               ) : (
