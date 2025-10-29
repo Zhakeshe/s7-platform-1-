@@ -33,10 +33,7 @@ export default function AdminAchievementsPage() {
   const [rows, setRows] = useState<UserAchievementRow[]>([])
   const [winners, setWinners] = useState<SubmissionRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [open, setOpen] = useState(false)
-  const [userId, setUserId] = useState("")
-  const [text, setText] = useState("")
-  const [saving, setSaving] = useState(false)
+  // "Выдать" UI removed per request — issuance of achievements is disabled in the admin UI.
   const [users, setUsers] = useState<Array<{ id: string; email: string; fullName?: string }>>([])
   const [userSearch, setUserSearch] = useState("")
 
@@ -59,69 +56,7 @@ export default function AdminAchievementsPage() {
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
       <h1 className="text-white text-2xl font-bold mb-6">Достижения участников</h1>
 
-      <div className="mb-4">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#00a3ff] hover:bg-[#0088cc] text-black">Выдать достижение</Button>
-          </DialogTrigger>
-          <DialogContent className="bg-[#16161c] border border-[#2a2a35] text-white">
-            <DialogHeader>
-              <DialogTitle className="text-white">Выдать достижение</DialogTitle>
-              <DialogDescription className="text-white/70">Найдите пользователя по email и укажите текст достижения.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <Input
-                value={userSearch}
-                onChange={(e)=>{ setUserSearch(e.target.value); const found = users.find(u=>u.email.toLowerCase()===e.target.value.toLowerCase()); if(found) setUserId(found.id) }}
-                placeholder="Поиск по email"
-                className="bg-[#0f0f14] border-[#2a2a35] text-white"
-              />
-              <div className="max-h-56 overflow-auto rounded-lg border border-[#2a2a35] bg-[#0f0f14]">
-                {(users||[])
-                  .filter(u=>!userSearch || u.email.toLowerCase().includes(userSearch.toLowerCase()) || (u.fullName||'').toLowerCase().includes(userSearch.toLowerCase()))
-                  .slice(0,50)
-                  .map(u=> (
-                    <button
-                      key={u.id}
-                      onClick={()=>{ setUserId(u.id); setUserSearch(u.email) }}
-                      className={`w-full text-left px-3 py-2 border-b border-[#2a2a35] last:border-b-0 hover:bg-[#1b1b22] ${userId===u.id ? 'bg-[#1b1b22]' : ''}`}
-                    >
-                      <div className="text-sm">{u.fullName || u.email}</div>
-                      <div className="text-xs text-white/60">{u.email}</div>
-                    </button>
-                  ))}
-                {users.length===0 && (
-                  <div className="px-3 py-2 text-white/60 text-sm">Пользователи не найдены</div>
-                )}
-              </div>
-              <Input value={text} onChange={(e)=>setText(e.target.value)} placeholder="Текст достижения" className="bg-[#0f0f14] border-[#2a2a35] text-white" />
-            </div>
-            <DialogFooter>
-              <Button
-                disabled={saving}
-                onClick={async ()=>{
-                  if (!userId.trim() || !text.trim()) { toast({ title: 'Заполните все поля' } as any); return }
-                  setSaving(true)
-                  try {
-                    const ua = await apiFetch<any>(`/api/admin/users/${encodeURIComponent(userId.trim())}/achievements`, { method: 'POST', body: JSON.stringify({ text: text.trim() }) })
-                    setRows((prev)=>[
-                      { id: ua.id, earnedAt: new Date().toISOString(), user: { id: userId.trim(), email: userSearch }, achievement: { id: ua.achievementId || 'new', title: 'Достижение', description: text.trim() } } as any,
-                      ...prev
-                    ])
-                    setUserId(''); setUserSearch(''); setText(''); setOpen(false)
-                    toast({ title: 'Выдано' } as any)
-                  } catch(e:any) {
-                    toast({ title: 'Ошибка', description: e?.message || 'Не удалось выдать', variant: 'destructive' as any })
-                  } finally { setSaving(false) }
-                }}
-                className="bg-[#00a3ff] hover:bg-[#0088cc] text-black"
-              >
-                Сохранить
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+      {/* Issuance UI removed. To re-enable granting achievements from admin, restore a safe explicit flow here. */}
 
       {/* User Achievements */}
       <section className="mb-10">

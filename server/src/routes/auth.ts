@@ -299,32 +299,10 @@ router.post("/login", async (req: Request, res: Response) => {
   const valid = await verifyPassword(password, (user as any).passwordHash)
   if (!valid) return res.status(401).json({ error: "Invalid credentials" })
 
-  // Check if email is verified, if not send verification
+  // If email is not verified — do not auto-send verification on login.
+  // Require using the explicit verification flow (registration/send-verification).
   if (!user.emailVerified) {
-    // Send verification email
-    try {
-      const code = generateVerificationCode()
-      
-      // Store code with expiration (5 minutes) and attempt counter
-      verificationCodes.set(email, {
-        code,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        type: 'verification',
-        attempts: 0
-      })
-      
-      // Send email
-      await sendVerificationEmail(email, code)
-    } catch (error) {
-      console.error("Failed to send verification email:", error)
-      // Don't block login if email fails
-    }
-    
-    // Return response indicating email verification is required
-    return res.json({
-      requiresEmailVerification: true,
-      email: user.email
-    })
+    return res.status(403).json({ error: "Email не подтверждён. Пожалуйста, подтвердите почту через процесс верификации." })
   }
 
   // Proceed with login for verified users

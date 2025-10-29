@@ -24,11 +24,7 @@ interface Overview {
 export default function Page({ params }: { params: { id: string } }) {
   const [name, setName] = useState<string>("")
   const [role, setRole] = useState<Role | "">("")
-  const [achOpen, setAchOpen] = useState(false)
-  const [achText, setAchText] = useState("")
-  const [courseOpen, setCourseOpen] = useState(false)
-  const [courses, setCourses] = useState<Course[]>([])
-  const [courseId, setCourseId] = useState<string>("")
+  // Issuance UI removed: admin cannot directly grant achievements or enroll courses from this user details page.
   const [overview, setOverview] = useState<Overview | null>(null)
   const [loadingOverview, setLoadingOverview] = useState(true)
 
@@ -44,9 +40,6 @@ export default function Page({ params }: { params: { id: string } }) {
         }
       })
       .catch(() => setName(params.id))
-    apiFetch<{ id: string; title: string }[]>(`/api/admin/courses`)
-      .then((list) => setCourses(list.map((c) => ({ id: c.id, title: c.title }))))
-      .catch(() => setCourses([]))
   }, [params.id])
 
   useEffect(() => {
@@ -96,28 +89,7 @@ export default function Page({ params }: { params: { id: string } }) {
     }
   }
 
-  const issueAchievement = async () => {
-    if (!achText.trim()) return
-    try {
-      await apiFetch(`/api/admin/users/${params.id}/achievements`, { method: "POST", body: JSON.stringify({ text: achText.trim() }) })
-      toast({ title: "Достижение выдано" })
-      setAchText("")
-      setAchOpen(false)
-    } catch (e: any) {
-      toast({ title: "Ошибка", description: e?.message || "Не удалось выдать достижение", variant: "destructive" as any })
-    }
-  }
-
-  const issueCourse = async () => {
-    if (!courseId) return
-    try {
-      await apiFetch(`/api/admin/users/${params.id}/enrollments`, { method: "POST", body: JSON.stringify({ courseId }) })
-      toast({ title: "Курс выдан" })
-      setCourseOpen(false)
-    } catch (e: any) {
-      toast({ title: "Ошибка", description: e?.message || "Не удалось выдать курс", variant: "destructive" as any })
-    }
-  }
+  // issueAchievement and issueCourse removed — granting is disabled from UI.
 
   return (
     <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-slide-up">
@@ -146,19 +118,13 @@ export default function Page({ params }: { params: { id: string } }) {
         
         <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-4">
           <div className="text-white/90 font-medium">Достижения</div>
-          <button onClick={() => setAchOpen(true)} className="w-full rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors">
-            <span>Выдать достижение</span>
-            <ArrowUpRight className="w-5 h-5" />
-          </button>
+          <div className="text-sm text-white/60">Возможность напрямую выдать достижения удалена.</div>
         </section>
 
         
         <section className="bg-[#16161c] border border-[#2a2a35] rounded-2xl p-4 text-white space-y-4">
           <div className="text-white/90 font-medium">Курсы</div>
-          <button onClick={() => setCourseOpen(true)} className="w-full rounded-2xl bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-4 flex items-center justify-between px-4 transition-colors">
-            <span>Выдать курсы</span>
-            <ArrowUpRight className="w-5 h-5" />
-          </button>
+          <div className="text-sm text-white/60">Прямое вручение курсов удалено из интерфейса.</div>
         </section>
 
         
@@ -211,37 +177,10 @@ export default function Page({ params }: { params: { id: string } }) {
       </div>
 
       
-      {achOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="w-full max-w-md bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white">
-            <div className="text-lg font-medium mb-3">Выдать достижение</div>
-            <textarea value={achText} onChange={(e) => setAchText(e.target.value)} rows={4} placeholder="Текст достижения" className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-3 text-white outline-none" />
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => setAchOpen(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={issueAchievement} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Выдать</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* achievement issuance UI removed */}
 
       
-      {courseOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="w-full max-w-md bg-[#16161c] border border-[#2a2a35] rounded-2xl p-6 text-white">
-            <div className="text-lg font-medium mb-3">Выдать курс</div>
-            <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className="w-full bg-[#0f0f14] border border-[#2a2a35] rounded-lg p-3 text-white outline-none">
-              <option value="">Выберите курс</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => setCourseOpen(false)} className="rounded-lg bg-[#2a2a35] hover:bg-[#333344] py-2">Отмена</button>
-              <button onClick={issueCourse} className="rounded-lg bg-[#00a3ff] hover:bg-[#0088cc] text-black font-medium py-2">Выдать</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* course issuance UI removed */}
     </main>
   )
 }

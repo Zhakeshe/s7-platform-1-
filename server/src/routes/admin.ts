@@ -682,90 +682,9 @@ router.put("/courses/:courseId", async (req: AuthenticatedRequest, res: Response
         }
       }
     } else {
-      // Fallback: if draft lost module id, update the existing module with the same orderIndex instead of creating a new one
-      const targetModuleOrder = module.orderIndex ?? moduleIndex
-      const sameModule = (existing.modules || []).find((m) => Number(m.orderIndex) === Number(targetModuleOrder))
-      if (sameModule) {
-        ops.push(
-          prisma.courseModule.update({
-            where: { id: sameModule.id },
-            data: {
-              title: module.title,
-              description: module.description ?? sameModule.description,
-              orderIndex: targetModuleOrder,
-            },
-          })
-        )
-        const prevLessonsById = new Map((sameModule.lessons || []).map((l) => [l.id, l]))
-        for (let lessonIndex = 0; lessonIndex < (module.lessons || []).length; lessonIndex++) {
-          const lesson = module.lessons[lessonIndex]
-          if (lesson.id && prevLessonsById.has(lesson.id)) {
-            const prevLesson = prevLessonsById.get(lesson.id)!
-            ops.push(
-              prisma.lesson.update({
-                where: { id: lesson.id },
-                data: {
-                  title: lesson.title,
-                  content: (typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content) ?? (prevLesson.content as any),
-                  duration: (typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration) ?? (prevLesson.duration as any),
-                  orderIndex: lesson.orderIndex ?? lessonIndex,
-                  isFreePreview: lesson.isFreePreview !== undefined ? lesson.isFreePreview : (prevLesson.isFreePreview ?? false),
-                  videoUrl: (typeof lesson.videoUrl === "string" ? (normalizeMediaUrl(lesson.videoUrl?.trim() || undefined) || undefined) : lesson.videoUrl) ?? (prevLesson.videoUrl as any),
-                  videoStoragePath: (typeof lesson.videoStoragePath === "string" ? (lesson.videoStoragePath.trim() ? lesson.videoStoragePath : undefined) : lesson.videoStoragePath) ?? (prevLesson.videoStoragePath as any),
-                  presentationUrl: (typeof lesson.presentationUrl === "string" ? (normalizeMediaUrl(lesson.presentationUrl?.trim() || undefined) || undefined) : lesson.presentationUrl) ?? (prevLesson.presentationUrl as any),
-                  presentationStoragePath: (typeof lesson.presentationStoragePath === "string" ? (lesson.presentationStoragePath.trim() ? lesson.presentationStoragePath : undefined) : lesson.presentationStoragePath) ?? (prevLesson.presentationStoragePath as any),
-                  slides: lesson.slides !== undefined ? normalizeSlides(lesson.slides) : (prevLesson.slides as any),
-                  contentType: lesson.contentType !== undefined ? lesson.contentType : (prevLesson.contentType ?? "text"),
-                },
-              })
-            )
-          } else {
-            const targetOrder = lesson.orderIndex ?? lessonIndex
-            const sameOrder = (sameModule.lessons || []).find((l) => Number(l.orderIndex) === Number(targetOrder))
-            if (sameOrder) {
-              ops.push(
-                prisma.lesson.update({
-                  where: { id: sameOrder.id },
-                  data: {
-                    title: lesson.title,
-                    content: typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content,
-                    duration: typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration,
-                    orderIndex: targetOrder,
-                    isFreePreview: lesson.isFreePreview ?? sameOrder.isFreePreview ?? false,
-                    videoUrl: normalizeMediaUrl(lesson.videoUrl) || (sameOrder.videoUrl as any),
-                    videoStoragePath: lesson.videoStoragePath ?? (sameOrder.videoStoragePath as any),
-                    presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || (sameOrder.presentationUrl as any),
-                    presentationStoragePath: lesson.presentationStoragePath ?? (sameOrder.presentationStoragePath as any),
-                    slides: lesson.slides !== undefined ? normalizeSlides(lesson.slides) : (sameOrder.slides as any),
-                    contentType: lesson.contentType !== undefined ? lesson.contentType : (sameOrder.contentType ?? "text"),
-                  },
-                })
-              )
-              continue
-            }
-            ops.push(
-              prisma.lesson.create({
-                data: {
-                  moduleId: sameModule.id,
-                  title: lesson.title,
-                  content: typeof lesson.content === "string" ? (lesson.content.trim() ? lesson.content : undefined) : lesson.content,
-                  duration: typeof lesson.duration === "string" ? (lesson.duration.trim() ? lesson.duration : undefined) : lesson.duration,
-                  orderIndex: targetOrder,
-                  isFreePreview: lesson.isFreePreview ?? false,
-                  videoUrl: normalizeMediaUrl(lesson.videoUrl) || lesson.videoUrl,
-                  videoStoragePath: lesson.videoStoragePath,
-                  presentationUrl: normalizeMediaUrl(lesson.presentationUrl) || lesson.presentationUrl,
-                  presentationStoragePath: lesson.presentationStoragePath,
-                  slides: normalizeSlides(lesson.slides) ?? [],
-                  contentType: lesson.contentType,
-                },
-              })
-            )
-          }
-        }
-        continue
-      }
-
+      // If module.id missing, create a new module instead of trying to match/update existing one by orderIndex.
+      // Matching by orderIndex can unintentionally overwrite existing modules/lessons when local drafts
+      // lack remote IDs. Safer approach: always create new module (append) for missing IDs.
       ops.push(
         prisma.courseModule.create({
           data: {
