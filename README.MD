@@ -1,4 +1,4 @@
-Батыр лох короче 
+ 
 Стек
 Next.js 14 (App Router)
 React 18, TypeScript 5
